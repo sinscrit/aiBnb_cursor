@@ -77,15 +77,15 @@
 **Story Points**: 1  
 **Context**: Establish the PostgreSQL database schema using Supabase migrations
 
-- [ ] Create `supabase/migrations/001_initial_schema.sql` with complete database schema:
-  - [ ] `users` table (uuid id, email, name, avatar_url, metadata, timestamps)
-  - [ ] `properties` table (uuid id, user_id FK, name, description, address, property_type, settings, timestamps)
-  - [ ] `items` table (uuid id, property_id FK, name, description, location, media_url, media_type, metadata, timestamps)
-  - [ ] `qr_codes` table (uuid id, item_id FK, qr_id UK, status, scan_count, last_scanned, timestamps)
-  - [ ] `media_assets` table (uuid id, item_id FK, file_name, file_type, file_url, file_size, status, timestamps)
-- [ ] Apply migration to Supabase project
-- [ ] Verify all tables were created correctly
-- [ ] Test basic CRUD operations on each table
+- [x] Create `supabase/migrations/001_initial_schema.sql` with complete database schema:
+  - [x] `users` table (uuid id, email, name, avatar_url, metadata, timestamps)
+  - [x] `properties` table (uuid id, user_id FK, name, description, address, property_type, settings, timestamps)
+  - [x] `items` table (uuid id, property_id FK, name, description, location, media_url, media_type, metadata, timestamps)
+  - [x] `qr_codes` table (uuid id, item_id FK, qr_id UK, status, scan_count, last_scanned, timestamps)
+  - [x] `media_assets` table (uuid id, item_id FK, file_name, file_type, file_url, file_size, status, timestamps)
+- [x] Apply migration to Supabase project
+- [x] Verify all tables were created correctly
+- [x] Test basic CRUD operations on each table
 
 ### 5. Set Up Demo User System
 **Story Points**: 1  
