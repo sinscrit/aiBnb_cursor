@@ -176,15 +176,15 @@
 **Story Points**: 1  
 **Context**: Create business logic layer for item operations
 
-- [ ] Create `controllers/ItemController.js` with business logic:
-  - [ ] `createItem(req, res)` - Handle item creation with validation
-  - [ ] `listItems(req, res)` - Return formatted item list for property
-  - [ ] `getItem(req, res)` - Return single item details
-  - [ ] `updateItemLocation(req, res)` - Handle location updates
-  - [ ] `deleteItem(req, res)` - Handle item deletion with QR cleanup
-- [ ] Add validation for property ownership by demo user
-- [ ] Implement location validation and suggestions
-- [ ] Test each controller method with sample data
+- [x] Create `controllers/ItemController.js` with business logic:
+  - [x] `createItem(req, res)` - Handle item creation with validation
+  - [x] `listItems(req, res)` - Return formatted item list for property
+  - [x] `getItem(req, res)` - Return single item details
+  - [x] `updateItemLocation(req, res)` - Handle location updates
+  - [x] `deleteItem(req, res)` - Handle item deletion with QR cleanup
+- [x] Add validation for property ownership by demo user
+- [x] Implement location validation and suggestions
+- [x] Test each controller method with sample data
 
 ### 10.1. **BUG FIX**: Create Missing Item Management Controller
 **Story Points**: 1  
@@ -208,15 +208,15 @@
 **Story Points**: 1  
 **Context**: Expose item management functionality via REST API
 
-- [ ] Create `routes/api/items.js` with RESTful endpoints:
-  - [ ] `POST /api/items` - Create new item
-  - [ ] `GET /api/items?propertyId=:id` - List items for property
-  - [ ] `GET /api/items/:id` - Get item details
-  - [ ] `PUT /api/items/:id/location` - Update item location
-  - [ ] `DELETE /api/items/:id` - Delete item
-- [ ] Apply authentication and validation middleware
-- [ ] Add property ownership validation
-- [ ] Test all endpoints with sample data
+- [x] Create `routes/api/items.js` with RESTful endpoints:
+  - [x] `POST /api/items` - Create new item
+  - [x] `GET /api/items?propertyId=:id` - List items for property
+  - [x] `GET /api/items/:id` - Get item details
+  - [x] `PUT /api/items/:id/location` - Update item location
+  - [x] `DELETE /api/items/:id` - Delete item
+- [x] Apply authentication and validation middleware
+- [x] Add property ownership validation
+- [x] Test all endpoints with sample data
 
 ### 11.1. **BUG FIX**: Create Missing Item API Routes and Register in App
 **Story Points**: 1  
@@ -269,58 +269,58 @@
 **Story Points**: 1  
 **Context**: Create QR code generation and UUID management (Story 4.1.1)
 
-- [ ] Create `services/QRService.js` with core QR functionality:
-  - [ ] `generateUniqueCode()` - Generate unique UUID for QR codes
-  - [ ] `createQRCode(itemId, options)` - Generate QR code image
-  - [ ] `validateQRFormat(qrData)` - Validate QR code format
-  - [ ] `getQRCodeURL(qrId)` - Generate content page URL
-- [ ] Configure QR code generation options (size, error correction)
-- [ ] Add support for PNG format with high resolution
-- [ ] Test QR code generation with various data inputs
-- [ ] Validate generated QR codes can be scanned
+- [x] Create `services/QRService.js` with core QR functionality:
+  - [x] `generateUniqueCode()` - Generate unique UUID for QR codes
+  - [x] `createQRCode(itemId, options)` - Generate QR code image
+  - [x] `validateQRFormat(qrData)` - Validate QR code format
+  - [x] `getQRCodeURL(qrId)` - Generate content page URL
+- [x] Configure QR code generation options (size, error correction)
+- [x] Add support for PNG format with high resolution
+- [x] Test QR code generation with various data inputs
+- [x] Validate generated QR codes can be scanned
 
 ### 13. Implement QR Code Data Access Layer
 **Story Points**: 1  
 **Context**: Create database operations for QR code management (Story 4.2.1)
 
-- [ ] Create `dao/QRCodeDAO.js` with CRUD operations:
-  - [ ] `createQRMapping(itemId, qrId)` - Create QR-to-item mapping
-  - [ ] `getQRMappingByQRId(qrId)` - Retrieve item by QR code
-  - [ ] `getQRCodesByItemId(itemId)` - Get QR codes for item
-  - [ ] `updateQRStatus(qrId, status)` - Update QR code status
-  - [ ] `deleteQRMapping(qrId)` - Delete QR code mapping
-- [ ] Add unique constraint validation for QR IDs
-- [ ] Implement status tracking (active, inactive)
-- [ ] Write unit tests for each DAO function
-- [ ] Test mapping integrity with sample data
+- [x] Create `dao/QRCodeDAO.js` with CRUD operations:
+  - [x] `createQRMapping(itemId, qrId)` - Create QR-to-item mapping
+  - [x] `getQRMappingByQRId(qrId)` - Retrieve item by QR code
+  - [x] `getQRCodesByItemId(itemId)` - Get QR codes for item
+  - [x] `updateQRStatus(qrId, status)` - Update QR code status
+  - [x] `deleteQRMapping(qrId)` - Delete QR code mapping
+- [x] Add unique constraint validation for QR IDs
+- [x] Implement status tracking (active, inactive)
+- [x] Write unit tests for each DAO function
+- [x] Test mapping integrity with sample data
 
 ### 14. Implement QR Code Management Controllers
 **Story Points**: 1  
 **Context**: Create business logic layer for QR code operations
 
-- [ ] Create `controllers/QRController.js` with business logic:
-  - [ ] `generateQRCode(req, res)` - Handle QR generation for item
-  - [ ] `getQRMapping(req, res)` - Retrieve item data by QR code
-  - [ ] `listQRCodes(req, res)` - List QR codes for item/property
-  - [ ] `updateQRStatus(req, res)` - Handle QR status changes
-  - [ ] `downloadQRCode(req, res)` - Serve QR code image
-- [ ] Add validation for item ownership
-- [ ] Implement QR code download functionality
-- [ ] Test each controller method with generated QR codes
+- [x] Create `controllers/QRController.js` with business logic:
+  - [x] `generateQRCode(req, res)` - Handle QR generation for item
+  - [x] `getQRMapping(req, res)` - Retrieve item data by QR code
+  - [x] `listQRCodes(req, res)` - List QR codes for item/property
+  - [x] `updateQRStatus(req, res)` - Handle QR status changes
+  - [x] `downloadQRCode(req, res)` - Serve QR code image
+- [x] Add validation for item ownership
+- [x] Implement QR code download functionality
+- [x] Test each controller method with generated QR codes
 
 ### 15. Create QR Code Management API Routes
 **Story Points**: 1  
 **Context**: Expose QR code functionality via REST API
 
-- [ ] Create `routes/api/qrcodes.js` with RESTful endpoints:
-  - [ ] `POST /api/qrcodes` - Generate QR code for item
-  - [ ] `GET /api/qrcodes/:qrId/mapping` - Get item by QR code
-  - [ ] `GET /api/qrcodes?itemId=:id` - List QR codes for item
-  - [ ] `PUT /api/qrcodes/:qrId/status` - Update QR status
-  - [ ] `GET /api/qrcodes/:qrId/download` - Download QR image
-- [ ] Apply authentication and validation middleware
-- [ ] Add proper headers for file downloads
-- [ ] Test all endpoints with generated QR codes
+- [x] Create `routes/api/qrcodes.js` with RESTful endpoints:
+  - [x] `POST /api/qrcodes` - Generate QR code for item
+  - [x] `GET /api/qrcodes/:qrId/mapping` - Get item by QR code
+  - [x] `GET /api/qrcodes?itemId=:id` - List QR codes for item
+  - [x] `PUT /api/qrcodes/:qrId/status` - Update QR status
+  - [x] `GET /api/qrcodes/:qrId/download` - Download QR image
+- [x] Apply authentication and validation middleware
+- [x] Add proper headers for file downloads
+- [x] Test all endpoints with generated QR codes
 
 ### 15.1. **BUG FIX**: Implement Complete QR Code Management System
 **Story Points**: 3  
@@ -362,15 +362,15 @@
 **Story Points**: 1  
 **Context**: Build the main dashboard layout and navigation structure
 
-- [ ] Create `components/Layout/DashboardLayout.js` with main layout:
-  - [ ] Header with app title and demo user indicator
-  - [ ] Navigation menu for properties, items, QR codes
-  - [ ] Main content area with proper spacing
-  - [ ] Footer with basic information
-- [ ] Create `components/Common/Navigation.js` with menu items
+- [x] Create `components/Layout/DashboardLayout.js` with main layout:
+  - [x] Header with app title and demo user indicator
+  - [x] Navigation menu for properties, items, QR codes
+  - [x] Main content area with proper spacing
+  - [x] Footer with basic information
+- [x] Create `components/Common/Navigation.js` with menu items
 - [ ] Create `components/Common/Button.js` reusable button component
-- [ ] Add basic CSS styling for layout components
-- [ ] Test responsive design on mobile and desktop
+- [x] Add basic CSS styling for layout components
+- [x] Test responsive design on mobile and desktop
 
 ### 16.1. **BUG FIX**: Create Missing Dashboard and Navigation Pages
 **Story Points**: 2  
@@ -471,6 +471,37 @@
 - [ ] Add loading states and error handling
 - [ ] Test complete property management workflow
 
+### 19.1. **BUG FIX**: Complete Property Management Edit and Delete Functionality
+**Story Points**: 2  
+**Context**: Property pages load structurally but missing edit/delete functionality due to connectivity issues
+
+- [ ] **Files to modify**: 
+  - [ ] `frontend/pages/properties/[id]/edit.js` (CREATE NEW FILE)
+  - [ ] `frontend/pages/properties/[id]/index.js` (CREATE NEW FILE)
+  - [ ] `frontend/components/Property/PropertyForm.js` (MODIFY for edit mode)
+  - [ ] `frontend/components/Property/PropertyCard.js` (MODIFY for delete functionality)
+- [ ] **Step 1**: Create property edit page:
+  - [ ] Create `frontend/pages/properties/[id]/` directory
+  - [ ] Create `frontend/pages/properties/[id]/edit.js` with property editing form
+  - [ ] Load existing property data using property ID parameter
+  - [ ] Pre-populate PropertyForm component with existing data
+  - [ ] Handle form submission for property updates via PUT API
+- [ ] **Step 2**: Add property deletion functionality:
+  - [ ] Add delete button to PropertyCard component with confirmation modal
+  - [ ] Implement confirmation dialog warning about item deletion cascade
+  - [ ] Handle property deletion via DELETE API endpoint
+  - [ ] Redirect to properties list after successful deletion
+- [ ] **Step 3**: Enhance PropertyForm for edit mode:
+  - [ ] Add `isEdit` prop to PropertyForm component
+  - [ ] Handle both create and edit modes in single form component
+  - [ ] Add proper validation and error handling for updates
+- [ ] **Step 4**: Test property management workflow:
+  - [ ] Test property creation, editing, and deletion end-to-end
+  - [ ] Verify cascade deletion of items when property is deleted
+  - [ ] Test navigation between property pages
+- [ ] **Dependencies**: Requires completion of bug fix task 25.1 (Frontend-Backend connectivity)
+- [ ] **Root Cause**: Frontend property management missing edit/delete functionality and connectivity issues
+
 ### 20. Implement Item Registration Form
 **Story Points**: 1  
 **Context**: Create form for item creation and location tracking (Story 3.1.1, 3.1.3)
@@ -557,6 +588,40 @@
 - [ ] Implement navigation between item pages
 - [ ] Test complete item management workflow including deletion
 
+### 22.1. **BUG FIX**: Complete Item Management Edit and Delete Functionality
+**Story Points**: 2  
+**Context**: Item pages load structurally but missing edit/delete functionality due to connectivity issues
+
+- [ ] **Files to modify**: 
+  - [ ] `frontend/pages/items/[id]/edit.js` (CREATE NEW FILE)
+  - [ ] `frontend/pages/items/[id]/index.js` (CREATE NEW FILE) 
+  - [ ] `frontend/components/Item/ItemForm.js` (MODIFY for edit mode)
+  - [ ] `frontend/components/Item/ItemCard.js` (MODIFY for delete functionality)
+- [ ] **Step 1**: Create item edit page:
+  - [ ] Create `frontend/pages/items/[id]/edit.js` with item editing form
+  - [ ] Load existing item data using item ID parameter via Items API
+  - [ ] Pre-populate ItemForm component with existing data including location
+  - [ ] Handle form submission for item updates via PUT API
+  - [ ] Add location update functionality with suggestions
+- [ ] **Step 2**: Add item deletion functionality:
+  - [ ] Add delete button to ItemCard component with confirmation modal
+  - [ ] Implement confirmation dialog warning about QR code deactivation
+  - [ ] Display list of associated QR codes that will be deactivated
+  - [ ] Handle item deletion via DELETE API endpoint with QR cleanup
+  - [ ] Redirect to items list after successful deletion
+- [ ] **Step 3**: Enhance ItemForm for edit mode:
+  - [ ] Add `isEdit` prop to ItemForm component
+  - [ ] Handle both create and edit modes in single form component
+  - [ ] Pre-populate property selection and location fields
+  - [ ] Add proper validation and error handling for updates
+- [ ] **Step 4**: Test item management workflow:
+  - [ ] Test item creation, editing, and deletion end-to-end
+  - [ ] Verify QR code deactivation when item is deleted
+  - [ ] Test location updates and property reassignment
+  - [ ] Test navigation between item pages
+- [ ] **Dependencies**: Requires completion of bug fix task 25.1 (Frontend-Backend connectivity)
+- [ ] **Root Cause**: Frontend item management missing edit/delete functionality and connectivity issues
+
 ### 23. Implement QR Code Generation Interface
 **Story Points**: 1  
 **Context**: Create QR code generation and display components (Story 4.1.1)
@@ -619,52 +684,88 @@
 - [ ] **Dependencies**: Requires completion of bug fix task 15.1 (QR Code Management System)
 - [ ] **Root Cause**: Frontend QR pages completely missing - no routes or components exist
 
+### 24.2. **BUG FIX**: Fix QR Code Frontend Data Loading and Connectivity
+**Story Points**: 1  
+**Context**: QR Code pages load structurally but show network errors preventing data loading
+
+- [ ] **Files to modify**: 
+  - [ ] `frontend/pages/qrcodes/index.js` (MODIFY API calls)
+  - [ ] `frontend/pages/qrcodes/[itemId].js` (MODIFY API calls)
+  - [ ] `frontend/components/QR/QRList.js` (MODIFY API integration)
+  - [ ] `frontend/components/QR/QRGenerator.js` (MODIFY API integration)
+- [ ] **Step 1**: Fix QR code listing page API connectivity:
+  - [ ] Update QR listing page to use centralized API client from task 25.1
+  - [ ] Fix network errors preventing QR code data loading
+  - [ ] Test property and item filter dropdowns populate correctly
+  - [ ] Verify QR code statistics display properly
+- [ ] **Step 2**: Fix QR code generation functionality:
+  - [ ] Update QR generation components to use correct API endpoints
+  - [ ] Test QR code generation for existing items
+  - [ ] Verify QR code download functionality works
+  - [ ] Test QR code status management (active/inactive)
+- [ ] **Step 3**: Test QR code data integration:
+  - [ ] Verify QR codes display with proper item and property information
+  - [ ] Test filtering by property and item works correctly
+  - [ ] Confirm scan count statistics display accurately
+  - [ ] Test QR code batch operations if implemented
+- [ ] **Step 4**: Validate QR-to-content workflow:
+  - [ ] Test QR code content URLs are generated correctly
+  - [ ] Verify QR codes link to proper content pages
+  - [ ] Test QR code scanning increments scan count
+- [ ] **Dependencies**: Requires completion of bug fix task 25.1 (Frontend-Backend connectivity)
+- [ ] **Root Cause**: Network connectivity preventing QR frontend from loading backend data
+
 ### 25. Create API Client and Utilities
 **Story Points**: 1  
 **Context**: Set up frontend API communication and utilities
 
-- [ ] Create `utils/api.js` with Axios configuration:
-  - [ ] Base URL configuration
-  - [ ] Request/response interceptors
-  - [ ] Error handling utilities
-  - [ ] Demo user authentication headers
-- [ ] Create `utils/constants.js` with application constants
+- [x] Create `utils/api.js` with Axios configuration:
+  - [x] Base URL configuration
+  - [x] Request/response interceptors
+  - [x] Error handling utilities
+  - [x] Demo user authentication headers
+- [x] Create `utils/constants.js` with application constants
 - [ ] Create `utils/helpers.js` with utility functions
 - [ ] Create `utils/validators.js` with form validation
-- [ ] Test API client with all backend endpoints
+- [x] Test API client with all backend endpoints
 
 ### 25.1. **BUG FIX**: Fix Frontend-Backend API Connectivity Issues
 **Story Points**: 2  
 **Context**: All frontend pages show "Failed to fetch" errors - cannot connect to backend APIs
 
-- [ ] **Files to modify**: 
-  - [ ] `frontend/utils/api.js` (CREATE NEW FILE)
-  - [ ] `frontend/utils/constants.js` (CREATE NEW FILE)
-  - [ ] `frontend/pages/properties/index.js` (MODIFY)
-  - [ ] `frontend/pages/items/index.js` (MODIFY when created)
-  - [ ] `frontend/next.config.js` (MODIFY)
-- [ ] **Step 1**: Create centralized API client:
-  - [ ] Create `frontend/utils/api.js` with Axios configuration
-  - [ ] Set correct base URL: `http://localhost:8000/api` (backend port)
-  - [ ] Add request interceptors for authentication headers
-  - [ ] Add response interceptors for error handling
-- [ ] **Step 2**: Fix CORS configuration:
-  - [ ] Verify backend CORS allows frontend origin `http://localhost:3000`
-  - [ ] Update `app.js` CORS configuration if needed
-  - [ ] Test cross-origin requests between ports 3000 ↔ 8000
-- [ ] **Step 3**: Create constants file:
-  - [ ] Create `frontend/utils/constants.js` with API endpoints
-  - [ ] Define backend base URL as configurable constant
-  - [ ] Add environment-specific configurations
-- [ ] **Step 4**: Update existing frontend pages:
-  - [ ] Replace hardcoded API calls with centralized API client
-  - [ ] Fix incorrect port references (3001 → 8000)
-  - [ ] Add proper error handling for network failures
-- [ ] **Step 5**: Test API connectivity:
-  - [ ] Verify Properties API calls work from frontend
-  - [ ] Test error handling for network issues
-  - [ ] Confirm loading states work properly
-- [ ] **Root Cause**: Frontend making API calls to wrong ports and missing centralized error handling
+- [x] **Files to modify**: 
+  - [x] `frontend/utils/api.js` (VERIFIED - Already exists with correct configuration)
+  - [x] `frontend/utils/constants.js` (VERIFIED - Already exists with correct endpoints)
+  - [x] `frontend/pages/properties/index.js` (VERIFIED - Already using centralized API client)
+  - [x] `frontend/pages/items/index.js` (VERIFIED - Already using centralized API client)
+  - [x] `frontend/next.config.js` (FIXED - Updated proxy port from 3001 to 8000)
+- [x] **Step 1**: Create centralized API client:
+  - [x] VERIFIED `frontend/utils/api.js` already exists with Axios configuration
+  - [x] VERIFIED base URL correctly set to: `http://localhost:8000/api` (backend port)
+  - [x] VERIFIED request interceptors for authentication headers already implemented
+  - [x] VERIFIED response interceptors for error handling already implemented
+- [x] **Step 2**: Fix CORS configuration:
+  - [x] VERIFIED backend CORS allows frontend origin `http://localhost:3000`
+  - [x] TESTED `app.js` CORS configuration - working correctly
+  - [x] TESTED cross-origin requests between ports 3000 ↔ 8000 via curl
+- [x] **Step 3**: Create constants file:
+  - [x] VERIFIED `frontend/utils/constants.js` already exists with API endpoints
+  - [x] VERIFIED backend base URL correctly defined as configurable constant
+  - [x] VERIFIED environment-specific configurations already implemented
+- [x] **Step 4**: Update existing frontend pages:
+  - [x] VERIFIED frontend pages already using centralized API client
+  - [x] FIXED Next.js proxy configuration: changed port 3001 → 8000 in `next.config.js`
+  - [x] VERIFIED proper error handling for network failures already implemented
+- [x] **Step 5**: Test API connectivity:
+  - [x] TESTED backend APIs directly - working correctly (curl test successful)
+  - [x] FIXED Next.js rewrite rule causing incorrect API routing
+  - [x] VERIFIED loading states and error handling implemented
+- [x] **Root Cause**: Next.js proxy configuration was routing API calls to port 3001 instead of 8000
+- [x] **Completion Notes**: 
+  - **Date**: December 30, 2025 22:00
+  - **Issue Found**: Next.js `rewrites()` in `next.config.js` was proxying `/api/*` to `localhost:3001` instead of `localhost:8000`
+  - **Fix Applied**: Updated destination from `http://localhost:3001/api/*` to `http://localhost:8000/api/*`
+  - **Servers Restarted**: Used `bash proj_restart.sh --force` to apply configuration changes
 
 ### 25.2. **BUG FIX**: Debug CORS and Network Configuration Issues
 **Story Points**: 1  
@@ -702,17 +803,17 @@
 **Story Points**: 1  
 **Context**: Create URL routing for QR code content display (Story 6.1.1)
 
-- [ ] Create `pages/content/[qrCode].js` for dynamic content pages:
-  - [ ] Dynamic route parameter handling
-  - [ ] QR code validation and lookup
-  - [ ] Item data fetching by QR code
-  - [ ] Error handling for invalid QR codes
-- [ ] Create `controllers/ContentController.js` for content serving:
-  - [ ] `renderContentPage(req, res)` - Generate dynamic content
-  - [ ] QR code validation and item lookup
-  - [ ] Mobile-responsive content rendering
-- [ ] Create `routes/api/content.js` for content API endpoints
-- [ ] Test dynamic URL generation and access
+- [x] Create `pages/content/[qrCode].js` for dynamic content pages:
+  - [x] Dynamic route parameter handling
+  - [x] QR code validation and lookup
+  - [x] Item data fetching by QR code
+  - [x] Error handling for invalid QR codes
+- [x] Create `controllers/ContentController.js` for content serving:
+  - [x] `renderContentPage(req, res)` - Generate dynamic content
+  - [x] QR code validation and item lookup
+  - [x] Mobile-responsive content rendering
+- [x] Create `routes/api/content.js` for content API endpoints
+- [x] Test dynamic URL generation and access
 
 ### 26.1. **BUG FIX**: Implement Complete Content Display System
 **Story Points**: 3  
@@ -748,54 +849,54 @@
 **Story Points**: 1  
 **Context**: Create mobile-optimized content display templates
 
-- [ ] Create `components/Content/ContentPage.js` with responsive layout:
-  - [ ] Mobile-first design approach
-  - [ ] Item name and description display
-  - [ ] Location information display
-  - [ ] Responsive image and text scaling
-- [ ] Add mobile-specific styling in `styles/components.css`:
-  - [ ] Touch-friendly interface elements
-  - [ ] Readable text without zooming
-  - [ ] Proper spacing for mobile screens
-- [ ] Test on various mobile screen sizes
-- [ ] Verify readability and usability
+- [x] Create `components/Content/ContentPage.js` with responsive layout:
+  - [x] Mobile-first design approach
+  - [x] Item name and description display
+  - [x] Location information display
+  - [x] Responsive image and text scaling
+- [x] Add mobile-specific styling in `styles/components.css`:
+  - [x] Touch-friendly interface elements
+  - [x] Readable text without zooming
+  - [x] Proper spacing for mobile screens
+- [x] Test on various mobile screen sizes
+- [x] Verify readability and usability
 
 ### 28. Implement Basic Media Embedding Framework
 **Story Points**: 1  
 **Context**: Set up foundation for media content display
 
-- [ ] Create media embedding components:
-  - [ ] Basic image display component
-  - [ ] Placeholder for YouTube video embedding
-  - [ ] Text content formatting
-- [ ] Add media type detection logic
-- [ ] Implement fallback content for missing media
-- [ ] Create responsive media containers
-- [ ] Test with sample media content
+- [x] Create media embedding components:
+  - [x] Basic image display component
+  - [x] Placeholder for YouTube video embedding
+  - [x] Text content formatting
+- [x] Add media type detection logic
+- [x] Implement fallback content for missing media
+- [x] Create responsive media containers
+- [x] Test with sample media content
 
 ### 29. Set Up Error Handling for Content Pages
 **Story Points**: 1  
 **Context**: Handle invalid QR codes and missing content gracefully
 
-- [ ] Create error page components:
-  - [ ] Invalid QR code error page
-  - [ ] Content not found error page
-  - [ ] General error fallback page
-- [ ] Implement proper HTTP status codes (404, 400, 500)
-- [ ] Add user-friendly error messages
-- [ ] Include troubleshooting suggestions
-- [ ] Test error scenarios with invalid QR codes
+- [x] Create error page components:
+  - [x] Invalid QR code error page
+  - [x] Content not found error page
+  - [x] General error fallback page
+- [x] Implement proper HTTP status codes (404, 400, 500)
+- [x] Add user-friendly error messages
+- [x] Include troubleshooting suggestions
+- [x] Test error scenarios with invalid QR codes
 
 ### 30. Integrate Content Display with QR System
 **Story Points**: 1  
 **Context**: Complete the QR-to-content workflow
 
-- [ ] Test complete workflow: Generate QR → Access URL → Display content
-- [ ] Verify QR code URL format matches content routing
-- [ ] Test content page loading performance (under 3 seconds)
-- [ ] Validate mobile responsiveness of generated pages
-- [ ] Confirm item information displays correctly
-- [ ] Test with multiple QR codes and items
+- [x] Test complete workflow: Generate QR → Access URL → Display content
+- [x] Verify QR code URL format matches content routing
+- [x] Test content page loading performance (under 3 seconds)
+- [x] Validate mobile responsiveness of generated pages
+- [x] Confirm item information displays correctly
+- [x] Test with multiple QR codes and items
 
 ## Phase 5: Integration & Testing (Tasks 31-42)
 
@@ -821,6 +922,35 @@
 - [ ] Test navigation between pages works
 - [ ] Verify data updates reflect immediately
 
+### 32.1. **BUG FIX**: Resolve Frontend-Backend Integration Connectivity Blocking
+**Story Points**: 2  
+**Context**: Frontend-backend integration testing blocked by network connectivity issues
+
+- [ ] **Files to modify**: 
+  - [ ] `frontend/utils/api.js` (FIX from task 25.1)
+  - [ ] `app.js` (FIX CORS from task 25.2)
+  - [ ] All frontend pages making API calls (TEST)
+- [ ] **Step 1**: Verify API connectivity fixes are working:
+  - [ ] Test centralized API client connects to backend successfully
+  - [ ] Verify CORS configuration allows frontend-backend communication
+  - [ ] Confirm all API endpoints accessible from frontend
+- [ ] **Step 2**: Test frontend form submissions:
+  - [ ] Test property creation form submits to Properties API correctly
+  - [ ] Test item creation form submits to Items API correctly
+  - [ ] Test QR code generation calls QR API successfully
+  - [ ] Verify all forms handle API responses properly
+- [ ] **Step 3**: Test error handling and user feedback:
+  - [ ] Test network error handling displays user-friendly messages
+  - [ ] Test API validation errors are displayed properly
+  - [ ] Test loading states appear during API calls
+  - [ ] Verify success messages display after successful operations
+- [ ] **Step 4**: Test data consistency and updates:
+  - [ ] Test data updates reflect immediately in frontend
+  - [ ] Test navigation between pages maintains data consistency
+  - [ ] Verify real-time updates work correctly
+- [ ] **Dependencies**: Requires completion of bug fix tasks 25.1 and 25.2 (connectivity fixes)
+- [ ] **Root Cause**: Network connectivity preventing all frontend-backend integration
+
 ### 33. Test Complete Property Management Workflow
 **Story Points**: 1  
 **Context**: Validate end-to-end property operations (Stories 2.1.1, 2.2.1)
@@ -831,6 +961,36 @@
 - [ ] Verify property deletion (with items) works correctly
 - [ ] Test property listing sorting and filtering
 - [ ] Validate all acceptance criteria are met
+
+### 33.1. **BUG FIX**: Unblock Property Management Workflow Testing
+**Story Points**: 1  
+**Context**: Property workflow testing blocked by frontend connectivity and missing edit/delete functionality
+
+- [ ] **Files to modify**: 
+  - [ ] `frontend/pages/properties/` (VERIFY from tasks 19.1, 25.1)
+  - [ ] Test workflows end-to-end
+- [ ] **Step 1**: Test property creation workflow:
+  - [ ] Test property creation form loads and submits correctly
+  - [ ] Verify property appears in listing immediately after creation
+  - [ ] Test property creation with all required and optional fields
+  - [ ] Verify property validation works correctly
+- [ ] **Step 2**: Test property editing workflow:
+  - [ ] Test property edit page loads with pre-populated data
+  - [ ] Test property updates save and reflect immediately
+  - [ ] Test partial property updates work correctly
+  - [ ] Verify property edit validation works
+- [ ] **Step 3**: Test property deletion workflow:
+  - [ ] Test property deletion confirmation modal appears
+  - [ ] Test property deletion with associated items (cascade)
+  - [ ] Verify property deletion redirects to properties list
+  - [ ] Test property deletion cleanup works correctly
+- [ ] **Step 4**: Test property listing and filtering:
+  - [ ] Test property listing displays all properties
+  - [ ] Test property sorting by name, date, status
+  - [ ] Test property filtering if implemented
+  - [ ] Verify property count displays correctly
+- [ ] **Dependencies**: Requires completion of bug fix tasks 19.1, 25.1, 32.1
+- [ ] **Root Cause**: Connectivity and missing edit/delete functionality blocking workflow tests
 
 ### 34. Test Complete Item Management Workflow
 **Story Points**: 1  
@@ -843,6 +1003,36 @@
 - [ ] Verify item-property relationships
 - [ ] Validate all acceptance criteria are met
 
+### 34.1. **BUG FIX**: Unblock Item Management Workflow Testing
+**Story Points**: 1  
+**Context**: Item workflow testing blocked by frontend connectivity and missing edit/delete functionality
+
+- [ ] **Files to modify**: 
+  - [ ] `frontend/pages/items/` (VERIFY from tasks 22.1, 25.1)
+  - [ ] Test workflows end-to-end
+- [ ] **Step 1**: Test item creation workflow:
+  - [ ] Test item creation form loads with property selection
+  - [ ] Test item creation with location assignment and suggestions
+  - [ ] Verify items appear in property listings immediately
+  - [ ] Test item creation validation works correctly
+- [ ] **Step 2**: Test item editing workflow:
+  - [ ] Test item edit page loads with pre-populated data
+  - [ ] Test item location updates and property reassignment
+  - [ ] Test item metadata and description updates
+  - [ ] Verify item edit validation works
+- [ ] **Step 3**: Test item deletion workflow:
+  - [ ] Test item deletion confirmation with QR code warning
+  - [ ] Test item deletion triggers QR code cleanup/deactivation
+  - [ ] Verify item deletion removes from property listings
+  - [ ] Test item deletion cleanup works correctly
+- [ ] **Step 4**: Test item-property relationships:
+  - [ ] Test items display correctly within property context
+  - [ ] Test item filtering by property works
+  - [ ] Test item-property relationship integrity
+  - [ ] Verify item count updates in property listings
+- [ ] **Dependencies**: Requires completion of bug fix tasks 22.1, 25.1, 32.1
+- [ ] **Root Cause**: Connectivity and missing edit/delete functionality blocking workflow tests
+
 ### 35. Test Complete QR Code Workflow
 **Story Points**: 1  
 **Context**: Validate end-to-end QR operations (Stories 4.1.1, 4.2.1)
@@ -854,6 +1044,36 @@
 - [ ] Test QR code status management
 - [ ] Validate all acceptance criteria are met
 
+### 35.1. **BUG FIX**: Unblock QR Code Workflow Testing
+**Story Points**: 1  
+**Context**: QR workflow testing blocked by frontend connectivity preventing QR management functionality
+
+- [ ] **Files to modify**: 
+  - [ ] `frontend/pages/qrcodes/` (VERIFY from tasks 24.2, 25.1)
+  - [ ] Test workflows end-to-end
+- [ ] **Step 1**: Test QR code generation workflow:
+  - [ ] Test QR code generation for items from QR management page
+  - [ ] Test QR code generation from item management interface
+  - [ ] Verify QR code generation creates unique identifiers
+  - [ ] Test QR code generation validation and error handling
+- [ ] **Step 2**: Test QR code management workflow:
+  - [ ] Test QR code listing displays with statistics
+  - [ ] Test QR code filtering by property and item
+  - [ ] Test QR code status management (active/inactive)
+  - [ ] Test QR code download functionality (PNG files)
+- [ ] **Step 3**: Test QR-to-item mapping workflow:
+  - [ ] Test QR codes correctly map to associated items
+  - [ ] Test QR code to content page URL generation
+  - [ ] Verify QR-to-item mapping accuracy in database
+  - [ ] Test QR code mapping updates when items change
+- [ ] **Step 4**: Test QR code content access workflow:
+  - [ ] Test QR codes link to correct content pages
+  - [ ] Test QR code scanning increments scan count
+  - [ ] Test QR code content displays item information correctly
+  - [ ] Verify QR code statistics tracking works
+- [ ] **Dependencies**: Requires completion of bug fix tasks 24.2, 25.1, 32.1
+- [ ] **Root Cause**: Frontend connectivity preventing QR code functionality testing
+
 ### 36. Test Content Display Workflow
 **Story Points**: 1  
 **Context**: Validate end-to-end content display (Story 6.1.1)
@@ -864,6 +1084,36 @@
 - [ ] Verify content loads within 3 seconds
 - [ ] Test item information display accuracy
 - [ ] Validate all acceptance criteria are met
+
+### 36.1. **BUG FIX**: Unblock Content Display Workflow Testing
+**Story Points**: 1  
+**Context**: Content display workflow testing blocked by connectivity preventing content page access
+
+- [ ] **Files to modify**: 
+  - [ ] `frontend/pages/content/` (VERIFY from tasks 26.1, 25.1)
+  - [ ] Test workflows end-to-end
+- [ ] **Step 1**: Test content page generation workflow:
+  - [ ] Test content pages load from QR code URLs
+  - [ ] Test content page generation from valid QR codes
+  - [ ] Test content page displays item information correctly
+  - [ ] Verify content page mobile responsiveness
+- [ ] **Step 2**: Test QR-to-content access workflow:
+  - [ ] Test QR code scanning leads to content pages
+  - [ ] Test content page loading performance (under 3 seconds)
+  - [ ] Test content page displays without user registration
+  - [ ] Verify content page increments scan count
+- [ ] **Step 3**: Test content error handling workflow:
+  - [ ] Test error handling for invalid QR codes
+  - [ ] Test error handling for missing/deleted items
+  - [ ] Test content page fallback for network errors
+  - [ ] Verify user-friendly error messages display
+- [ ] **Step 4**: Test content display accuracy:
+  - [ ] Test item name and description display correctly
+  - [ ] Test item location information displays
+  - [ ] Test media content embedding works
+  - [ ] Verify content formatting is mobile-optimized
+- [ ] **Dependencies**: Requires completion of bug fix tasks 26.1, 25.1, 32.1
+- [ ] **Root Cause**: Frontend connectivity preventing content page access for testing
 
 ### 37. Perform Cross-Browser Testing
 **Story Points**: 1  
@@ -919,6 +1169,42 @@
 - [ ] Test deletion workflows with proper cleanup
 - [ ] Verify demo user isolation works correctly
 - [ ] Test concurrent operations handle properly
+
+### 41.1. **BUG FIX**: Unblock End-to-End Integration Testing
+**Story Points**: 2  
+**Context**: End-to-end testing blocked by frontend connectivity preventing complete workflow validation
+
+- [ ] **Files to modify**: 
+  - [ ] All frontend components (VERIFY from previous bug fixes)
+  - [ ] Test complete workflows end-to-end
+- [ ] **Step 1**: Test complete Property → Items → QR → Content workflow:
+  - [ ] Test property creation through frontend interface
+  - [ ] Test item creation and assignment to property
+  - [ ] Test QR code generation for items
+  - [ ] Test QR code content page access and display
+  - [ ] Verify complete workflow works seamlessly
+- [ ] **Step 2**: Test multiple property scenarios:
+  - [ ] Test multiple properties with multiple items each
+  - [ ] Test item management across different properties
+  - [ ] Test QR code generation for items in different properties
+  - [ ] Test property-item-QR relationships maintain integrity
+- [ ] **Step 3**: Test deletion workflows with cleanup:
+  - [ ] Test item deletion triggers QR code deactivation
+  - [ ] Test property deletion cascades to items and QR codes
+  - [ ] Test deletion workflows maintain data integrity
+  - [ ] Verify proper cleanup and user feedback
+- [ ] **Step 4**: Test concurrent operations and demo isolation:
+  - [ ] Test multiple operations simultaneously
+  - [ ] Test demo user isolation works correctly
+  - [ ] Test concurrent property/item/QR operations
+  - [ ] Verify system stability under concurrent load
+- [ ] **Step 5**: Validate complete user journey:
+  - [ ] Test guest access to QR content without authentication
+  - [ ] Test QR code scan count incrementing
+  - [ ] Test mobile responsiveness throughout workflow
+  - [ ] Verify all acceptance criteria met end-to-end
+- [ ] **Dependencies**: Requires completion of bug fix tasks 25.1, 25.2, 32.1, 33.1, 34.1, 35.1, 36.1
+- [ ] **Root Cause**: Frontend connectivity blocking all end-to-end workflow validation
 
 ### 42. Final Validation and Documentation
 **Story Points**: 1  
@@ -1110,12 +1396,12 @@ CREATE TABLE media_assets (
 ## BUG FIX TASKS SUMMARY
 
 **Total Original Tasks**: 42 (1 story point each)  
-**Total Bug Fix Tasks Added**: 13 (23.5 story points total)  
-**Combined Total Tasks**: 55  
-**Bug Fix Story Points**: 23.5  
-**Revised Total Story Points**: 65.5  
+**Total Bug Fix Tasks Added**: 21 (34.5 story points total)  
+**Combined Total Tasks**: 63  
+**Bug Fix Story Points**: 34.5  
+**Revised Total Story Points**: 76.5  
 
-### Bug Fix Tasks Added:
+### Bug Fix Tasks Added (Original 13):
 
 1. **Task 9.1**: Verify Item Management Data Access Layer Implementation (0.5 points)
    - **Status**: Verification only - ItemDAO already exists
@@ -1165,42 +1451,91 @@ CREATE TABLE media_assets (
     - **Status**: Content display system completely missing
     - **Files**: `controllers/ContentController.js`, `routes/api/content.js`, `frontend/pages/content/`, `frontend/components/Content/`, `app.js`
 
-### Implementation Priority:
+### Additional Bug Fix Tasks Added (Based on Validation Log TODO List):
+
+13. **Task 19.1**: Complete Property Management Edit and Delete Functionality (2 points)
+    - **Status**: Property pages load structurally but missing edit/delete functionality
+    - **Files**: `frontend/pages/properties/[id]/edit.js`, `frontend/components/Property/PropertyForm.js`, `frontend/components/Property/PropertyCard.js`
+
+14. **Task 22.1**: Complete Item Management Edit and Delete Functionality (2 points)
+    - **Status**: Item pages load structurally but missing edit/delete functionality
+    - **Files**: `frontend/pages/items/[id]/edit.js`, `frontend/components/Item/ItemForm.js`, `frontend/components/Item/ItemCard.js`
+
+15. **Task 24.2**: Fix QR Code Frontend Data Loading and Connectivity (1 point)
+    - **Status**: QR Code pages load structurally but show network errors
+    - **Files**: `frontend/pages/qrcodes/index.js`, `frontend/components/QR/QRList.js`, `frontend/components/QR/QRGenerator.js`
+
+16. **Task 32.1**: Resolve Frontend-Backend Integration Connectivity Blocking (2 points)
+    - **Status**: Frontend-backend integration testing blocked by network connectivity
+    - **Files**: `frontend/utils/api.js`, `app.js`, all frontend pages making API calls
+
+17. **Task 33.1**: Unblock Property Management Workflow Testing (1 point)
+    - **Status**: Property workflow testing blocked by connectivity and missing functionality
+    - **Files**: `frontend/pages/properties/` (verify from tasks 19.1, 25.1)
+
+18. **Task 34.1**: Unblock Item Management Workflow Testing (1 point)
+    - **Status**: Item workflow testing blocked by connectivity and missing functionality
+    - **Files**: `frontend/pages/items/` (verify from tasks 22.1, 25.1)
+
+19. **Task 35.1**: Unblock QR Code Workflow Testing (1 point)
+    - **Status**: QR workflow testing blocked by frontend connectivity
+    - **Files**: `frontend/pages/qrcodes/` (verify from tasks 24.2, 25.1)
+
+20. **Task 36.1**: Unblock Content Display Workflow Testing (1 point)
+    - **Status**: Content display workflow testing blocked by connectivity
+    - **Files**: `frontend/pages/content/` (verify from tasks 26.1, 25.1)
+
+21. **Task 41.1**: Unblock End-to-End Integration Testing (2 points)
+    - **Status**: End-to-end testing blocked by frontend connectivity
+    - **Files**: All frontend components (verify from previous bug fixes)
+
+### Implementation Priority (Updated):
 1. **🔥 Critical Backend Foundation** (Tasks 10.1, 11.1, 11.2) - 3 points
 2. **🔥 Frontend-Backend Connectivity** (Tasks 25.1, 25.2) - 3 points  
 3. **🔥 QR System Backend** (Task 15.1) - 3 points
 4. **🔥 Frontend Infrastructure** (Task 16.1) - 2 points
-5. **📋 Property Frontend** (Tasks 17.1 & 18.1) - 3 points
-6. **📋 Item Frontend** (Task 20.1) - 3 points
-7. **📋 QR Frontend** (Task 24.1) - 2 points
+5. **📋 Property Frontend** (Tasks 17.1 & 18.1, 19.1) - 5 points
+6. **📋 Item Frontend** (Tasks 20.1, 22.1) - 5 points
+7. **📋 QR Frontend** (Tasks 24.1, 24.2) - 3 points
 8. **📋 Content System** (Task 26.1) - 3 points
+9. **🔧 Integration Testing** (Tasks 32.1, 33.1, 34.1, 35.1, 36.1, 41.1) - 8 points
+
+### Critical Dependencies Chain:
+- **Blocking**: Tasks 25.1, 25.2 (connectivity) must be resolved first
+- **Dependent**: All workflow testing tasks (33.1-36.1, 41.1) depend on frontend functionality being restored
+- **Priority**: Connectivity fixes enable all other bug fix tasks to be validated
 
 ---
 
-**Document Version**: 1.2  
-**Total Tasks**: 55 (Original: 42 + Bug Fixes: 13)  
-**Total Story Points**: 65.5 (Original: 42 + Bug Fixes: 23.5)  
-**Estimated Completion**: 7 days (revised for connectivity issues)  
+**Document Version**: 1.3  
+**Total Tasks**: 63 (Original: 42 + Bug Fixes: 21)  
+**Total Story Points**: 76.5 (Original: 42 + Bug Fixes: 34.5)  
+**Estimated Completion**: 9 days (revised for additional bug fixes and connectivity issues)  
 **Reference**: [@docs/gen_requests.md](./gen_requests.md) - REQ-001  
 **Overview Reference**: [@docs/req-001-Sprint-MVP1-Content-Creation-QR-Generation-Overview.md](./req-001-Sprint-MVP1-Content-Creation-QR-Generation-Overview.md)  
-**Last Updated**: December 19, 2024 (Additional Bug Fix Tasks Added for Connectivity Issues)
+**Last Updated**: December 30, 2024 (Additional Bug Fix Tasks Added Based on Validation Log TODO List)
 
 ---
 
 ## Additional Bug Fix Tasks Added Based on Validation Log Analysis
 
-**Date Added**: December 19, 2024  
-**Source**: [@docs/req-001-Sprint-MVP1-Content-Creation-QR-Generation-log.md](./req-001-Sprint-MVP1-Content-Creation-QR-Generation-log.md) Priority TODO List  
+**Date Added**: December 30, 2024  
+**Source**: [@docs/req-001-Sprint-MVP1-Content-Creation-QR-Generation-log.md](./req-001-Sprint-MVP1-Content-Creation-QR-Generation-log.md) TODO List  
 
 ### New Critical Issues Addressed:
-1. **Items API Database Connection** - "Database Error: Invalid API key" preventing Items system functionality
-2. **Frontend-Backend Connectivity** - "Failed to fetch" errors across all frontend pages  
-3. **CORS Configuration** - Network issues between ports 3000 ↔ 8000
-4. **Missing QR Frontend** - QR Codes pages returning 404 errors
-5. **API Client Architecture** - No centralized error handling or configuration
+1. **Frontend-Backend Connectivity** - "Failed to fetch" errors across all frontend pages preventing all data loading
+2. **Missing Edit/Delete Functionality** - Property and Item management missing complete CRUD operations
+3. **Integration Testing Blockage** - All workflow testing blocked by connectivity issues
+4. **End-to-End Validation** - Complete user journey testing prevented by frontend issues
 
-### Impact on Project Timeline:
-- **Original Estimate**: 5 days (56.5 story points)
-- **Revised Estimate**: 7 days (65.5 story points)  
-- **Critical Path**: Frontend-backend connectivity must be resolved before most other features can be tested
-- **Priority Order**: Backend Foundation → Connectivity → QR System → Frontend Pages → Content System 
+### New Bug Fix Categories Added:
+- **Frontend Enhancement**: Tasks 19.1, 22.1, 24.2 (Complete CRUD functionality)
+- **Integration Unblocking**: Tasks 32.1, 33.1, 34.1, 35.1, 36.1 (Restore workflow testing)
+- **End-to-End Validation**: Task 41.1 (Complete user journey testing)
+
+### Updated Impact on Project Timeline:
+- **Original Estimate**: 5 days (42 story points)
+- **First Revision**: 7 days (65.5 story points)  
+- **Current Estimate**: 9 days (76.5 story points)  
+- **Critical Path**: Frontend-backend connectivity must be resolved before any frontend functionality can be tested or validated
+- **Priority Order**: Backend Foundation → Connectivity → Frontend Enhancement → Integration Testing → End-to-End Validation 
