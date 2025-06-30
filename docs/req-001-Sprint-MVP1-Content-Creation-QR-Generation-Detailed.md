@@ -91,15 +91,15 @@
 **Story Points**: 1  
 **Context**: Create hardcoded demo user to bypass authentication complexity
 
-- [ ] Create `supabase/migrations/002_demo_user_setup.sql` to insert demo user
-- [ ] Create `services/DemoUserService.js` with hardcoded user functions:
-  - [ ] `getCurrentUser()` - Return hardcoded demo user object
-  - [ ] `getDemoUserId()` - Return consistent demo user UUID
-  - [ ] `validateDemoUser()` - Validate demo user exists in database
-- [ ] Create `middleware/auth.js` for demo user authentication:
-  - [ ] Mock authentication middleware that sets demo user
-  - [ ] Skip actual JWT validation for MVP1
-- [ ] Test demo user integration with sample API call
+- [x] Create `supabase/migrations/002_demo_user_setup.sql` to insert demo user
+- [x] Create `services/DemoUserService.js` with hardcoded user functions:
+  - [x] `getCurrentUser()` - Return hardcoded demo user object
+  - [x] `getDemoUserId()` - Return consistent demo user UUID
+  - [x] `validateDemoUser()` - Validate demo user exists in database
+- [x] Create `middleware/auth.js` for demo user authentication:
+  - [x] Mock authentication middleware that sets demo user
+  - [x] Skip actual JWT validation for MVP1
+- [x] Test demo user integration with sample API call
 
 ## Phase 2: Core Backend Development (Tasks 6-25)
 
