@@ -4,17 +4,16 @@
  */
 
 import { useState } from 'react';
+import { useRouter } from 'next/router';
 
 const HomePage = () => {
+  const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
 
   const handleGetStarted = () => {
     setIsLoading(true);
-    // Navigate to properties page (will be implemented later)
-    setTimeout(() => {
-      setIsLoading(false);
-      alert('Properties page will be implemented in upcoming tasks!');
-    }, 1000);
+    // Navigate to dashboard
+    router.push('/dashboard');
   };
 
   return (
