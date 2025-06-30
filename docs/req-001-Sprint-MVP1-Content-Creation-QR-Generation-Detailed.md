@@ -190,19 +190,19 @@
 **Story Points**: 1  
 **Context**: ItemController.js does not exist, preventing Item API functionality
 
-- [ ] **Files to modify**: `controllers/ItemController.js` (CREATE NEW FILE)
-- [ ] Create `controllers/ItemController.js` following the same pattern as `PropertyController.js`
-- [ ] Import existing `ItemDAO` from `dao/ItemDAO.js` 
-- [ ] Implement controller methods that wrap DAO operations:
-  - [ ] `createItem(req, res)` - Validate input, call ItemDAO.createItem, return formatted response
-  - [ ] `listItems(req, res)` - Handle query parameters, call ItemDAO.getItemsByPropertyId
-  - [ ] `getItem(req, res)` - Call ItemDAO.getItemById with validation
-  - [ ] `updateItemLocation(req, res)` - Call ItemDAO.updateItemLocation
-  - [ ] `deleteItem(req, res)` - Call ItemDAO.deleteItem with confirmation
-- [ ] Add proper HTTP status codes (200, 201, 400, 404, 500)
-- [ ] Add error handling middleware integration
-- [ ] Use same validation pattern as PropertyController (Joi schemas)
-- [ ] **Root Cause**: Controller layer missing - DAO exists but no business logic layer to expose it
+- [x] **Files to modify**: `controllers/ItemController.js` (CREATE NEW FILE)
+- [x] Create `controllers/ItemController.js` following the same pattern as `PropertyController.js`
+- [x] Import existing `ItemDAO` from `dao/ItemDAO.js` 
+- [x] Implement controller methods that wrap DAO operations:
+  - [x] `createItem(req, res)` - Validate input, call ItemDAO.createItem, return formatted response
+  - [x] `listItems(req, res)` - Handle query parameters, call ItemDAO.getItemsByPropertyId
+  - [x] `getItem(req, res)` - Call ItemDAO.getItemById with validation
+  - [x] `updateItemLocation(req, res)` - Call ItemDAO.updateItemLocation
+  - [x] `deleteItem(req, res)` - Call ItemDAO.deleteItem with confirmation
+- [x] Add proper HTTP status codes (200, 201, 400, 404, 500)
+- [x] Add error handling middleware integration
+- [x] Use same validation pattern as PropertyController (Joi schemas)
+- [x] **Root Cause**: Controller layer missing - DAO exists but no business logic layer to expose it
 
 ### 11. Create Item Management API Routes
 **Story Points**: 1  
