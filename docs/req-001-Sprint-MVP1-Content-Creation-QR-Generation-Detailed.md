@@ -135,16 +135,16 @@
 **Story Points**: 1  
 **Context**: Expose property management functionality via REST API
 
-- [ ] Create `routes/api/properties.js` with RESTful endpoints:
-  - [ ] `POST /api/properties` - Create new property
-  - [ ] `GET /api/properties` - List user's properties
-  - [ ] `GET /api/properties/:id` - Get property details
-  - [ ] `PUT /api/properties/:id` - Update property
-  - [ ] `DELETE /api/properties/:id` - Delete property
-- [ ] Apply authentication middleware (demo user)
-- [ ] Apply validation middleware
-- [ ] Add proper CORS configuration
-- [ ] Test all endpoints with Postman or curl
+- [x] Create `routes/api/properties.js` with RESTful endpoints:
+  - [x] `POST /api/properties` - Create new property
+  - [x] `GET /api/properties` - List user's properties
+  - [x] `GET /api/properties/:id` - Get property details
+  - [x] `PUT /api/properties/:id` - Update property
+  - [x] `DELETE /api/properties/:id` - Delete property
+- [x] Apply authentication middleware (demo user)
+- [x] Apply validation middleware
+- [x] Add proper CORS configuration
+- [x] Test all endpoints with Postman or curl
 
 ### 9. Implement Item Management Data Access Layer
 **Story Points**: 1  
