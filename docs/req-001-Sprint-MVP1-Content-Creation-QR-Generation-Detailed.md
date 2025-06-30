@@ -957,12 +957,12 @@
 **Story Points**: 1  
 **Context**: Ensure all backend services work together seamlessly
 
-- [ ] Test property → item → QR code creation workflow
-- [ ] Verify data integrity across all operations
-- [ ] Test cascade operations (property deletion affects items)
-- [ ] Validate foreign key relationships
-- [ ] Test error propagation between services
-- [ ] Verify demo user isolation works correctly
+- [x] Test property → item → QR code creation workflow
+- [x] Verify data integrity across all operations
+- [x] Test cascade operations (property deletion affects items)
+- [x] Validate foreign key relationships
+- [x] Test error propagation between services
+- [x] Verify demo user isolation works correctly
 
 ### 32. Integrate Frontend with Backend APIs
 **Story Points**: 1  
