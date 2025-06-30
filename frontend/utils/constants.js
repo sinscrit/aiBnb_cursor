@@ -3,7 +3,8 @@ const isDevelopment = process.env.NODE_ENV === 'development';
 const isProduction = process.env.NODE_ENV === 'production';
 
 // API Base URLs - configurable by environment
-export const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000/api';
+// Using Next.js proxy to avoid CORS issues and leverage the rewrite rule in next.config.js
+export const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3000/api';
 
 // API Endpoints
 export const API_ENDPOINTS = {

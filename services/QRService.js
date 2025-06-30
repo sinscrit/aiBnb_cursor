@@ -6,22 +6,22 @@
 const QRCode = require('qrcode');
 const { v4: uuidv4 } = require('uuid');
 
-/**
+  /**
  * Generate a unique UUID for QR codes
  * @returns {string} Unique QR code identifier
- */
+   */
 const generateUniqueCode = () => {
-  return uuidv4();
+    return uuidv4();
 };
 
-/**
+  /**
  * Generate QR code image for an item
  * @param {string} itemId - Item UUID to generate QR code for
  * @param {Object} options - QR code generation options
  * @returns {Promise<Object>} Result with QR code data or error
- */
+   */
 const createQRCode = async (itemId, options = {}) => {
-  try {
+    try {
     if (!itemId) {
       return {
         success: false,
@@ -29,33 +29,33 @@ const createQRCode = async (itemId, options = {}) => {
       };
     }
 
-    // Generate unique QR identifier
+      // Generate unique QR identifier
     const qrId = generateUniqueCode();
-
+      
     // Create content URL that the QR code will point to
     const contentUrl = getQRCodeURL(qrId);
-
+      
     // Configure QR code generation options
-    const qrOptions = {
+      const qrOptions = {
       errorCorrectionLevel: options.errorCorrectionLevel || 'M', // Medium error correction
-      type: 'image/png',
-      quality: 0.92,
-      margin: 1,
-      color: {
+        type: 'image/png',
+        quality: 0.92,
+        margin: 1,
+        color: {
         dark: options.darkColor || '#000000',   // QR code color
         light: options.lightColor || '#FFFFFF'  // Background color
-      },
+        },
       width: options.width || 256,  // Default size 256x256
-      ...options
-    };
+        ...options
+      };
 
     // Generate QR code as data URL (base64 encoded PNG)
-    const qrCodeDataURL = await QRCode.toDataURL(contentUrl, qrOptions);
-
+      const qrCodeDataURL = await QRCode.toDataURL(contentUrl, qrOptions);
+      
     // Generate QR code as buffer for file download
-    const qrCodeBuffer = await QRCode.toBuffer(contentUrl, qrOptions);
+      const qrCodeBuffer = await QRCode.toBuffer(contentUrl, qrOptions);
 
-    return {
+      return {
       success: true,
       qr_id: qrId,
       item_id: itemId,
@@ -65,23 +65,23 @@ const createQRCode = async (itemId, options = {}) => {
       generation_options: qrOptions,
       size: `${qrOptions.width}x${qrOptions.width}`,
       format: 'PNG'
-    };
+      };
 
-  } catch (error) {
+    } catch (error) {
     return {
       success: false,
       error: `QR code generation failed: ${error.message}`
     };
-  }
+    }
 };
 
-/**
+  /**
  * Validate QR code format and data
- * @param {string} qrData - QR code data to validate
+   * @param {string} qrData - QR code data to validate
  * @returns {Object} Validation result
- */
+   */
 const validateQRFormat = (qrData) => {
-  try {
+    try {
     if (!qrData || typeof qrData !== 'string') {
       return {
         isValid: false,
@@ -97,7 +97,7 @@ const validateQRFormat = (qrData) => {
         isValid: false,
         error: 'QR data does not match expected content URL format'
       };
-    }
+  }
 
     // Extract QR ID from URL
     const qrIdMatch = qrData.match(/\/content\/([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})$/i);
@@ -115,15 +115,15 @@ const validateQRFormat = (qrData) => {
       message: 'QR code format is valid'
     };
 
-  } catch (error) {
+    } catch (error) {
     return {
       isValid: false,
       error: `QR validation failed: ${error.message}`
     };
-  }
+    }
 };
 
-/**
+  /**
  * Generate content page URL for a QR code
  * @param {string} qrId - QR code identifier
  * @returns {string} Full URL to content page
@@ -134,18 +134,18 @@ const getQRCodeURL = (qrId) => {
   return `${baseUrl}/content/${qrId}`;
 };
 
-/**
- * Extract QR ID from content URL
+  /**
+   * Extract QR ID from content URL
  * @param {string} contentUrl - Full content URL
- * @returns {string|null} QR ID or null if invalid
- */
+   * @returns {string|null} QR ID or null if invalid
+   */
 const extractQRIdFromURL = (contentUrl) => {
-  try {
+    try {
     const validation = validateQRFormat(contentUrl);
     return validation.isValid ? validation.qr_id : null;
-  } catch (error) {
-    return null;
-  }
+    } catch (error) {
+      return null;
+    }
 };
 
 /**

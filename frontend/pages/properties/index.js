@@ -41,10 +41,10 @@ const PropertiesPage = () => {
       const response = await apiService.properties.delete(propertyId);
       const data = apiHelpers.extractData(response);
 
-      // Remove the deleted property from the list
+        // Remove the deleted property from the list
       setProperties(prev => prev.filter(property => property.property_id !== propertyId));
-      
-      // Show success message
+        
+        // Show success message
       alert(`Property "${data.deleted_property?.name || 'Property'}" was successfully deleted.`);
     } catch (error) {
       console.error('Error deleting property:', error);

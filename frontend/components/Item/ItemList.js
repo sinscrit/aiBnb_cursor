@@ -83,7 +83,7 @@ const ItemList = ({ items = [], properties = [], loading = false, onDeleteItem, 
     const total = items.length;
     const withQR = items.filter(item => (item.qr_count || 0) > 0).length;
     const withoutQR = total - withQR;
-    
+
     return { total, withQR, withoutQR };
   };
 
@@ -150,13 +150,13 @@ const ItemList = ({ items = [], properties = [], loading = false, onDeleteItem, 
                 Manage items and generate QR codes for instructions
               </p>
               <div className="stats-summary">
-                <span className="stat-item">
+              <span className="stat-item">
                   <span className="stat-number">{stats.withQR}</span> with QR codes
-                </span>
-                <span className="stat-separator">•</span>
-                <span className="stat-item">
+              </span>
+              <span className="stat-separator">•</span>
+              <span className="stat-item">
                   <span className="stat-number">{stats.withoutQR}</span> without QR codes
-                </span>
+              </span>
               </div>
             </div>
           )}

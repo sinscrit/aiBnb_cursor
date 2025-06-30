@@ -95,7 +95,7 @@ const CreateItemPage = () => {
   const selectedProperty = getSelectedProperty();
 
   if (error) {
-    return (
+  return (
       <DashboardLayout>
         <div className="error-container">
           <div className="error-content">
@@ -200,7 +200,7 @@ const CreateItemPage = () => {
             <div className="loading-spinner"></div>
             <p className="loading-text">Loading properties...</p>
           </div>
-        </div>
+              </div>
 
         <style jsx>{`
           .loading-container {
@@ -350,7 +350,7 @@ const CreateItemPage = () => {
               <p className="page-subtitle">
                 Add a new item to generate QR codes and manage guest instructions
               </p>
-            </div>
+          </div>
             <div className="header-actions">
               <button
                 onClick={handleCancel}
@@ -373,8 +373,8 @@ const CreateItemPage = () => {
               >
                 Change Property
               </button>
-            </div>
-          )}
+          </div>
+        )}
         </div>
 
         <div className="page-content">

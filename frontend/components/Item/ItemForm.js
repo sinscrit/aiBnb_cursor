@@ -132,7 +132,7 @@ const ItemForm = ({
         const urlRegex = /^https?:\/\/.+/;
         if (!urlRegex.test(formData.media_url)) {
           newErrors.media_url = 'Please enter a valid PDF URL';
-        }
+      }
       }
     }
 
@@ -157,10 +157,10 @@ const ItemForm = ({
         }
       }));
     } else {
-      setFormData(prev => ({
-        ...prev,
-        [name]: value
-      }));
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
     }
 
     // Clear error when user starts typing
@@ -280,7 +280,7 @@ const ItemForm = ({
       </div>
 
       <form onSubmit={handleSubmit} className="form">
-        <div className="form-grid">
+          <div className="form-grid">
           <div className="form-group">
             <label htmlFor="name" className="form-label">
               Item Name <span className="required">*</span>
@@ -300,48 +300,48 @@ const ItemForm = ({
             )}
           </div>
 
-          <div className="form-group">
-            <label htmlFor="property_id" className="form-label">
-              Property <span className="required">*</span>
-            </label>
-            <select
-              id="property_id"
-              name="property_id"
-              value={formData.property_id}
-              onChange={handleInputChange}
-              className={`form-select ${errors.property_id ? 'error' : ''}`}
-              disabled={isSubmitting || loading}
-            >
-              <option value="">Select a property...</option>
-              {properties.map(property => (
-                <option key={property.id} value={property.id}>
-                  {property.name}
-                </option>
-              ))}
-            </select>
-            {errors.property_id && (
-              <span className="form-error">{errors.property_id}</span>
-            )}
+            <div className="form-group">
+              <label htmlFor="property_id" className="form-label">
+                Property <span className="required">*</span>
+              </label>
+              <select
+                id="property_id"
+                name="property_id"
+                value={formData.property_id}
+                onChange={handleInputChange}
+                className={`form-select ${errors.property_id ? 'error' : ''}`}
+                disabled={isSubmitting || loading}
+              >
+                <option value="">Select a property...</option>
+                {properties.map(property => (
+                  <option key={property.id} value={property.id}>
+                    {property.name}
+                  </option>
+                ))}
+              </select>
+              {errors.property_id && (
+                <span className="form-error">{errors.property_id}</span>
+              )}
+            </div>
           </div>
-        </div>
 
-        <div className="form-group">
-          <label htmlFor="description" className="form-label">
-            Description
-          </label>
-          <textarea
-            id="description"
-            name="description"
-            value={formData.description}
-            onChange={handleInputChange}
+          <div className="form-group">
+            <label htmlFor="description" className="form-label">
+              Description
+            </label>
+            <textarea
+              id="description"
+              name="description"
+              value={formData.description}
+              onChange={handleInputChange}
             placeholder="Describe what this item is and how guests should use it..."
             rows="3"
             className="form-textarea"
-            disabled={isSubmitting || loading}
-          />
-          {errors.description && (
-            <span className="form-error">{errors.description}</span>
-          )}
+              disabled={isSubmitting || loading}
+            />
+            {errors.description && (
+              <span className="form-error">{errors.description}</span>
+            )}
         </div>
 
         <div className="form-grid">
@@ -364,7 +364,7 @@ const ItemForm = ({
               ))}
             </select>
           </div>
-
+          
           <div className="form-group">
             <label htmlFor="location" className="form-label">
               Location
@@ -393,7 +393,7 @@ const ItemForm = ({
 
         <div className="form-section">
           <h3 className="section-title">Instructions & Media</h3>
-          
+
           <div className="form-grid">
             <div className="form-group">
               <label htmlFor="media_type" className="form-label">

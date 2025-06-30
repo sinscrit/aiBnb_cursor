@@ -76,13 +76,13 @@ const ItemCard = ({ item, onDelete, onGenerateQR }) => {
           <div className="item-location">
             <span className="location-icon">📍</span>
             <span className="location-text">{item.location || 'No location specified'}</span>
-          </div>
+            </div>
           {item.property && (
             <div className="property-ref">
               <span className="property-icon">🏠</span>
               <span className="property-text">{item.property.name}</span>
-            </div>
-          )}
+              </div>
+            )}
         </div>
         <div className="item-stats">
           <div className="stat">
@@ -109,9 +109,9 @@ const ItemCard = ({ item, onDelete, onGenerateQR }) => {
                  item.media_type === 'image' ? 'Image Guide' : 
                  'Instructions Available'}
               </span>
-            </div>
-          )}
-          
+          </div>
+        )}
+
           {item.metadata?.difficulty && (
             <div className="detail-item">
               <span className="detail-icon">📊</span>
@@ -122,7 +122,7 @@ const ItemCard = ({ item, onDelete, onGenerateQR }) => {
           )}
 
           {item.metadata?.duration && (
-            <div className="detail-item">
+          <div className="detail-item">
               <span className="detail-icon">⏱️</span>
               <span className="detail-text">
                 Duration: {item.metadata.duration}

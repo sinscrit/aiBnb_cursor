@@ -13,8 +13,8 @@ const apiClient = axios.create({
 // Request interceptor to add authentication headers
 apiClient.interceptors.request.use(
   (config) => {
-    // Add demo user authentication token
-    config.headers.Authorization = 'Demo demo-user-token';
+    // Add demo user authentication header (matches backend expectation)
+    config.headers['X-Demo-User-ID'] = '550e8400-e29b-41d4-a716-446655440000';
     
     // Log request for debugging (only in development)
     if (process.env.NODE_ENV === 'development') {

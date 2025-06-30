@@ -192,7 +192,7 @@ const getQRCodesByItemId = async (itemId) => {
   try {
     // Get the Supabase client
     const supabase = SupabaseService.getSupabaseClient();
-    
+
     if (!itemId) {
       return {
         success: false,
@@ -285,7 +285,7 @@ const updateQRStatus = async (qrId, status) => {
     // Update QR code status
     const { data: updatedQR, error: updateError } = await supabase
       .from('qr_codes')
-      .update({ 
+      .update({
         status: status,
         updated_at: new Date().toISOString()
       })
@@ -314,7 +314,7 @@ const updateQRStatus = async (qrId, status) => {
       success: false,
       error: `Failed to update QR status: ${error.message}`
     };
-  }
+    }
 };
 
 /**
@@ -414,7 +414,7 @@ const incrementScanCount = async (qrId) => {
     // Update with incremented count
     const { data: updatedQR, error: updateError } = await supabase
       .from('qr_codes')
-      .update({ 
+      .update({
         scan_count: newScanCount,
         last_scanned: new Date().toISOString(),
         updated_at: new Date().toISOString()
