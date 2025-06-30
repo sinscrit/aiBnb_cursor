@@ -5,8 +5,11 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
+import Head from 'next/head';
 import DashboardLayout from '../../../components/Layout/DashboardLayout';
 import ItemForm from '../../../components/Item/ItemForm';
+import { apiService, apiHelpers } from '../../../utils/api';
+import { SUCCESS_MESSAGES, ERROR_MESSAGES } from '../../../utils/constants';
 
 const EditItemPage = () => {
   const router = useRouter();
@@ -26,49 +29,21 @@ const EditItemPage = () => {
       setLoading(true);
       setError(null);
 
-      // Fetch properties first
-      const propertiesResponse = await fetch('http://localhost:3001/api/properties', {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
+      // Fetch properties and item details in parallel
+      const [propertiesResponse, itemResponse] = await Promise.all([
+        apiService.properties.getAll(),
+        apiService.items.getById(id)
+      ]);
 
-      if (!propertiesResponse.ok) {
-        throw new Error(`Failed to fetch properties: ${propertiesResponse.status}`);
-      }
+      const propertiesResult = apiHelpers.extractData(propertiesResponse);
+      const itemResult = apiHelpers.extractData(itemResponse);
 
-      const propertiesData = await propertiesResponse.json();
-      if (!propertiesData.success) {
-        throw new Error(propertiesData.message || 'Failed to fetch properties');
-      }
-
-      setProperties(propertiesData.data.properties || []);
-
-      // Fetch item details
-      const itemResponse = await fetch(`http://localhost:3001/api/items/${id}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (!itemResponse.ok) {
-        if (itemResponse.status === 404) {
-          throw new Error('Item not found');
-        }
-        throw new Error(`Failed to fetch item: ${itemResponse.status}`);
-      }
-
-      const itemData = await itemResponse.json();
-      if (!itemData.success) {
-        throw new Error(itemData.message || 'Failed to fetch item');
-      }
-
-      setItem(itemData.data.item);
+      setProperties(propertiesResult.properties || []);
+      setItem(itemResult.item);
     } catch (error) {
       console.error('Error fetching data:', error);
-      setError(error.message);
+      const errorInfo = apiHelpers.handleError(error);
+      setError(errorInfo.message || 'Failed to load item details');
     } finally {
       setLoading(false);
     }
@@ -80,80 +55,27 @@ const EditItemPage = () => {
       setSubmitting(true);
       setError(null);
 
-      const response = await fetch(`http://localhost:3001/api/items/${id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(itemData),
+      const response = await apiService.items.update(id, itemData);
+      const result = apiHelpers.extractData(response);
+      
+      // Success! Navigate back to items list
+      router.push({
+        pathname: '/items',
+        query: { 
+          message: SUCCESS_MESSAGES.ITEM_UPDATED,
+          propertyId: result.item.property_id
+        }
       });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-
-      if (data.success) {
-        // Success! Navigate back to items list
-        const updatedItem = data.data.item;
-        
-        // Show success message
-        alert(`Item "${updatedItem.name}" was successfully updated!`);
-        
-        // Navigate back to items list, filtering by property
-        router.push(`/items?propertyId=${updatedItem.property_id}`);
-      } else {
-        throw new Error(data.message || 'Failed to update item');
-      }
     } catch (error) {
       console.error('Error updating item:', error);
-      setError(error.message);
-    } finally {
+      const errorInfo = apiHelpers.handleError(error);
+      setError(errorInfo.message || 'Failed to update item');
       setSubmitting(false);
     }
   };
 
-  // Delete item
-  const handleDelete = async () => {
-    if (!item) return;
-
-    const confirmed = confirm(
-      `Are you sure you want to delete "${item.name}"? This action cannot be undone.`
-    );
-
-    if (!confirmed) return;
-
-    try {
-      setSubmitting(true);
-      setError(null);
-
-      const response = await fetch(`http://localhost:3001/api/items/${id}`, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-
-      if (data.success) {
-        // Success! Navigate back to items list
-        alert(`Item "${item.name}" was successfully deleted.`);
-        router.push(`/items?propertyId=${item.property_id}`);
-      } else {
-        throw new Error(data.message || 'Failed to delete item');
-      }
-    } catch (error) {
-      console.error('Error deleting item:', error);
-      setError(error.message);
-    } finally {
-      setSubmitting(false);
-    }
+  const handleCancel = () => {
+    router.push('/items');
   };
 
   // Load data on component mount
@@ -164,51 +86,51 @@ const EditItemPage = () => {
   // Get property name for breadcrumbs
   const property = item && properties.find(p => p.id === item.property_id);
 
-  // Loading state
   if (loading) {
     return (
-      <DashboardLayout title="Loading...">
-        <div className="loading-container">
-          <div className="loading-content">
+      <>
+        <Head>
+          <title>Edit Item - aiBnb Management</title>
+        </Head>
+        
+        <DashboardLayout>
+          <div className="loading-container">
             <div className="loading-spinner"></div>
-            <p className="loading-text">Loading item details...</p>
+            <p>Loading item...</p>
           </div>
-        </div>
 
-        <style jsx>{`
-          .loading-container {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 400px;
-          }
-
-          .loading-content {
-            text-align: center;
-          }
-
-          .loading-spinner {
-            width: 2rem;
-            height: 2rem;
-            border: 2px solid #e5e7eb;
-            border-top: 2px solid #3b82f6;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 1rem auto;
-          }
-
-          .loading-text {
-            color: #6b7280;
-            margin: 0;
-          }
-
-          @keyframes spin {
-            to {
-              transform: rotate(360deg);
+          <style jsx>{`
+            .loading-container {
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+              justify-content: center;
+              padding: 60px 20px;
+              text-align: center;
             }
-          }
-        `}</style>
-      </DashboardLayout>
+
+            .loading-spinner {
+              width: 40px;
+              height: 40px;
+              border: 4px solid #f3f4f6;
+              border-top: 4px solid #3b82f6;
+              border-radius: 50%;
+              animation: spin 1s linear infinite;
+              margin-bottom: 16px;
+            }
+
+            @keyframes spin {
+              0% { transform: rotate(0deg); }
+              100% { transform: rotate(360deg); }
+            }
+
+            .loading-container p {
+              color: #6b7280;
+              margin: 0;
+            }
+          `}</style>
+        </DashboardLayout>
+      </>
     );
   }
 

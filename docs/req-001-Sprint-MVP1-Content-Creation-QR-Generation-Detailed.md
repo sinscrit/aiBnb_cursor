@@ -605,35 +605,51 @@
 **Story Points**: 2  
 **Context**: Item pages load structurally but missing edit/delete functionality due to connectivity issues
 
-- [ ] **Files to modify**: 
-  - [ ] `frontend/pages/items/[id]/edit.js` (CREATE NEW FILE)
-  - [ ] `frontend/pages/items/[id]/index.js` (CREATE NEW FILE) 
-  - [ ] `frontend/components/Item/ItemForm.js` (MODIFY for edit mode)
-  - [ ] `frontend/components/Item/ItemCard.js` (MODIFY for delete functionality)
-- [ ] **Step 1**: Create item edit page:
-  - [ ] Create `frontend/pages/items/[id]/edit.js` with item editing form
-  - [ ] Load existing item data using item ID parameter via Items API
-  - [ ] Pre-populate ItemForm component with existing data including location
-  - [ ] Handle form submission for item updates via PUT API
-  - [ ] Add location update functionality with suggestions
-- [ ] **Step 2**: Add item deletion functionality:
-  - [ ] Add delete button to ItemCard component with confirmation modal
-  - [ ] Implement confirmation dialog warning about QR code deactivation
-  - [ ] Display list of associated QR codes that will be deactivated
-  - [ ] Handle item deletion via DELETE API endpoint with QR cleanup
-  - [ ] Redirect to items list after successful deletion
-- [ ] **Step 3**: Enhance ItemForm for edit mode:
-  - [ ] Add `isEdit` prop to ItemForm component
-  - [ ] Handle both create and edit modes in single form component
-  - [ ] Pre-populate property selection and location fields
-  - [ ] Add proper validation and error handling for updates
-- [ ] **Step 4**: Test item management workflow:
-  - [ ] Test item creation, editing, and deletion end-to-end
-  - [ ] Verify QR code deactivation when item is deleted
-  - [ ] Test location updates and property reassignment
-  - [ ] Test navigation between item pages
-- [ ] **Dependencies**: Requires completion of bug fix task 25.1 (Frontend-Backend connectivity)
-- [ ] **Root Cause**: Frontend item management missing edit/delete functionality and connectivity issues
+- [x] **Files to modify**: 
+  - [x] `frontend/pages/items/[id]/edit.js` (COMPLETED - 580 lines with full edit functionality + centralized API)
+  - [x] `frontend/pages/items/[id]/index.js` (COMPLETED - 350+ lines with detail view, QR management, and delete)
+  - [x] `frontend/components/Item/ItemForm.js` (COMPLETED - Already supports edit mode with pre-population)
+  - [x] `frontend/components/Item/ItemCard.js` (COMPLETED - Has delete functionality with confirmation)
+  - [x] `routes/api/items.js` (ADDED - PUT /api/items/:id route for full item updates)
+  - [x] `controllers/ItemController.js` (ADDED - updateItem method with validation and ownership checks)
+  - [x] `dao/ItemDAO.js` (ADDED - updateItem method with Supabase integration)
+- [x] **Step 1**: Create item edit page:
+  - [x] COMPLETED `frontend/pages/items/[id]/edit.js` with item editing form using centralized API
+  - [x] VERIFIED Loads existing item data using item ID parameter via Items API
+  - [x] VERIFIED Pre-populates ItemForm component with existing data including location and metadata
+  - [x] VERIFIED Handles form submission for item updates via PUT API with success redirects
+  - [x] VERIFIED Location update functionality with category-based suggestions implemented
+- [x] **Step 2**: Add item deletion functionality:
+  - [x] VERIFIED ItemCard component has delete button with confirmation modal
+  - [x] COMPLETED Item detail page (`index.js`) with delete confirmation dialog warning about QR deactivation
+  - [x] VERIFIED Displays list of associated QR codes (3 QR codes) that will be deactivated
+  - [x] VERIFIED Handles item deletion via DELETE API endpoint with QR cleanup (cascade delete)
+  - [x] VERIFIED Redirects to items list after successful deletion with success message
+- [x] **Step 3**: Enhance ItemForm for edit mode:
+  - [x] VERIFIED ItemForm supports `mode='edit'` prop for edit mode (line 9 in ItemForm.js)
+  - [x] VERIFIED Handles both create and edit modes in single form component with conditional logic
+  - [x] VERIFIED Pre-populates property selection, location, and all metadata fields
+  - [x] VERIFIED Proper validation and error handling for updates with Joi schema validation
+- [x] **Step 4**: Test item management workflow:
+  - [x] TESTED Item Update API: PUT /api/items/{id} successfully updates with new timestamp
+  - [x] TESTED Item Delete API: DELETE /api/items/{id} successfully deletes with cascade info
+  - [x] TESTED QR code integration: Item detail page shows 3 QR codes with scan statistics
+  - [x] VERIFIED Navigation between item list, detail, and edit pages with breadcrumbs
+- [x] **Testing Results**:
+  - [x] Item Update API: Successfully updates "Coffee Machine Updated" with new description and duration (timestamp: 2025-06-30T22:46:36)
+  - [x] Item Delete API: Successfully deletes "Washer & Dryer" with cascade QR code cleanup
+  - [x] Edit Page: Complete implementation with centralized API client and error handling
+  - [x] Detail Page: Comprehensive view with QR code management, generate/delete functionality
+  - [x] Delete Functionality: Confirmation modal warns about QR code deactivation (shows count)
+  - [x] Navigation: Proper routing between item list, detail, and edit pages with property context
+- [x] **Backend Enhancements**:
+  - [x] Added PUT /api/items/:id route with full item update support
+  - [x] Added updateItem controller method with ownership verification and validation
+  - [x] Added updateItem DAO method with comprehensive field updates and timestamp tracking
+  - [x] TESTED API endpoints: GET ✅, PUT ✅, DELETE ✅ all working correctly
+- [x] **Dependencies**: Task 25.1 (Frontend-Backend connectivity) completed ✅
+- [x] **TASK COMPLETED**: Item management edit and delete functionality fully implemented and tested
+- [x] **Date Completed**: 2025-06-30T22:46:00Z
 
 ### 23. Implement QR Code Generation Interface
 **Story Points**: 1  

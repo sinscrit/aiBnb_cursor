@@ -188,6 +188,90 @@ const getItemById = async (itemId) => {
 };
 
 /**
+ * Update an item
+ * @param {string} itemId - Item UUID
+ * @param {Object} updateData - Data to update
+ * @returns {Promise<Object>} Result object with success flag and updated item
+ */
+const updateItem = async (itemId, updateData) => {
+  try {
+    // Get the Supabase client
+    const supabase = SupabaseService.getSupabaseClient();
+    
+    if (!itemId) {
+      return {
+        success: false,
+        error: 'Item ID is required'
+      };
+    }
+
+    if (!updateData || Object.keys(updateData).length === 0) {
+      return {
+        success: false,
+        error: 'Update data is required'
+      };
+    }
+
+    // Prepare update data
+    const itemToUpdate = {};
+    
+    if (updateData.name !== undefined) {
+      itemToUpdate.name = updateData.name.trim();
+    }
+    if (updateData.description !== undefined) {
+      itemToUpdate.description = updateData.description || null;
+    }
+    if (updateData.location !== undefined) {
+      itemToUpdate.location = updateData.location || null;
+    }
+    if (updateData.media_url !== undefined) {
+      itemToUpdate.media_url = updateData.media_url || null;
+    }
+    if (updateData.media_type !== undefined) {
+      itemToUpdate.media_type = updateData.media_type || null;
+    }
+    if (updateData.metadata !== undefined) {
+      itemToUpdate.metadata = updateData.metadata || {};
+    }
+
+    // Add updated timestamp
+    itemToUpdate.updated_at = new Date().toISOString();
+
+    // Update the item
+    const { data: updatedItem, error: updateError } = await supabase
+      .from('items')
+      .update(itemToUpdate)
+      .eq('id', itemId)
+      .select()
+      .single();
+
+    if (updateError) {
+      if (updateError.code === 'PGRST116') {
+        return {
+          success: false,
+          error: 'Item not found'
+        };
+      }
+      return {
+        success: false,
+        error: `Failed to update item: ${updateError.message}`
+      };
+    }
+
+    return {
+      success: true,
+      item: updatedItem
+    };
+
+  } catch (error) {
+    return {
+      success: false,
+      error: `Update item operation failed: ${error.message}`
+    };
+  }
+};
+
+/**
  * Update item location
  * @param {string} itemId - Item UUID
  * @param {string} location - New location within property
@@ -307,6 +391,7 @@ module.exports = {
   createItem,
   getItemsByPropertyId,
   getItemById,
+  updateItem,
   updateItemLocation,
   deleteItem
 };

@@ -265,6 +265,86 @@ const getItem = async (req, res) => {
 };
 
 /**
+ * Update an item
+ */
+const updateItem = async (req, res) => {
+  try {
+    const { error, value } = itemUpdateSchema.validate(req.body);
+    if (error) {
+      return res.status(400).json({
+        success: false,
+        error: 'Validation Error',
+        message: error.details[0].message
+      });
+    }
+
+    const itemId = req.params.id;
+    const userId = req.getUserId();
+    
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        error: 'Authentication Error',
+        message: 'User ID not found in request'
+      });
+    }
+
+    // First, get the item to verify ownership
+    const itemResult = await ItemDAO.getItemById(itemId);
+    if (!itemResult.success) {
+      if (itemResult.error === 'Item not found') {
+        return res.status(404).json({
+          success: false,
+          error: 'Not Found',
+          message: 'Item not found'
+        });
+      }
+      return res.status(500).json({
+        success: false,
+        error: 'Database Error',
+        message: 'Failed to retrieve item'
+      });
+    }
+
+    // Verify property ownership
+    const propertyResult = await PropertyDAO.getPropertyById(itemResult.item.property_id);
+    if (!propertyResult.success || propertyResult.property.user_id !== userId) {
+      return res.status(403).json({
+        success: false,
+        error: 'Forbidden',
+        message: 'You do not have permission to update this item'
+      });
+    }
+
+    // Update the item
+    const updateResult = await ItemDAO.updateItem(itemId, value);
+
+    if (updateResult.success) {
+      return res.status(200).json({
+        success: true,
+        message: 'Item updated successfully',
+        data: { 
+          item: updateResult.item
+        }
+      });
+    } else {
+      return res.status(500).json({
+        success: false,
+        error: 'Database Error',
+        message: updateResult.error
+      });
+    }
+
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      error: 'Internal Server Error',
+      message: 'An unexpected error occurred'
+    });
+  }
+};
+
+/**
  * Update item location
  */
 const updateItemLocation = async (req, res) => {
@@ -436,6 +516,7 @@ module.exports = {
   createItem,
   listItems,
   getItem,
+  updateItem,
   updateItemLocation,
   deleteItem
 }; 

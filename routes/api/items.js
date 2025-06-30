@@ -33,6 +33,13 @@ router.get('/', ItemController.listItems);
 router.get('/:id', ItemController.getItem);
 
 /**
+ * @route   PUT /api/items/:id
+ * @desc    Update an item
+ * @access  Private (Demo User, Property Owner only)
+ */
+router.put('/:id', ItemController.updateItem);
+
+/**
  * @route   PUT /api/items/:id/location
  * @desc    Update item location
  * @access  Private (Demo User, Property Owner only)
