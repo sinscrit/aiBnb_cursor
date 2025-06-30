@@ -1049,42 +1049,42 @@
 **Story Points**: 1  
 **Context**: Validate end-to-end item operations (Stories 3.1.1, 3.1.3, 3.2.3)
 
-- [ ] Test item creation with location assignment
-- [ ] Verify items appear in property listings
-- [ ] Test item location updates
-- [ ] Test item deletion with QR code cleanup
-- [ ] Verify item-property relationships
-- [ ] Validate all acceptance criteria are met
+- [x] Test item creation with location assignment
+- [x] Verify items appear in property listings
+- [x] Test item location updates
+- [x] Test item deletion with QR code cleanup
+- [x] Verify item-property relationships
+- [x] Validate all acceptance criteria are met
 
 ### 34.1. **BUG FIX**: Unblock Item Management Workflow Testing
 **Story Points**: 1  
 **Context**: Item workflow testing blocked by frontend connectivity and missing edit/delete functionality
 
-- [ ] **Files to modify**: 
-  - [ ] `frontend/pages/items/` (VERIFY from tasks 22.1, 25.1)
-  - [ ] Test workflows end-to-end
-- [ ] **Step 1**: Test item creation workflow:
-  - [ ] Test item creation form loads with property selection
-  - [ ] Test item creation with location assignment and suggestions
-  - [ ] Verify items appear in property listings immediately
-  - [ ] Test item creation validation works correctly
-- [ ] **Step 2**: Test item editing workflow:
-  - [ ] Test item edit page loads with pre-populated data
-  - [ ] Test item location updates and property reassignment
-  - [ ] Test item metadata and description updates
-  - [ ] Verify item edit validation works
-- [ ] **Step 3**: Test item deletion workflow:
-  - [ ] Test item deletion confirmation with QR code warning
-  - [ ] Test item deletion triggers QR code cleanup/deactivation
-  - [ ] Verify item deletion removes from property listings
-  - [ ] Test item deletion cleanup works correctly
-- [ ] **Step 4**: Test item-property relationships:
-  - [ ] Test items display correctly within property context
-  - [ ] Test item filtering by property works
-  - [ ] Test item-property relationship integrity
-  - [ ] Verify item count updates in property listings
-- [ ] **Dependencies**: Requires completion of bug fix tasks 22.1, 25.1, 32.1
-- [ ] **Root Cause**: Connectivity and missing edit/delete functionality blocking workflow tests
+- [x] **Files to modify**: 
+  - [x] `frontend/pages/items/` (VERIFY from tasks 22.1, 25.1)
+  - [x] Test workflows end-to-end
+- [x] **Step 1**: Test item creation workflow:
+  - [x] Test item creation form loads with property selection
+  - [x] Test item creation with location assignment and suggestions
+  - [x] Verify items appear in property listings immediately
+  - [x] Test item creation validation works correctly
+- [x] **Step 2**: Test item editing workflow:
+  - [x] Test item edit page loads with pre-populated data
+  - [x] Test item location updates and property reassignment
+  - [x] Test item metadata and description updates
+  - [x] Verify item edit validation works
+- [x] **Step 3**: Test item deletion workflow:
+  - [x] Test item deletion confirmation with QR code warning
+  - [x] Test item deletion triggers QR code cleanup/deactivation
+  - [x] Verify item deletion removes from property listings
+  - [x] Test item deletion cleanup works correctly
+- [x] **Step 4**: Test item-property relationships:
+  - [x] Test items display correctly within property context
+  - [x] Test item filtering by property works
+  - [x] Test item-property relationship integrity
+  - [x] Verify item count updates in property listings
+- [x] **Dependencies**: Requires completion of bug fix tasks 22.1, 25.1, 32.1
+- [x] **Root Cause**: Connectivity and missing edit/delete functionality blocking workflow tests
 
 ### 35. Test Complete QR Code Workflow
 **Story Points**: 1  
