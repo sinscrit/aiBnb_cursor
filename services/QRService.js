@@ -1,178 +1,212 @@
 /**
- * QR Code Service
- * QR Code-Based Instructional System - QR Code Generation and Management
+ * QR Code Service - QR Code Generation and Management
+ * QR Code-Based Instructional System - QR Generation Service Layer
  */
 
 const QRCode = require('qrcode');
 const { v4: uuidv4 } = require('uuid');
 
-class QRService {
-  /**
-   * Generate a unique QR code identifier
-   * @returns {string} Unique UUID for QR code
-   */
-  static generateUniqueCode() {
-    return uuidv4();
-  }
+/**
+ * Generate a unique UUID for QR codes
+ * @returns {string} Unique QR code identifier
+ */
+const generateUniqueCode = () => {
+  return uuidv4();
+};
 
-  /**
-   * Create QR code image for an item
-   * @param {string} itemId - Item UUID
-   * @param {object} options - QR generation options
-   * @returns {Promise<object>} QR code data and image
-   */
-  static async createQRCode(itemId, options = {}) {
-    try {
-      // Generate unique QR identifier
-      const qrId = this.generateUniqueCode();
-      
-      // Create content URL
-      const contentUrl = this.getQRCodeURL(qrId);
-      
-      // QR code generation options
-      const qrOptions = {
-        errorCorrectionLevel: 'M',
-        type: 'image/png',
-        quality: 0.92,
-        margin: 1,
-        width: options.width || 256,
-        color: {
-          dark: '#000000FF',
-          light: '#FFFFFFFF'
-        },
-        ...options
-      };
-
-      // Generate QR code as data URL
-      const qrCodeDataURL = await QRCode.toDataURL(contentUrl, qrOptions);
-      
-      // Generate QR code as buffer for file storage
-      const qrCodeBuffer = await QRCode.toBuffer(contentUrl, qrOptions);
-
+/**
+ * Generate QR code image for an item
+ * @param {string} itemId - Item UUID to generate QR code for
+ * @param {Object} options - QR code generation options
+ * @returns {Promise<Object>} Result with QR code data or error
+ */
+const createQRCode = async (itemId, options = {}) => {
+  try {
+    if (!itemId) {
       return {
-        qrId,
-        itemId,
-        contentUrl,
-        qrCodeDataURL,
-        qrCodeBuffer,
-        options: qrOptions,
-        generatedAt: new Date()
+        success: false,
+        error: 'Item ID is required for QR code generation'
       };
-    } catch (error) {
-      console.error('Error generating QR code:', error);
-      throw new Error('Failed to generate QR code: ' + error.message);
     }
-  }
 
-  /**
-   * Validate QR code format
-   * @param {string} qrData - QR code data to validate
-   * @returns {boolean} True if valid format
-   */
-  static validateQRFormat(qrData) {
-    try {
-      // Check if it's a valid UUID format
-      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-      return uuidRegex.test(qrData);
-    } catch (error) {
-      console.error('Error validating QR format:', error);
-      return false;
-    }
-  }
+    // Generate unique QR identifier
+    const qrId = generateUniqueCode();
 
-  /**
-   * Generate content page URL for QR code
-   * @param {string} qrId - QR code identifier
-   * @returns {string} Content page URL
-   */
-  static getQRCodeURL(qrId) {
-    const baseUrl = process.env.FRONTEND_URL || 'http://localhost:3002';
-    return `${baseUrl}/content/${qrId}`;
-  }
+    // Create content URL that the QR code will point to
+    const contentUrl = getQRCodeURL(qrId);
 
-  /**
-   * Generate QR code for download (high resolution)
-   * @param {string} itemId - Item UUID
-   * @param {object} options - Download options
-   * @returns {Promise<object>} High-resolution QR code data
-   */
-  static async createDownloadableQRCode(itemId, options = {}) {
-    try {
-      const downloadOptions = {
-        width: options.width || 512,
-        margin: options.margin || 2,
-        errorCorrectionLevel: 'H', // High error correction for printing
-        ...options
+    // Configure QR code generation options
+    const qrOptions = {
+      errorCorrectionLevel: options.errorCorrectionLevel || 'M', // Medium error correction
+      type: 'image/png',
+      quality: 0.92,
+      margin: 1,
+      color: {
+        dark: options.darkColor || '#000000',   // QR code color
+        light: options.lightColor || '#FFFFFF'  // Background color
+      },
+      width: options.width || 256,  // Default size 256x256
+      ...options
+    };
+
+    // Generate QR code as data URL (base64 encoded PNG)
+    const qrCodeDataURL = await QRCode.toDataURL(contentUrl, qrOptions);
+
+    // Generate QR code as buffer for file download
+    const qrCodeBuffer = await QRCode.toBuffer(contentUrl, qrOptions);
+
+    return {
+      success: true,
+      qr_id: qrId,
+      item_id: itemId,
+      content_url: contentUrl,
+      qr_code_data_url: qrCodeDataURL,  // For display in browser
+      qr_code_buffer: qrCodeBuffer,     // For file download
+      generation_options: qrOptions,
+      size: `${qrOptions.width}x${qrOptions.width}`,
+      format: 'PNG'
+    };
+
+  } catch (error) {
+    return {
+      success: false,
+      error: `QR code generation failed: ${error.message}`
+    };
+  }
+};
+
+/**
+ * Validate QR code format and data
+ * @param {string} qrData - QR code data to validate
+ * @returns {Object} Validation result
+ */
+const validateQRFormat = (qrData) => {
+  try {
+    if (!qrData || typeof qrData !== 'string') {
+      return {
+        isValid: false,
+        error: 'QR data must be a non-empty string'
       };
-
-      return await this.createQRCode(itemId, downloadOptions);
-    } catch (error) {
-      console.error('Error generating downloadable QR code:', error);
-      throw new Error('Failed to generate downloadable QR code: ' + error.message);
     }
+
+    // Check if it's a valid URL format for our content pages
+    const urlPattern = /^https?:\/\/[^\/]+\/content\/[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i;
+    
+    if (!urlPattern.test(qrData)) {
+      return {
+        isValid: false,
+        error: 'QR data does not match expected content URL format'
+      };
+    }
+
+    // Extract QR ID from URL
+    const qrIdMatch = qrData.match(/\/content\/([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})$/i);
+    if (!qrIdMatch) {
+      return {
+        isValid: false,
+        error: 'Could not extract QR ID from URL'
+      };
+    }
+
+    return {
+      isValid: true,
+      qr_id: qrIdMatch[1],
+      content_url: qrData,
+      message: 'QR code format is valid'
+    };
+
+  } catch (error) {
+    return {
+      isValid: false,
+      error: `QR validation failed: ${error.message}`
+    };
+  }
+};
+
+/**
+ * Generate content page URL for a QR code
+ * @param {string} qrId - QR code identifier
+ * @returns {string} Full URL to content page
+ */
+const getQRCodeURL = (qrId) => {
+  // Use environment variables for base URL or default to localhost
+  const baseUrl = process.env.FRONTEND_BASE_URL || 'http://localhost:3000';
+  return `${baseUrl}/content/${qrId}`;
+};
+
+/**
+ * Extract QR ID from content URL
+ * @param {string} contentUrl - Full content URL
+ * @returns {string|null} QR ID or null if invalid
+ */
+const extractQRIdFromURL = (contentUrl) => {
+  try {
+    const validation = validateQRFormat(contentUrl);
+    return validation.isValid ? validation.qr_id : null;
+  } catch (error) {
+    return null;
+  }
+};
+
+/**
+ * Generate QR code file name for downloads
+ * @param {string} qrId - QR code identifier
+ * @param {string} itemName - Item name for descriptive filename
+ * @returns {string} Filename for QR code download
+ */
+const generateQRFileName = (qrId, itemName = 'item') => {
+  // Sanitize item name for filename
+  const sanitizedName = itemName
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, '_')
+    .replace(/_+/g, '_')
+    .replace(/^_|_$/g, '')
+    .substring(0, 20); // Limit length
+
+  const shortQrId = qrId.substring(0, 8); // First 8 characters of UUID
+  return `qr_${sanitizedName}_${shortQrId}.png`;
+};
+
+/**
+ * Get QR code generation statistics
+ * @param {Array} qrCodes - Array of QR code objects
+ * @returns {Object} Statistics about QR codes
+ */
+const getQRStatistics = (qrCodes) => {
+  if (!Array.isArray(qrCodes)) {
+    return {
+      total: 0,
+      active: 0,
+      inactive: 0,
+      scan_count: 0
+    };
   }
 
-  /**
-   * Create batch QR codes for multiple items
-   * @param {Array<string>} itemIds - Array of item UUIDs
-   * @param {object} options - QR generation options
-   * @returns {Promise<Array<object>>} Array of QR code data
-   */
-  static async createBatchQRCodes(itemIds, options = {}) {
-    try {
-      const qrCodes = [];
-      
-      for (const itemId of itemIds) {
-        const qrCode = await this.createQRCode(itemId, options);
-        qrCodes.push(qrCode);
-      }
+  const stats = qrCodes.reduce((acc, qr) => {
+    acc.total++;
+    if (qr.status === 'active') acc.active++;
+    else acc.inactive++;
+    acc.scan_count += qr.scan_count || 0;
+    return acc;
+  }, {
+    total: 0,
+    active: 0,
+    inactive: 0,
+    scan_count: 0
+  });
 
-      return qrCodes;
-    } catch (error) {
-      console.error('Error generating batch QR codes:', error);
-      throw new Error('Failed to generate batch QR codes: ' + error.message);
-    }
-  }
+  return {
+    ...stats,
+    activity_rate: stats.total > 0 ? (stats.active / stats.total * 100).toFixed(1) : '0.0'
+  };
+};
 
-  /**
-   * Validate content URL format
-   * @param {string} url - URL to validate
-   * @returns {boolean} True if valid content URL
-   */
-  static validateContentURL(url) {
-    try {
-      const urlObj = new URL(url);
-      const pathParts = urlObj.pathname.split('/');
-      
-      // Expected format: /content/{qrId}
-      return pathParts.length === 3 && 
-             pathParts[1] === 'content' && 
-             this.validateQRFormat(pathParts[2]);
-    } catch (error) {
-      return false;
-    }
-  }
-
-  /**
-   * Extract QR ID from content URL
-   * @param {string} url - Content URL
-   * @returns {string|null} QR ID or null if invalid
-   */
-  static extractQRIdFromURL(url) {
-    try {
-      const urlObj = new URL(url);
-      const pathParts = urlObj.pathname.split('/');
-      
-      if (pathParts.length === 3 && pathParts[1] === 'content') {
-        const qrId = pathParts[2];
-        return this.validateQRFormat(qrId) ? qrId : null;
-      }
-      
-      return null;
-    } catch (error) {
-      return null;
-    }
-  }
-}
-
-module.exports = QRService; 
+module.exports = {
+  generateUniqueCode,
+  createQRCode,
+  validateQRFormat,
+  getQRCodeURL,
+  extractQRIdFromURL,
+  generateQRFileName,
+  getQRStatistics
+}; 

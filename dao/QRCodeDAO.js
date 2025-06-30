@@ -1,68 +1,139 @@
 /**
- * QR Code Data Access Object
- * QR Code-Based Instructional System - QR Code Database Operations
+ * QR Code Data Access Object (DAO)
+ * QR Code-Based Instructional System - QR Code Database Layer
  */
 
-const { createClient } = require('@supabase/supabase-js');
-
-// Initialize Supabase client
-const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_KEY
-);
+const SupabaseService = require('../services/SupabaseService');
 
 /**
- * Create QR code mapping for an item
+ * Create a QR code mapping for an item
  * @param {string} itemId - Item UUID
- * @param {string} qrId - QR code identifier
- * @param {object} metadata - Additional QR code data
- * @returns {Promise<object>} Created QR code record
+ * @param {string} qrId - QR code UUID
+ * @param {Object} qrData - QR code data object
+ * @returns {Promise<Object>} Result object with success flag and QR mapping data
  */
-const createQRMapping = async (itemId, qrId, metadata = {}) => {
+const createQRMapping = async (itemId, qrId, qrData) => {
   try {
-    const qrCodeData = {
+    // Get the Supabase client
+    const supabase = SupabaseService.getSupabaseClient();
+    
+    // Validate required fields
+    if (!itemId) {
+      return {
+        success: false,
+        error: 'Item ID is required'
+      };
+    }
+
+    if (!qrId) {
+      return {
+        success: false,
+        error: 'QR ID is required'
+      };
+    }
+
+    // Verify the item exists
+    const { data: itemData, error: itemError } = await supabase
+      .from('items')
+      .select('id, name, property_id')
+      .eq('id', itemId)
+      .single();
+
+    if (itemError || !itemData) {
+      return {
+        success: false,
+        error: 'Item not found'
+      };
+    }
+
+    // Check if QR code already exists for this item
+    const { data: existingQR, error: checkError } = await supabase
+      .from('qr_codes')
+      .select('id')
+      .eq('item_id', itemId)
+      .eq('status', 'active');
+
+    if (checkError) {
+      return {
+        success: false,
+        error: `Error checking existing QR codes: ${checkError.message}`
+      };
+    }
+
+    // Prepare QR code data for database
+    const qrMappingData = {
       item_id: itemId,
       qr_id: qrId,
       status: 'active',
       scan_count: 0,
-      metadata: metadata,
+      last_scanned: null,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
     };
 
-    const { data, error } = await supabase
+    // Insert the QR code mapping
+    const { data: insertedQR, error: insertError } = await supabase
       .from('qr_codes')
-      .insert([qrCodeData])
+      .insert([qrMappingData])
       .select()
       .single();
 
-    if (error) {
-      console.error('Error creating QR mapping:', error);
-      throw error;
+    if (insertError) {
+      return {
+        success: false,
+        error: `Failed to create QR mapping: ${insertError.message}`
+      };
     }
 
-    console.log(`QR mapping created: ${qrId} -> Item ${itemId}`);
-    return data;
+    return {
+      success: true,
+      message: 'QR code mapping created successfully',
+      data: {
+        qr_mapping: insertedQR,
+        item: itemData,
+        existing_qr_count: existingQR ? existingQR.length : 0
+      }
+    };
+
   } catch (error) {
-    console.error('QRCodeDAO.createQRMapping error:', error);
-    throw new Error('Failed to create QR code mapping: ' + error.message);
+    return {
+      success: false,
+      error: `QR mapping creation failed: ${error.message}`
+    };
   }
 };
 
 /**
- * Retrieve item data by QR code identifier
- * @param {string} qrId - QR code identifier
- * @returns {Promise<object|null>} QR code record with item data
+ * Retrieve item data by QR code ID
+ * @param {string} qrId - QR code UUID
+ * @returns {Promise<Object>} Result object with item data or error
  */
 const getQRMappingByQRId = async (qrId) => {
   try {
-    const { data, error } = await supabase
+    // Get the Supabase client
+    const supabase = SupabaseService.getSupabaseClient();
+    
+    if (!qrId) {
+      return {
+        success: false,
+        error: 'QR ID is required'
+      };
+    }
+
+    // Get QR code mapping with item details
+    const { data: qrMapping, error: qrError } = await supabase
       .from('qr_codes')
       .select(`
-        *,
+        id,
+        item_id,
+        qr_id,
+        status,
+        scan_count,
+        last_scanned,
+        created_at,
+        updated_at,
         items (
           id,
-          property_id,
           name,
           description,
           location,
@@ -81,92 +152,140 @@ const getQRMappingByQRId = async (qrId) => {
         )
       `)
       .eq('qr_id', qrId)
-      .eq('status', 'active')
       .single();
 
-    if (error && error.code !== 'PGRST116') { // PGRST116 = not found
-      console.error('Error getting QR mapping:', error);
-      throw error;
+    if (qrError || !qrMapping) {
+      return {
+        success: false,
+        error: 'QR code mapping not found'
+      };
     }
 
-    return data || null;
+    // Update scan count
+    await incrementScanCount(qrId);
+
+    return {
+      success: true,
+      message: 'QR mapping retrieved successfully',
+      data: {
+        qr_code: qrMapping,
+        item: qrMapping.items,
+        property: qrMapping.items?.properties,
+        scan_count: qrMapping.scan_count + 1 // Reflect the increment
+      }
+    };
+
   } catch (error) {
-    console.error('QRCodeDAO.getQRMappingByQRId error:', error);
-    throw new Error('Failed to get QR mapping: ' + error.message);
+    return {
+      success: false,
+      error: `Failed to retrieve QR mapping: ${error.message}`
+    };
   }
 };
 
 /**
  * Get all QR codes for a specific item
  * @param {string} itemId - Item UUID
- * @returns {Promise<Array>} Array of QR code records
+ * @returns {Promise<Object>} Result object with QR codes or error
  */
 const getQRCodesByItemId = async (itemId) => {
   try {
-    const { data, error } = await supabase
+    // Get the Supabase client
+    const supabase = SupabaseService.getSupabaseClient();
+    
+    if (!itemId) {
+      return {
+        success: false,
+        error: 'Item ID is required'
+      };
+    }
+
+    // Get all QR codes for the item
+    const { data: qrCodes, error: qrError } = await supabase
       .from('qr_codes')
-      .select('*')
+      .select(`
+        id,
+        item_id,
+        qr_id,
+        status,
+        scan_count,
+        last_scanned,
+        created_at,
+        updated_at
+      `)
       .eq('item_id', itemId)
       .order('created_at', { ascending: false });
 
-    if (error) {
-      console.error('Error getting QR codes for item:', error);
-      throw error;
+    if (qrError) {
+      return {
+        success: false,
+        error: `Failed to retrieve QR codes: ${qrError.message}`
+      };
     }
 
-    return data || [];
-  } catch (error) {
-    console.error('QRCodeDAO.getQRCodesByItemId error:', error);
-    throw new Error('Failed to get QR codes for item: ' + error.message);
-  }
-};
+    // Get item details
+    const { data: itemData, error: itemError } = await supabase
+      .from('items')
+      .select('id, name, description, location, property_id')
+      .eq('id', itemId)
+      .single();
 
-/**
- * Get all QR codes for a specific property (via items)
- * @param {string} propertyId - Property UUID
- * @returns {Promise<Array>} Array of QR code records with item data
- */
-const getQRCodesByPropertyId = async (propertyId) => {
-  try {
-    const { data, error } = await supabase
-      .from('qr_codes')
-      .select(`
-        *,
-        items (
-          id,
-          name,
-          description,
-          location,
-          media_url,
-          media_type
-        )
-      `)
-      .eq('items.property_id', propertyId)
-      .order('created_at', { ascending: false });
-
-    if (error) {
-      console.error('Error getting QR codes for property:', error);
-      throw error;
+    if (itemError || !itemData) {
+      return {
+        success: false,
+        error: 'Item not found'
+      };
     }
 
-    return data || [];
+    return {
+      success: true,
+      message: `Found ${qrCodes ? qrCodes.length : 0} QR codes for item`,
+      data: {
+        qr_codes: qrCodes || [],
+        item: itemData,
+        count: qrCodes ? qrCodes.length : 0,
+        active_count: qrCodes ? qrCodes.filter(qr => qr.status === 'active').length : 0,
+        total_scans: qrCodes ? qrCodes.reduce((sum, qr) => sum + (qr.scan_count || 0), 0) : 0
+      }
+    };
+
   } catch (error) {
-    console.error('QRCodeDAO.getQRCodesByPropertyId error:', error);
-    throw new Error('Failed to get QR codes for property: ' + error.message);
+    return {
+      success: false,
+      error: `Failed to retrieve QR codes for item: ${error.message}`
+    };
   }
 };
 
 /**
  * Update QR code status
- * @param {string} qrId - QR code identifier
- * @param {string} status - New status (active, inactive, expired)
- * @returns {Promise<object>} Updated QR code record
+ * @param {string} qrId - QR code UUID
+ * @param {string} status - New status ('active' or 'inactive')
+ * @returns {Promise<Object>} Result object with success flag and updated data
  */
 const updateQRStatus = async (qrId, status) => {
   try {
-    const { data, error } = await supabase
+    // Get the Supabase client
+    const supabase = SupabaseService.getSupabaseClient();
+    
+    if (!qrId) {
+      return {
+        success: false,
+        error: 'QR ID is required'
+      };
+    }
+
+    if (!['active', 'inactive'].includes(status)) {
+      return {
+        success: false,
+        error: 'Status must be either "active" or "inactive"'
+      };
+    }
+
+    // Update QR code status
+    const { data: updatedQR, error: updateError } = await supabase
       .from('qr_codes')
-      .update({
+      .update({ 
         status: status,
         updated_at: new Date().toISOString()
       })
@@ -174,203 +293,241 @@ const updateQRStatus = async (qrId, status) => {
       .select()
       .single();
 
-    if (error) {
-      console.error('Error updating QR status:', error);
-      throw error;
+    if (updateError || !updatedQR) {
+      return {
+        success: false,
+        error: 'QR code not found or update failed'
+      };
     }
 
-    console.log(`QR code ${qrId} status updated to: ${status}`);
-    return data;
+    return {
+      success: true,
+      message: `QR code status updated to ${status}`,
+      data: {
+        qr_code: updatedQR,
+        previous_status: updatedQR.status === status ? 'unknown' : (status === 'active' ? 'inactive' : 'active')
+      }
+    };
+
   } catch (error) {
-    console.error('QRCodeDAO.updateQRStatus error:', error);
-    throw new Error('Failed to update QR status: ' + error.message);
+    return {
+      success: false,
+      error: `Failed to update QR status: ${error.message}`
+    };
   }
 };
 
 /**
- * Increment scan count for QR code
- * @param {string} qrId - QR code identifier
- * @returns {Promise<object>} Updated QR code record
+ * Delete QR code mapping
+ * @param {string} qrId - QR code UUID
+ * @returns {Promise<Object>} Result object with success flag and deletion info
+ */
+const deleteQRMapping = async (qrId) => {
+  try {
+    // Get the Supabase client
+    const supabase = SupabaseService.getSupabaseClient();
+    
+    if (!qrId) {
+      return {
+        success: false,
+        error: 'QR ID is required'
+      };
+    }
+
+    // Get QR details before deletion
+    const existingQR = await getQRMappingByQRId(qrId);
+    if (!existingQR.success) {
+      return existingQR;
+    }
+
+    const qrCode = existingQR.data.qr_code;
+
+    // Delete the QR code mapping
+    const { error: deleteError } = await supabase
+      .from('qr_codes')
+      .delete()
+      .eq('qr_id', qrId);
+
+    if (deleteError) {
+      return {
+        success: false,
+        error: `Failed to delete QR mapping: ${deleteError.message}`
+      };
+    }
+
+    return {
+      success: true,
+      message: 'QR code mapping deleted successfully',
+      data: {
+        deleted_qr: {
+          id: qrCode.id,
+          item_id: qrCode.item_id,
+          status: qrCode.status,
+          scan_count: qrCode.scan_count,
+          created_at: qrCode.created_at
+        },
+        item_name: existingQR.data.item?.name || 'Unknown Item'
+      }
+    };
+
+  } catch (error) {
+    return {
+      success: false,
+      error: `QR mapping deletion failed: ${error.message}`
+    };
+  }
+};
+
+/**
+ * Increment scan count for a QR code
+ * @param {string} qrId - QR code UUID
+ * @returns {Promise<Object>} Result object with updated scan count
  */
 const incrementScanCount = async (qrId) => {
   try {
+    // Get the Supabase client
+    const supabase = SupabaseService.getSupabaseClient();
+    
+    if (!qrId) {
+      return {
+        success: false,
+        error: 'QR ID is required'
+      };
+    }
+
     // First get current scan count
-    const { data: currentData, error: getError } = await supabase
+    const { data: currentQR, error: getError } = await supabase
       .from('qr_codes')
       .select('scan_count')
       .eq('qr_id', qrId)
       .single();
 
     if (getError) {
-      console.error('Error getting current scan count:', getError);
-      throw getError;
+      return {
+        success: false,
+        error: `Failed to get current scan count: ${getError.message}`
+      };
     }
 
-    const newScanCount = (currentData.scan_count || 0) + 1;
+    const newScanCount = (currentQR?.scan_count || 0) + 1;
 
     // Update with incremented count
-    const { data, error } = await supabase
+    const { data: updatedQR, error: updateError } = await supabase
       .from('qr_codes')
-      .update({
+      .update({ 
         scan_count: newScanCount,
         last_scanned: new Date().toISOString(),
         updated_at: new Date().toISOString()
       })
       .eq('qr_id', qrId)
-      .select()
-      .single();
-
-    if (error) {
-      console.error('Error incrementing scan count:', error);
-      throw error;
-    }
-
-    console.log(`QR code ${qrId} scan count incremented to: ${newScanCount}`);
-    return data;
-  } catch (error) {
-    console.error('QRCodeDAO.incrementScanCount error:', error);
-    throw new Error('Failed to increment scan count: ' + error.message);
-  }
-};
-
-/**
- * Delete QR code mapping
- * @param {string} qrId - QR code identifier
- * @returns {Promise<object>} Deleted QR code record
- */
-const deleteQRMapping = async (qrId) => {
-  try {
-    // First update status to inactive (soft delete)
-    const { data, error } = await supabase
-      .from('qr_codes')
-      .update({
-        status: 'inactive',
-        updated_at: new Date().toISOString()
-      })
-      .eq('qr_id', qrId)
-      .select()
-      .single();
-
-    if (error) {
-      console.error('Error deleting QR mapping:', error);
-      throw error;
-    }
-
-    console.log(`QR code ${qrId} marked as inactive`);
-    return data;
-  } catch (error) {
-    console.error('QRCodeDAO.deleteQRMapping error:', error);
-    throw new Error('Failed to delete QR mapping: ' + error.message);
-  }
-};
-
-/**
- * Delete all QR codes for an item (used when item is deleted)
- * @param {string} itemId - Item UUID
- * @returns {Promise<Array>} Array of deactivated QR code records
- */
-const deleteQRCodesByItemId = async (itemId) => {
-  try {
-    const { data, error } = await supabase
-      .from('qr_codes')
-      .update({
-        status: 'inactive',
-        updated_at: new Date().toISOString()
-      })
-      .eq('item_id', itemId)
-      .select();
-
-    if (error) {
-      console.error('Error deleting QR codes for item:', error);
-      throw error;
-    }
-
-    const count = data ? data.length : 0;
-    console.log(`${count} QR codes marked as inactive for item ${itemId}`);
-    return data || [];
-  } catch (error) {
-    console.error('QRCodeDAO.deleteQRCodesByItemId error:', error);
-    throw new Error('Failed to delete QR codes for item: ' + error.message);
-  }
-};
-
-/**
- * Get QR code statistics
- * @param {string} userId - User UUID (demo user)
- * @returns {Promise<object>} QR code statistics
- */
-const getQRCodeStats = async (userId) => {
-  try {
-    // Get total QR codes for user's items
-    const { data: totalData, error: totalError } = await supabase
-      .from('qr_codes')
-      .select('id', { count: 'exact' })
-      .eq('items.properties.user_id', userId);
-
-    if (totalError) {
-      console.error('Error getting total QR count:', totalError);
-      throw totalError;
-    }
-
-    // Get active QR codes
-    const { data: activeData, error: activeError } = await supabase
-      .from('qr_codes')
-      .select('id', { count: 'exact' })
-      .eq('items.properties.user_id', userId)
-      .eq('status', 'active');
-
-    if (activeError) {
-      console.error('Error getting active QR count:', activeError);
-      throw activeError;
-    }
-
-    // Get total scans
-    const { data: scanData, error: scanError } = await supabase
-      .from('qr_codes')
       .select('scan_count')
-      .eq('items.properties.user_id', userId);
+      .single();
 
-    if (scanError) {
-      console.error('Error getting scan data:', scanError);
-      throw scanError;
+    if (updateError) {
+      return {
+        success: false,
+        error: `Failed to increment scan count: ${updateError.message}`
+      };
     }
-
-    const totalScans = scanData.reduce((sum, record) => sum + (record.scan_count || 0), 0);
 
     return {
-      totalQRCodes: totalData.length || 0,
-      activeQRCodes: activeData.length || 0,
-      inactiveQRCodes: (totalData.length || 0) - (activeData.length || 0),
-      totalScans: totalScans
+      success: true,
+      message: 'Scan count incremented',
+      data: {
+        scan_count: updatedQR?.scan_count || 0
+      }
     };
+
   } catch (error) {
-    console.error('QRCodeDAO.getQRCodeStats error:', error);
-    throw new Error('Failed to get QR code statistics: ' + error.message);
+    return {
+      success: false,
+      error: `Failed to increment scan count: ${error.message}`
+    };
   }
 };
 
 /**
- * Check if QR code exists
- * @param {string} qrId - QR code identifier
- * @returns {Promise<boolean>} True if QR code exists
+ * Get QR code statistics for an item or property
+ * @param {string} itemId - Item UUID (optional)
+ * @param {string} propertyId - Property UUID (optional)
+ * @returns {Promise<Object>} Result object with QR statistics
  */
-const qrCodeExists = async (qrId) => {
+const getQRStatistics = async (itemId = null, propertyId = null) => {
   try {
-    const { data, error } = await supabase
+    // Get the Supabase client
+    const supabase = SupabaseService.getSupabaseClient();
+    
+    let query = supabase
       .from('qr_codes')
-      .select('id')
-      .eq('qr_id', qrId)
-      .single();
+      .select(`
+        id,
+        status,
+        scan_count,
+        created_at,
+        items (
+          id,
+          name,
+          property_id
+        )
+      `);
 
-    if (error && error.code !== 'PGRST116') { // PGRST116 = not found
-      console.error('Error checking QR existence:', error);
-      throw error;
+    // Filter by item or property
+    if (itemId) {
+      query = query.eq('item_id', itemId);
+    } else if (propertyId) {
+      query = query.eq('items.property_id', propertyId);
     }
 
-    return !!data;
+    const { data: qrCodes, error: qrError } = await query;
+
+    if (qrError) {
+      return {
+        success: false,
+        error: `Failed to retrieve QR statistics: ${qrError.message}`
+      };
+    }
+
+    // Calculate statistics
+    const stats = {
+      total_qr_codes: qrCodes ? qrCodes.length : 0,
+      active_qr_codes: qrCodes ? qrCodes.filter(qr => qr.status === 'active').length : 0,
+      inactive_qr_codes: qrCodes ? qrCodes.filter(qr => qr.status === 'inactive').length : 0,
+      total_scans: qrCodes ? qrCodes.reduce((sum, qr) => sum + (qr.scan_count || 0), 0) : 0,
+      average_scans: 0,
+      most_scanned: null,
+      least_scanned: null
+    };
+
+    if (stats.total_qr_codes > 0) {
+      stats.average_scans = (stats.total_scans / stats.total_qr_codes).toFixed(2);
+      
+      const sortedByScans = qrCodes.sort((a, b) => (b.scan_count || 0) - (a.scan_count || 0));
+      stats.most_scanned = {
+        qr_id: sortedByScans[0].id,
+        item_name: sortedByScans[0].items?.name || 'Unknown',
+        scan_count: sortedByScans[0].scan_count || 0
+      };
+      stats.least_scanned = {
+        qr_id: sortedByScans[sortedByScans.length - 1].id,
+        item_name: sortedByScans[sortedByScans.length - 1].items?.name || 'Unknown',
+        scan_count: sortedByScans[sortedByScans.length - 1].scan_count || 0
+      };
+    }
+
+    return {
+      success: true,
+      message: 'QR statistics retrieved successfully',
+      data: {
+        statistics: stats,
+        filter: itemId ? `item: ${itemId}` : propertyId ? `property: ${propertyId}` : 'all'
+      }
+    };
+
   } catch (error) {
-    console.error('QRCodeDAO.qrCodeExists error:', error);
-    return false;
+    return {
+      success: false,
+      error: `Failed to retrieve QR statistics: ${error.message}`
+    };
   }
 };
 
@@ -378,11 +535,8 @@ module.exports = {
   createQRMapping,
   getQRMappingByQRId,
   getQRCodesByItemId,
-  getQRCodesByPropertyId,
   updateQRStatus,
-  incrementScanCount,
   deleteQRMapping,
-  deleteQRCodesByItemId,
-  getQRCodeStats,
-  qrCodeExists
+  incrementScanCount,
+  getQRStatistics
 }; 

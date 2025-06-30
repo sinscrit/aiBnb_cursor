@@ -1,507 +1,556 @@
 /**
- * QR Code Controller
- * QR Code-Based Instructional System - QR Code Business Logic Layer
+ * QR Code Controller - Business Logic Layer
+ * QR Code-Based Instructional System - QR Code Management Controller
  */
 
 const QRService = require('../services/QRService');
 const QRCodeDAO = require('../dao/QRCodeDAO');
 const ItemDAO = require('../dao/ItemDAO');
-const Joi = require('joi');
 
-class QRController {
-  /**
-   * Generate QR code for an item
-   * POST /api/qrcodes
-   */
-  async generateQRCode(req, res) {
-    try {
-      // Validate request body
-      const schema = Joi.object({
-        itemId: Joi.string().uuid().required(),
-        options: Joi.object({
-          width: Joi.number().min(128).max(1024).optional(),
-          margin: Joi.number().min(0).max(5).optional(),
-          errorCorrectionLevel: Joi.string().valid('L', 'M', 'Q', 'H').optional()
-        }).optional()
-      });
+/**
+ * Generate QR code for an item
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+const generateQRCode = async (req, res) => {
+  try {
+    const { itemId } = req.body;
+    const options = req.body.options || {};
 
-      const { error, value } = schema.validate(req.body);
-      if (error) {
-        return res.status(400).json({
-          success: false,
-          message: 'Validation error',
-          error: error.details[0].message
-        });
-      }
-
-      const { itemId, options = {} } = value;
-
-      // Verify item exists and belongs to demo user
-      const itemResult = await ItemDAO.getItemById(itemId);
-      if (!itemResult.success) {
-        return res.status(404).json({
-          success: false,
-          message: 'Item not found'
-        });
-      }
-
-      const item = itemResult.item;
-
-      // Generate QR code using QRService
-      const qrCodeData = await QRService.createQRCode(itemId, options);
-
-      // Save QR mapping to database
-      const qrMapping = await QRCodeDAO.createQRMapping(
-        itemId, 
-        qrCodeData.qrId,
-        {
-          contentUrl: qrCodeData.contentUrl,
-          generationOptions: qrCodeData.options
-        }
-      );
-
-      res.status(201).json({
-        success: true,
-        message: 'QR code generated successfully',
-        data: {
-          qrCode: {
-            id: qrMapping.id,
-            qrId: qrCodeData.qrId,
-            itemId: itemId,
-            contentUrl: qrCodeData.contentUrl,
-            qrCodeDataURL: qrCodeData.qrCodeDataURL,
-            status: qrMapping.status,
-            scanCount: qrMapping.scan_count,
-            createdAt: qrMapping.created_at
-          }
-        }
-      });
-    } catch (error) {
-      console.error('Error generating QR code:', error);
-      res.status(500).json({
+    // Validate required fields
+    if (!itemId) {
+      return res.status(400).json({
         success: false,
-        message: 'Failed to generate QR code',
-        error: error.message
+        error: 'Item ID is required'
       });
     }
-  }
 
-  /**
-   * Get item data by QR code (for content display)
-   * GET /api/qrcodes/:qrId/mapping
-   */
-  async getQRMapping(req, res) {
-    try {
-      const { qrId } = req.params;
-
-      // Validate QR ID format
-      if (!QRService.validateQRFormat(qrId)) {
-        return res.status(400).json({
-          success: false,
-          message: 'Invalid QR code format'
-        });
-      }
-
-      // Get QR mapping with item and property data
-      const qrMapping = await QRCodeDAO.getQRMappingByQRId(qrId);
-      
-      if (!qrMapping) {
-        return res.status(404).json({
-          success: false,
-          message: 'QR code not found or inactive'
-        });
-      }
-
-      // Increment scan count
-      await QRCodeDAO.incrementScanCount(qrId);
-
-      res.status(200).json({
-        success: true,
-        message: 'QR mapping retrieved successfully',
-        data: {
-          qrCode: {
-            id: qrMapping.id,
-            qrId: qrMapping.qr_id,
-            status: qrMapping.status,
-            scanCount: qrMapping.scan_count + 1, // Return incremented count
-            lastScanned: new Date().toISOString()
-          },
-          item: qrMapping.items,
-          contentUrl: QRService.getQRCodeURL(qrId)
-        }
-      });
-    } catch (error) {
-      console.error('Error getting QR mapping:', error);
-      res.status(500).json({
+    // Verify item exists and user has access
+    const itemResult = await ItemDAO.getItemById(itemId);
+    if (!itemResult.success) {
+      return res.status(404).json({
         success: false,
-        message: 'Failed to get QR mapping',
-        error: error.message
+        error: 'Item not found'
       });
     }
+
+    const item = itemResult.item;
+
+    // Generate QR code using QRService
+    const qrResult = await QRService.createQRCode(itemId, options);
+    if (!qrResult.success) {
+      return res.status(500).json({
+        success: false,
+        error: qrResult.error
+      });
+    }
+
+    // Save QR mapping to database
+    const mappingResult = await QRCodeDAO.createQRMapping(
+      itemId, 
+      qrResult.qr_id, 
+      qrResult
+    );
+    
+    if (!mappingResult.success) {
+      return res.status(500).json({
+        success: false,
+        error: mappingResult.error
+      });
+    }
+
+    // Generate filename for downloads
+    const filename = QRService.generateQRFileName(qrResult.qr_id, item.name);
+
+    res.status(201).json({
+      success: true,
+      message: 'QR code generated successfully',
+      data: {
+        qr_id: qrResult.qr_id,
+        item_id: itemId,
+        item_name: item.name,
+        content_url: qrResult.content_url,
+        qr_code_data_url: qrResult.qr_code_data_url,
+        download_url: `/api/qrcodes/${qrResult.qr_id}/download`,
+        filename: filename,
+        size: qrResult.size,
+        format: qrResult.format,
+        scan_count: 0,
+        status: 'active',
+        database_record: mappingResult.data.qr_mapping
+      }
+    });
+
+  } catch (error) {
+    console.error('Error generating QR code:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Internal server error while generating QR code'
+    });
   }
+};
 
-  /**
-   * List QR codes for an item or property
-   * GET /api/qrcodes?itemId=xxx or GET /api/qrcodes?propertyId=xxx
-   */
-  async listQRCodes(req, res) {
-    try {
-      const { itemId, propertyId } = req.query;
+/**
+ * Get item data by QR code ID
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+const getQRMapping = async (req, res) => {
+  try {
+    const { qrId } = req.params;
 
-      let qrCodes = [];
+    if (!qrId) {
+      return res.status(400).json({
+        success: false,
+        error: 'QR ID is required'
+      });
+    }
 
-      if (itemId) {
-        // Validate item exists
+    // Get QR mapping with item details
+    const mappingResult = await QRCodeDAO.getQRMappingByQRId(qrId);
+    if (!mappingResult.success) {
+      return res.status(404).json({
+        success: false,
+        error: mappingResult.error
+      });
+    }
+
+    const data = mappingResult.data;
+
+    res.status(200).json({
+      success: true,
+      message: 'QR mapping retrieved successfully',
+      data: {
+        qr_code: {
+          id: data.qr_code.id,
+          qr_id: data.qr_code.qr_id,
+          content_url: QRService.getQRCodeURL(data.qr_code.qr_id),
+          scan_count: data.scan_count,
+          status: data.qr_code.status,
+          last_scanned: data.qr_code.last_scanned,
+          created_at: data.qr_code.created_at
+        },
+        item: {
+          id: data.item.id,
+          name: data.item.name,
+          description: data.item.description,
+          location: data.item.location,
+          media_url: data.item.media_url,
+          media_type: data.item.media_type,
+          metadata: data.item.metadata
+        },
+        property: data.property ? {
+          id: data.property.id,
+          name: data.property.name,
+          description: data.property.description,
+          address: data.property.address,
+          property_type: data.property.property_type
+        } : null
+      }
+    });
+
+  } catch (error) {
+    console.error('Error getting QR mapping:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Internal server error while retrieving QR mapping'
+    });
+  }
+};
+
+/**
+ * List QR codes for an item
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+const listQRCodes = async (req, res) => {
+  try {
+    const { itemId } = req.query;
+
+    if (!itemId) {
+      return res.status(400).json({
+        success: false,
+        error: 'Item ID is required as query parameter'
+      });
+    }
+
+    // Get QR codes for the item
+    const qrResult = await QRCodeDAO.getQRCodesByItemId(itemId);
+    if (!qrResult.success) {
+      return res.status(404).json({
+        success: false,
+        error: qrResult.error
+      });
+    }
+
+    const data = qrResult.data;
+
+    // Generate download URLs for each QR code
+    const qrCodesWithUrls = data.qr_codes.map(qr => ({
+      id: qr.id,
+      qr_id: qr.qr_id,
+      content_url: QRService.getQRCodeURL(qr.qr_id),
+      status: qr.status,
+      scan_count: qr.scan_count,
+      last_scanned: qr.last_scanned,
+      created_at: qr.created_at,
+      download_url: `/api/qrcodes/${qr.qr_id}/download`,
+      filename: QRService.generateQRFileName(qr.qr_id, data.item.name)
+    }));
+
+    res.status(200).json({
+      success: true,
+      message: data.count > 0 ? `Found ${data.count} QR codes for item` : 'No QR codes found for item',
+      data: {
+        qr_codes: qrCodesWithUrls,
+        item: {
+          id: data.item.id,
+          name: data.item.name,
+          description: data.item.description,
+          location: data.item.location
+        },
+        statistics: {
+          total_count: data.count,
+          active_count: data.active_count,
+          inactive_count: data.count - data.active_count,
+          total_scans: data.total_scans
+        }
+      }
+    });
+
+  } catch (error) {
+    console.error('Error listing QR codes:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Internal server error while listing QR codes'
+    });
+  }
+};
+
+/**
+ * Update QR code status
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+const updateQRStatus = async (req, res) => {
+  try {
+    const { qrId } = req.params;
+    const { status } = req.body;
+
+    if (!qrId) {
+      return res.status(400).json({
+        success: false,
+        error: 'QR ID is required'
+      });
+    }
+
+    if (!status || !['active', 'inactive'].includes(status)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Status must be either "active" or "inactive"'
+      });
+    }
+
+    // Update QR code status
+    const updateResult = await QRCodeDAO.updateQRStatus(qrId, status);
+    if (!updateResult.success) {
+      return res.status(404).json({
+        success: false,
+        error: updateResult.error
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: updateResult.message,
+      data: {
+        qr_code: {
+          id: updateResult.data.qr_code.id,
+          qr_id: updateResult.data.qr_code.qr_id,
+          status: updateResult.data.qr_code.status,
+          updated_at: updateResult.data.qr_code.updated_at
+        },
+        previous_status: updateResult.data.previous_status
+      }
+    });
+
+  } catch (error) {
+    console.error('Error updating QR status:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Internal server error while updating QR status'
+    });
+  }
+};
+
+/**
+ * Download QR code image
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+const downloadQRCode = async (req, res) => {
+  try {
+    const { qrId } = req.params;
+    const { size = '256', format = 'png' } = req.query;
+
+    if (!qrId) {
+      return res.status(400).json({
+        success: false,
+        error: 'QR ID is required'
+      });
+    }
+
+    // Get QR mapping to verify it exists
+    const mappingResult = await QRCodeDAO.getQRMappingByQRId(qrId);
+    if (!mappingResult.success) {
+      return res.status(404).json({
+        success: false,
+        error: 'QR code not found'
+      });
+    }
+
+    const qrData = mappingResult.data;
+    const item = qrData.item;
+
+    // Generate fresh QR code for download with specified options
+    const downloadOptions = {
+      width: parseInt(size) || 256,
+      errorCorrectionLevel: 'H', // High error correction for printing
+      margin: 2
+    };
+
+    const qrResult = await QRService.createQRCode(qrData.qr_code.item_id, downloadOptions);
+    if (!qrResult.success) {
+      return res.status(500).json({
+        success: false,
+        error: 'Failed to generate QR code for download'
+      });
+    }
+
+    // Generate appropriate filename
+    const filename = QRService.generateQRFileName(qrId, item.name);
+
+    // Set appropriate headers for file download
+    res.setHeader('Content-Type', 'image/png');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('X-QR-ID', qrId);
+    res.setHeader('X-Item-Name', item.name);
+
+    // Send the QR code buffer as response
+    res.status(200).send(qrResult.qr_code_buffer);
+
+  } catch (error) {
+    console.error('Error downloading QR code:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Internal server error while downloading QR code'
+    });
+  }
+};
+
+/**
+ * Delete QR code mapping
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+const deleteQRCode = async (req, res) => {
+  try {
+    const { qrId } = req.params;
+
+    if (!qrId) {
+      return res.status(400).json({
+        success: false,
+        error: 'QR ID is required'
+      });
+    }
+
+    // Delete QR code mapping
+    const deleteResult = await QRCodeDAO.deleteQRMapping(qrId);
+    if (!deleteResult.success) {
+      return res.status(404).json({
+        success: false,
+        error: deleteResult.error
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: deleteResult.message,
+      data: {
+        deleted_qr: deleteResult.data.deleted_qr,
+        item_name: deleteResult.data.item_name
+      }
+    });
+
+  } catch (error) {
+    console.error('Error deleting QR code:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Internal server error while deleting QR code'
+    });
+  }
+};
+
+/**
+ * Get QR code statistics
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+const getQRStatistics = async (req, res) => {
+  try {
+    const { itemId, propertyId } = req.query;
+
+    if (!itemId && !propertyId) {
+      return res.status(400).json({
+        success: false,
+        error: 'Either itemId or propertyId is required as query parameter'
+      });
+    }
+
+    // Get QR statistics
+    const statsResult = await QRCodeDAO.getQRStatistics(itemId, propertyId);
+    if (!statsResult.success) {
+      return res.status(500).json({
+        success: false,
+        error: statsResult.error
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: statsResult.message,
+      data: {
+        statistics: statsResult.data.statistics,
+        filter: statsResult.data.filter,
+        generated_at: new Date().toISOString()
+      }
+    });
+
+  } catch (error) {
+    console.error('Error getting QR statistics:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Internal server error while retrieving QR statistics'
+    });
+  }
+};
+
+/**
+ * Batch generate QR codes for multiple items
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+const batchGenerateQRCodes = async (req, res) => {
+  try {
+    const { itemIds, options = {} } = req.body;
+
+    if (!itemIds || !Array.isArray(itemIds) || itemIds.length === 0) {
+      return res.status(400).json({
+        success: false,
+        error: 'Array of item IDs is required'
+      });
+    }
+
+    if (itemIds.length > 10) {
+      return res.status(400).json({
+        success: false,
+        error: 'Maximum 10 items allowed for batch generation'
+      });
+    }
+
+    const results = [];
+    const errors = [];
+
+    // Generate QR codes for each item
+    for (const itemId of itemIds) {
+      try {
+        // Verify item exists
         const itemResult = await ItemDAO.getItemById(itemId);
         if (!itemResult.success) {
-          return res.status(404).json({
-            success: false,
-            message: 'Item not found'
-          });
-        }
-
-        const item = itemResult.item;
-        qrCodes = await QRCodeDAO.getQRCodesByItemId(itemId);
-      } else if (propertyId) {
-        qrCodes = await QRCodeDAO.getQRCodesByPropertyId(propertyId);
-      } else {
-        return res.status(400).json({
-          success: false,
-          message: 'Either itemId or propertyId query parameter is required'
-        });
-      }
-
-      // Format response data
-      const formattedQRCodes = qrCodes.map(qr => ({
-        id: qr.id,
-        qrId: qr.qr_id,
-        itemId: qr.item_id,
-        status: qr.status,
-        scanCount: qr.scan_count || 0,
-        lastScanned: qr.last_scanned,
-        contentUrl: QRService.getQRCodeURL(qr.qr_id),
-        createdAt: qr.created_at,
-        item: qr.items || null
-      }));
-
-      res.status(200).json({
-        success: true,
-        message: `Found ${formattedQRCodes.length} QR codes`,
-        data: {
-          qrCodes: formattedQRCodes,
-          count: formattedQRCodes.length
-        }
-      });
-    } catch (error) {
-      console.error('Error listing QR codes:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Failed to list QR codes',
-        error: error.message
-      });
-    }
-  }
-
-  /**
-   * Update QR code status
-   * PUT /api/qrcodes/:qrId/status
-   */
-  async updateQRStatus(req, res) {
-    try {
-      const { qrId } = req.params;
-      
-      // Validate request body
-      const schema = Joi.object({
-        status: Joi.string().valid('active', 'inactive', 'expired').required()
-      });
-
-      const { error, value } = schema.validate(req.body);
-      if (error) {
-        return res.status(400).json({
-          success: false,
-          message: 'Validation error',
-          error: error.details[0].message
-        });
-      }
-
-      const { status } = value;
-
-      // Validate QR ID format
-      if (!QRService.validateQRFormat(qrId)) {
-        return res.status(400).json({
-          success: false,
-          message: 'Invalid QR code format'
-        });
-      }
-
-      // Check if QR code exists
-      const exists = await QRCodeDAO.qrCodeExists(qrId);
-      if (!exists) {
-        return res.status(404).json({
-          success: false,
-          message: 'QR code not found'
-        });
-      }
-
-      // Update QR status
-      const updatedQR = await QRCodeDAO.updateQRStatus(qrId, status);
-
-      res.status(200).json({
-        success: true,
-        message: `QR code status updated to ${status}`,
-        data: {
-          qrCode: {
-            id: updatedQR.id,
-            qrId: updatedQR.qr_id,
-            itemId: updatedQR.item_id,
-            status: updatedQR.status,
-            scanCount: updatedQR.scan_count,
-            updatedAt: updatedQR.updated_at
-          }
-        }
-      });
-    } catch (error) {
-      console.error('Error updating QR status:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Failed to update QR status',
-        error: error.message
-      });
-    }
-  }
-
-  /**
-   * Download QR code image
-   * GET /api/qrcodes/:qrId/download
-   */
-  async downloadQRCode(req, res) {
-    try {
-      const { qrId } = req.params;
-      const { size = '512', format = 'png' } = req.query;
-
-      // Validate QR ID format
-      if (!QRService.validateQRFormat(qrId)) {
-        return res.status(400).json({
-          success: false,
-          message: 'Invalid QR code format'
-        });
-      }
-
-      // Get QR mapping to verify it exists
-      const qrMapping = await QRCodeDAO.getQRMappingByQRId(qrId);
-      if (!qrMapping) {
-        return res.status(404).json({
-          success: false,
-          message: 'QR code not found or inactive'
-        });
-      }
-
-      // Generate high-resolution QR code for download
-      const downloadOptions = {
-        width: parseInt(size),
-        margin: 2,
-        errorCorrectionLevel: 'H'
-      };
-
-      const qrCodeData = await QRService.createDownloadableQRCode(
-        qrMapping.item_id, 
-        downloadOptions
-      );
-
-      // Set appropriate headers for file download
-      const filename = `qr-${qrMapping.items?.name || 'item'}-${qrId}.${format}`;
-      res.setHeader('Content-Type', `image/${format}`);
-      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
-      res.setHeader('Content-Length', qrCodeData.qrCodeBuffer.length);
-
-      // Send the QR code buffer
-      res.status(200).send(qrCodeData.qrCodeBuffer);
-    } catch (error) {
-      console.error('Error downloading QR code:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Failed to download QR code',
-        error: error.message
-      });
-    }
-  }
-
-  /**
-   * Generate batch QR codes for multiple items
-   * POST /api/qrcodes/batch
-   */
-  async generateBatchQRCodes(req, res) {
-    try {
-      // Validate request body
-      const schema = Joi.object({
-        itemIds: Joi.array().items(Joi.string().uuid()).min(1).max(50).required(),
-        options: Joi.object({
-          width: Joi.number().min(128).max(1024).optional(),
-          margin: Joi.number().min(0).max(5).optional(),
-          errorCorrectionLevel: Joi.string().valid('L', 'M', 'Q', 'H').optional()
-        }).optional()
-      });
-
-      const { error, value } = schema.validate(req.body);
-      if (error) {
-        return res.status(400).json({
-          success: false,
-          message: 'Validation error',
-          error: error.details[0].message
-        });
-      }
-
-      const { itemIds, options = {} } = value;
-
-      const results = [];
-      const errors = [];
-
-      // Process each item
-      for (const itemId of itemIds) {
-        try {
-          // Verify item exists
-          const itemResult = await ItemDAO.getItemById(itemId);
-          if (!itemResult.success) {
-            errors.push({
-              itemId,
-              error: 'Item not found'
-            });
-            continue;
-          }
-
-          const item = itemResult.item;
-
-          // Generate QR code
-          const qrCodeData = await QRService.createQRCode(itemId, options);
-
-          // Save QR mapping
-          const qrMapping = await QRCodeDAO.createQRMapping(
-            itemId,
-            qrCodeData.qrId,
-            {
-              contentUrl: qrCodeData.contentUrl,
-              generationOptions: qrCodeData.options
-            }
-          );
-
-          results.push({
-            itemId,
-            itemName: item.name,
-            qrId: qrCodeData.qrId,
-            contentUrl: qrCodeData.contentUrl,
-            status: 'success'
-          });
-        } catch (itemError) {
           errors.push({
-            itemId,
-            error: itemError.message
+            item_id: itemId,
+            error: 'Item not found'
           });
+          continue;
         }
-      }
 
-      const successCount = results.length;
-      const errorCount = errors.length;
-
-      res.status(successCount > 0 ? 201 : 400).json({
-        success: successCount > 0,
-        message: `Batch QR generation completed: ${successCount} successful, ${errorCount} failed`,
-        data: {
-          successful: results,
-          failed: errors,
-          summary: {
-            total: itemIds.length,
-            successful: successCount,
-            failed: errorCount
-          }
+        // Generate QR code
+        const qrResult = await QRService.createQRCode(itemId, options);
+        if (!qrResult.success) {
+          errors.push({
+            item_id: itemId,
+            error: qrResult.error
+          });
+          continue;
         }
-      });
-    } catch (error) {
-      console.error('Error generating batch QR codes:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Failed to generate batch QR codes',
-        error: error.message
-      });
-    }
-  }
 
-  /**
-   * Get QR code statistics
-   * GET /api/qrcodes/stats
-   */
-  async getQRStats(req, res) {
-    try {
-      // Get demo user ID
-      const demoUserId = req.user?.id || '550e8400-e29b-41d4-a716-446655440000';
+        // Save mapping
+        const mappingResult = await QRCodeDAO.createQRMapping(
+          itemId, 
+          qrResult.qr_id, 
+          qrResult
+        );
 
-      const stats = await QRCodeDAO.getQRCodeStats(demoUserId);
-
-      res.status(200).json({
-        success: true,
-        message: 'QR code statistics retrieved successfully',
-        data: {
-          stats
+        if (!mappingResult.success) {
+          errors.push({
+            item_id: itemId,
+            error: mappingResult.error
+          });
+          continue;
         }
-      });
-    } catch (error) {
-      console.error('Error getting QR stats:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Failed to get QR statistics',
-        error: error.message
-      });
-    }
-  }
 
-  /**
-   * Delete QR code
-   * DELETE /api/qrcodes/:qrId
-   */
-  async deleteQRCode(req, res) {
-    try {
-      const { qrId } = req.params;
+        results.push({
+          item_id: itemId,
+          item_name: itemResult.item.name,
+          qr_id: qrResult.qr_id,
+          content_url: qrResult.content_url,
+          download_url: `/api/qrcodes/${qrResult.qr_id}/download`,
+          filename: QRService.generateQRFileName(qrResult.qr_id, itemResult.item.name)
+        });
 
-      // Validate QR ID format
-      if (!QRService.validateQRFormat(qrId)) {
-        return res.status(400).json({
-          success: false,
-          message: 'Invalid QR code format'
+      } catch (error) {
+        errors.push({
+          item_id: itemId,
+          error: `Unexpected error: ${error.message}`
         });
       }
-
-      // Check if QR code exists
-      const exists = await QRCodeDAO.qrCodeExists(qrId);
-      if (!exists) {
-        return res.status(404).json({
-          success: false,
-          message: 'QR code not found'
-        });
-      }
-
-      // Delete QR mapping (soft delete)
-      const deletedQR = await QRCodeDAO.deleteQRMapping(qrId);
-
-      res.status(200).json({
-        success: true,
-        message: 'QR code deleted successfully',
-        data: {
-          deletedQRCode: {
-            qrId: deletedQR.qr_id,
-            itemId: deletedQR.item_id,
-            status: deletedQR.status,
-            deletedAt: deletedQR.updated_at
-          }
-        }
-      });
-    } catch (error) {
-      console.error('Error deleting QR code:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Failed to delete QR code',
-        error: error.message
-      });
     }
-  }
-}
 
-module.exports = new QRController();
+    const successCount = results.length;
+    const errorCount = errors.length;
+
+    res.status(successCount > 0 ? 201 : 400).json({
+      success: successCount > 0,
+      message: `Batch QR generation completed: ${successCount} successful, ${errorCount} failed`,
+      data: {
+        successful: results,
+        failed: errors,
+        statistics: {
+          requested: itemIds.length,
+          successful: successCount,
+          failed: errorCount,
+          success_rate: `${((successCount / itemIds.length) * 100).toFixed(1)}%`
+        }
+      }
+    });
+
+  } catch (error) {
+    console.error('Error in batch QR generation:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Internal server error during batch QR generation'
+    });
+  }
+};
+
+module.exports = {
+  generateQRCode,
+  getQRMapping,
+  listQRCodes,
+  updateQRStatus,
+  downloadQRCode,
+  deleteQRCode,
+  getQRStatistics,
+  batchGenerateQRCodes
+};
