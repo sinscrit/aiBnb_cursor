@@ -239,6 +239,32 @@
   - [x] Verify 404 error is resolved
 - [x] **Root Cause**: API routes file missing and not registered in Express app
 
+### 11.2. **BUG FIX**: Debug Items API Database Connection Issue
+**Story Points**: 1  
+**Context**: Items API returning "Database Error: Invalid API key" despite existing ItemDAO
+
+- [x] **Files to modify**: 
+  - [x] `dao/ItemDAO.js` (FIXED - Supabase service import pattern)
+  - [x] `services/SupabaseService.js` (VERIFIED)
+  - [x] `.env` (VERIFIED)
+- [x] **Step 1**: Debug Supabase connection in ItemDAO:
+  - [x] Fixed ItemDAO import pattern to match PropertyDAO: `SupabaseService.getSupabaseClient()`
+  - [x] Replaced incorrect destructured import with consistent service pattern
+  - [x] Updated all DAO methods to use correct Supabase client initialization
+- [x] **Step 2**: Verify environment configuration:
+  - [x] Confirmed anonymous key is working (Properties API functions correctly)
+  - [x] Verified same credentials work for both Properties and Items
+  - [x] Environment configuration validated as correct
+- [x] **Step 3**: Fix authentication middleware integration:
+  - [x] ItemController already uses same auth pattern as PropertyController
+  - [x] Demo user ID properly passed to ItemDAO functions
+  - [x] Authentication flow working correctly
+- [x] **Step 4**: Test API endpoints:
+  - [x] Verified `GET /api/items?propertyId=550e8400-e29b-41d4-a716-446655440001` returns items successfully
+  - [x] API returns 3 items with full property information
+  - [x] Database connection working correctly
+- [x] **Root Cause**: ItemDAO was using incorrect Supabase service import pattern (`getSupabaseServiceClient()` destructured import vs `SupabaseService.getSupabaseClient()` consistent pattern)
+
 ### 12. Implement QR Code Generation Service
 **Story Points**: 1  
 **Context**: Create QR code generation and UUID management (Story 4.1.1)
@@ -545,6 +571,40 @@
 - [ ] Implement QR code download functionality
 - [ ] Test complete QR workflow from generation to download
 
+### 24.1. **BUG FIX**: Create Missing QR Code Frontend Pages
+**Story Points**: 2  
+**Context**: QR Codes pages return 404 - no QR code management interface exists
+
+- [ ] **Files to modify**: 
+  - [ ] `frontend/pages/qrcodes/` (CREATE NEW DIRECTORY)
+  - [ ] `frontend/pages/qrcodes/index.js` (CREATE NEW FILE)
+  - [ ] `frontend/pages/qrcodes/[itemId].js` (CREATE NEW FILE)
+  - [ ] `frontend/components/QR/` (CREATE NEW DIRECTORY)
+  - [ ] `frontend/components/QR/QRGenerator.js` (CREATE NEW FILE)
+  - [ ] `frontend/components/QR/QRDisplay.js` (CREATE NEW FILE)
+  - [ ] `frontend/components/QR/QRList.js` (CREATE NEW FILE)
+- [ ] **Step 1**: Create directory structure:
+  - [ ] Create `frontend/pages/qrcodes/` directory
+  - [ ] Create `frontend/components/QR/` directory
+- [ ] **Step 2**: Create `frontend/pages/qrcodes/index.js`:
+  - [ ] QR code listing page for all items
+  - [ ] Filter by property and item
+  - [ ] Add "Generate QR Code" functionality
+- [ ] **Step 3**: Create `frontend/pages/qrcodes/[itemId].js`:
+  - [ ] Item-specific QR code management page
+  - [ ] Display existing QR codes for specific item
+  - [ ] Generate new QR codes for item
+  - [ ] Download QR code functionality
+- [ ] **Step 4**: Create QR components:
+  - [ ] `QRGenerator.js` - QR code generation interface with progress indicators
+  - [ ] `QRDisplay.js` - QR code image display with download buttons
+  - [ ] `QRList.js` - List of QR codes with status and actions
+- [ ] **Step 5**: Test QR code pages:
+  - [ ] Verify `http://localhost:3002/qrcodes` loads QR listing
+  - [ ] Verify `http://localhost:3002/qrcodes/[itemId]` loads item QR management
+- [ ] **Dependencies**: Requires completion of bug fix task 15.1 (QR Code Management System)
+- [ ] **Root Cause**: Frontend QR pages completely missing - no routes or components exist
+
 ### 25. Create API Client and Utilities
 **Story Points**: 1  
 **Context**: Set up frontend API communication and utilities
@@ -558,6 +618,69 @@
 - [ ] Create `utils/helpers.js` with utility functions
 - [ ] Create `utils/validators.js` with form validation
 - [ ] Test API client with all backend endpoints
+
+### 25.1. **BUG FIX**: Fix Frontend-Backend API Connectivity Issues
+**Story Points**: 2  
+**Context**: All frontend pages show "Failed to fetch" errors - cannot connect to backend APIs
+
+- [ ] **Files to modify**: 
+  - [ ] `frontend/utils/api.js` (CREATE NEW FILE)
+  - [ ] `frontend/utils/constants.js` (CREATE NEW FILE)
+  - [ ] `frontend/pages/properties/index.js` (MODIFY)
+  - [ ] `frontend/pages/items/index.js` (MODIFY when created)
+  - [ ] `frontend/next.config.js` (MODIFY)
+- [ ] **Step 1**: Create centralized API client:
+  - [ ] Create `frontend/utils/api.js` with Axios configuration
+  - [ ] Set correct base URL: `http://localhost:8000/api` (backend port)
+  - [ ] Add request interceptors for authentication headers
+  - [ ] Add response interceptors for error handling
+- [ ] **Step 2**: Fix CORS configuration:
+  - [ ] Verify backend CORS allows frontend origin `http://localhost:3000`
+  - [ ] Update `app.js` CORS configuration if needed
+  - [ ] Test cross-origin requests between ports 3000 ↔ 8000
+- [ ] **Step 3**: Create constants file:
+  - [ ] Create `frontend/utils/constants.js` with API endpoints
+  - [ ] Define backend base URL as configurable constant
+  - [ ] Add environment-specific configurations
+- [ ] **Step 4**: Update existing frontend pages:
+  - [ ] Replace hardcoded API calls with centralized API client
+  - [ ] Fix incorrect port references (3001 → 8000)
+  - [ ] Add proper error handling for network failures
+- [ ] **Step 5**: Test API connectivity:
+  - [ ] Verify Properties API calls work from frontend
+  - [ ] Test error handling for network issues
+  - [ ] Confirm loading states work properly
+- [ ] **Root Cause**: Frontend making API calls to wrong ports and missing centralized error handling
+
+### 25.2. **BUG FIX**: Debug CORS and Network Configuration Issues
+**Story Points**: 1  
+**Context**: Network connectivity issues between frontend (port 3000) and backend (port 8000)
+
+- [ ] **Files to modify**: 
+  - [ ] `app.js` (MODIFY CORS configuration)
+  - [ ] `frontend/next.config.js` (ADD proxy configuration)
+  - [ ] `package.json` (VERIFY scripts)
+- [ ] **Step 1**: Fix backend CORS configuration:
+  - [ ] Update `app.js` to allow `http://localhost:3000` origin
+  - [ ] Add proper CORS headers for credentials and methods
+  - [ ] Test CORS with browser dev tools network tab
+- [ ] **Step 2**: Add Next.js proxy configuration (if needed):
+  - [ ] Configure `frontend/next.config.js` to proxy API calls
+  - [ ] Set up rewrites for `/api/*` to `http://localhost:8000/api/*`
+  - [ ] Test proxy functionality
+- [ ] **Step 3**: Verify server startup configuration:
+  - [ ] Confirm backend runs on port 8000 as expected
+  - [ ] Confirm frontend runs on port 3000 as expected
+  - [ ] Test both servers can be accessed independently
+- [ ] **Step 4**: Add network debugging:
+  - [ ] Add request/response logging to identify failed calls
+  - [ ] Test with browser network tab to see actual errors
+  - [ ] Verify authentication headers are being sent correctly
+- [ ] **Step 5**: Test complete workflow:
+  - [ ] Test frontend can successfully fetch from all backend endpoints
+  - [ ] Verify error messages are user-friendly
+  - [ ] Confirm loading states work during API calls
+- [ ] **Root Cause**: CORS misconfiguration or network routing issues between frontend and backend ports
 
 ## Phase 4: Content Display System (Tasks 26-35)
 
@@ -973,10 +1096,10 @@ CREATE TABLE media_assets (
 ## BUG FIX TASKS SUMMARY
 
 **Total Original Tasks**: 42 (1 story point each)  
-**Total Bug Fix Tasks Added**: 8 (14.5 story points total)  
-**Combined Total Tasks**: 50  
-**Bug Fix Story Points**: 14.5  
-**Revised Total Story Points**: 56.5  
+**Total Bug Fix Tasks Added**: 13 (23.5 story points total)  
+**Combined Total Tasks**: 55  
+**Bug Fix Story Points**: 23.5  
+**Revised Total Story Points**: 65.5  
 
 ### Bug Fix Tasks Added:
 
@@ -992,40 +1115,78 @@ CREATE TABLE media_assets (
    - **Status**: API routes missing and commented out
    - **Files**: `routes/api/items.js`, `app.js`
 
-4. **Task 15.1**: Implement Complete QR Code Management System (3 points)
+4. **Task 11.2**: Debug Items API Database Connection Issue (1 point)
+   - **Status**: Database connection errors preventing Items API functionality
+   - **Files**: `controllers/ItemController.js`, `services/SupabaseService.js`, `.env`
+
+5. **Task 15.1**: Implement Complete QR Code Management System (3 points)
    - **Status**: Entire QR system missing
    - **Files**: `services/QRService.js`, `dao/QRCodeDAO.js`, `controllers/QRController.js`, `routes/api/qrcodes.js`, `app.js`
 
-5. **Task 16.1**: Create Missing Dashboard and Navigation Pages (2 points)
+6. **Task 16.1**: Create Missing Dashboard and Navigation Pages (2 points)
    - **Status**: Landing page exists but functional pages missing
    - **Files**: `frontend/pages/dashboard.tsx`, `frontend/components/Layout/DashboardLayout.js`, `frontend/components/Common/Navigation.js`, `frontend/pages/index.tsx`
 
-6. **Task 17.1 & 18.1**: Create Missing Property Frontend Pages and Components (3 points)
+7. **Task 17.1 & 18.1**: Create Missing Property Frontend Pages and Components (3 points)
    - **Status**: Property API works but frontend pages missing
    - **Files**: `frontend/pages/properties/`, `frontend/components/Property/`
 
-7. **Task 20.1**: Create Missing Item Frontend Pages and Components (3 points)
+8. **Task 20.1**: Create Missing Item Frontend Pages and Components (3 points)
    - **Status**: Item backend exists but frontend pages missing
    - **Files**: `frontend/pages/items/`, `frontend/components/Item/`
 
-8. **Task 26.1**: Implement Complete Content Display System (3 points)
-   - **Status**: Content display system completely missing
-   - **Files**: `controllers/ContentController.js`, `routes/api/content.js`, `frontend/pages/content/`, `frontend/components/Content/`, `app.js`
+9. **Task 24.1**: Create Missing QR Code Frontend Pages (2 points)
+   - **Status**: QR Codes pages return 404 - no QR management interface
+   - **Files**: `frontend/pages/qrcodes/`, `frontend/components/QR/`
+
+10. **Task 25.1**: Fix Frontend-Backend API Connectivity Issues (2 points)
+    - **Status**: All frontend pages show "Failed to fetch" errors
+    - **Files**: `frontend/utils/api.js`, `frontend/utils/constants.js`, `frontend/pages/properties/index.js`, `frontend/next.config.js`
+
+11. **Task 25.2**: Debug CORS and Network Configuration Issues (1 point)
+    - **Status**: Network connectivity issues between frontend and backend ports
+    - **Files**: `app.js`, `frontend/next.config.js`, `package.json`
+
+12. **Task 26.1**: Implement Complete Content Display System (3 points)
+    - **Status**: Content display system completely missing
+    - **Files**: `controllers/ContentController.js`, `routes/api/content.js`, `frontend/pages/content/`, `frontend/components/Content/`, `app.js`
 
 ### Implementation Priority:
-1. **Backend Foundation** (Tasks 10.1, 11.1) - 2 points
-2. **QR System** (Task 15.1) - 3 points  
-3. **Frontend Infrastructure** (Task 16.1) - 2 points
-4. **Property Frontend** (Tasks 17.1 & 18.1) - 3 points
-5. **Item Frontend** (Task 20.1) - 3 points
-6. **Content System** (Task 26.1) - 3 points
+1. **🔥 Critical Backend Foundation** (Tasks 10.1, 11.1, 11.2) - 3 points
+2. **🔥 Frontend-Backend Connectivity** (Tasks 25.1, 25.2) - 3 points  
+3. **🔥 QR System Backend** (Task 15.1) - 3 points
+4. **🔥 Frontend Infrastructure** (Task 16.1) - 2 points
+5. **📋 Property Frontend** (Tasks 17.1 & 18.1) - 3 points
+6. **📋 Item Frontend** (Task 20.1) - 3 points
+7. **📋 QR Frontend** (Task 24.1) - 2 points
+8. **📋 Content System** (Task 26.1) - 3 points
 
 ---
 
-**Document Version**: 1.1  
-**Total Tasks**: 50 (Original: 42 + Bug Fixes: 8)  
-**Total Story Points**: 56.5 (Original: 42 + Bug Fixes: 14.5)  
-**Estimated Completion**: 5 days (revised)  
+**Document Version**: 1.2  
+**Total Tasks**: 55 (Original: 42 + Bug Fixes: 13)  
+**Total Story Points**: 65.5 (Original: 42 + Bug Fixes: 23.5)  
+**Estimated Completion**: 7 days (revised for connectivity issues)  
 **Reference**: [@docs/gen_requests.md](./gen_requests.md) - REQ-001  
 **Overview Reference**: [@docs/req-001-Sprint-MVP1-Content-Creation-QR-Generation-Overview.md](./req-001-Sprint-MVP1-Content-Creation-QR-Generation-Overview.md)  
-**Last Updated**: December 19, 2024 (Bug Fix Tasks Added) 
+**Last Updated**: December 19, 2024 (Additional Bug Fix Tasks Added for Connectivity Issues)
+
+---
+
+## Additional Bug Fix Tasks Added Based on Validation Log Analysis
+
+**Date Added**: December 19, 2024  
+**Source**: [@docs/req-001-Sprint-MVP1-Content-Creation-QR-Generation-log.md](./req-001-Sprint-MVP1-Content-Creation-QR-Generation-log.md) Priority TODO List  
+
+### New Critical Issues Addressed:
+1. **Items API Database Connection** - "Database Error: Invalid API key" preventing Items system functionality
+2. **Frontend-Backend Connectivity** - "Failed to fetch" errors across all frontend pages  
+3. **CORS Configuration** - Network issues between ports 3000 ↔ 8000
+4. **Missing QR Frontend** - QR Codes pages returning 404 errors
+5. **API Client Architecture** - No centralized error handling or configuration
+
+### Impact on Project Timeline:
+- **Original Estimate**: 5 days (56.5 story points)
+- **Revised Estimate**: 7 days (65.5 story points)  
+- **Critical Path**: Frontend-backend connectivity must be resolved before most other features can be tested
+- **Priority Order**: Backend Foundation → Connectivity → QR System → Frontend Pages → Content System 

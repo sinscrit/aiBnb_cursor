@@ -3,10 +3,7 @@
  * QR Code-Based Instructional System - Item Management Database Layer
  */
 
-const { getSupabaseServiceClient } = require('../services/SupabaseService');
-
-// Get the service client for admin operations
-const supabase = getSupabaseServiceClient();
+const SupabaseService = require('../services/SupabaseService');
 
 /**
  * Create a new item for a property
@@ -16,6 +13,9 @@ const supabase = getSupabaseServiceClient();
  */
 const createItem = async (propertyId, itemData) => {
   try {
+    // Get the Supabase client
+    const supabase = SupabaseService.getSupabaseClient();
+    
     // Validate required fields
     if (!propertyId) {
       return {
@@ -100,6 +100,9 @@ const createItem = async (propertyId, itemData) => {
  */
 const getItemsByPropertyId = async (propertyId) => {
   try {
+    // Get the Supabase client
+    const supabase = SupabaseService.getSupabaseClient();
+    
     if (!propertyId) {
       return {
         success: false,
@@ -142,6 +145,9 @@ const getItemsByPropertyId = async (propertyId) => {
  */
 const getItemById = async (itemId) => {
   try {
+    // Get the Supabase client
+    const supabase = SupabaseService.getSupabaseClient();
+    
     if (!itemId) {
       return {
         success: false,
@@ -189,6 +195,9 @@ const getItemById = async (itemId) => {
  */
 const updateItemLocation = async (itemId, location) => {
   try {
+    // Get the Supabase client
+    const supabase = SupabaseService.getSupabaseClient();
+    
     if (!itemId) {
       return {
         success: false,
@@ -242,6 +251,9 @@ const updateItemLocation = async (itemId, location) => {
  */
 const deleteItem = async (itemId) => {
   try {
+    // Get the Supabase client
+    const supabase = SupabaseService.getSupabaseClient();
+    
     if (!itemId) {
       return {
         success: false,
