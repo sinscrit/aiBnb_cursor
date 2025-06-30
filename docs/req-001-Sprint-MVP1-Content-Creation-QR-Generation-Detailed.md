@@ -150,16 +150,27 @@
 **Story Points**: 1  
 **Context**: Create database operations for item management (Story 3.1.1, 3.1.3, 3.2.3)
 
-- [ ] Create `dao/ItemDAO.js` with CRUD operations:
-  - [ ] `createItem(propertyId, itemData)` - Insert new item
-  - [ ] `getItemsByPropertyId(propertyId)` - Retrieve property's items
-  - [ ] `getItemById(itemId)` - Retrieve single item
-  - [ ] `updateItemLocation(itemId, location)` - Update item location
-  - [ ] `deleteItem(itemId)` - Soft delete item with QR cleanup
-- [ ] Add foreign key validation for properties
-- [ ] Implement cascade operations for item deletion
-- [ ] Write unit tests for each DAO function
-- [ ] Test with sample property data
+- [x] Create `dao/ItemDAO.js` with CRUD operations:
+  - [x] `createItem(propertyId, itemData)` - Insert new item
+  - [x] `getItemsByPropertyId(propertyId)` - Retrieve property's items
+  - [x] `getItemById(itemId)` - Retrieve single item
+  - [x] `updateItemLocation(itemId, location)` - Update item location
+  - [x] `deleteItem(itemId)` - Soft delete item with QR cleanup
+- [x] Add foreign key validation for properties
+- [x] Implement cascade operations for item deletion
+- [x] Write unit tests for each DAO function
+- [x] Test with sample property data
+
+### 9.1. **BUG FIX**: Verify Item Management Data Access Layer Implementation
+**Story Points**: 0.5  
+**Context**: Task 9 was incorrectly marked as failed - ItemDAO.js actually exists and is fully implemented
+
+- [x] **Files to modify**: None (verification only)
+- [x] Verify `dao/ItemDAO.js` exists (301 lines, fully implemented)
+- [x] Confirm all CRUD operations are working: createItem, getItemsByPropertyId, getItemById, updateItemLocation, deleteItem
+- [x] Test ItemDAO functions directly in isolation
+- [x] Update task status documentation to reflect actual implementation state
+- [x] **Root Cause**: ItemDAO exists but is not accessible via API due to missing Controller and Routes
 
 ### 10. Implement Item Management Controllers
 **Story Points**: 1  
@@ -175,6 +186,24 @@
 - [ ] Implement location validation and suggestions
 - [ ] Test each controller method with sample data
 
+### 10.1. **BUG FIX**: Create Missing Item Management Controller
+**Story Points**: 1  
+**Context**: ItemController.js does not exist, preventing Item API functionality
+
+- [ ] **Files to modify**: `controllers/ItemController.js` (CREATE NEW FILE)
+- [ ] Create `controllers/ItemController.js` following the same pattern as `PropertyController.js`
+- [ ] Import existing `ItemDAO` from `dao/ItemDAO.js` 
+- [ ] Implement controller methods that wrap DAO operations:
+  - [ ] `createItem(req, res)` - Validate input, call ItemDAO.createItem, return formatted response
+  - [ ] `listItems(req, res)` - Handle query parameters, call ItemDAO.getItemsByPropertyId
+  - [ ] `getItem(req, res)` - Call ItemDAO.getItemById with validation
+  - [ ] `updateItemLocation(req, res)` - Call ItemDAO.updateItemLocation
+  - [ ] `deleteItem(req, res)` - Call ItemDAO.deleteItem with confirmation
+- [ ] Add proper HTTP status codes (200, 201, 400, 404, 500)
+- [ ] Add error handling middleware integration
+- [ ] Use same validation pattern as PropertyController (Joi schemas)
+- [ ] **Root Cause**: Controller layer missing - DAO exists but no business logic layer to expose it
+
 ### 11. Create Item Management API Routes
 **Story Points**: 1  
 **Context**: Expose item management functionality via REST API
@@ -188,6 +217,27 @@
 - [ ] Apply authentication and validation middleware
 - [ ] Add property ownership validation
 - [ ] Test all endpoints with sample data
+
+### 11.1. **BUG FIX**: Create Missing Item API Routes and Register in App
+**Story Points**: 1  
+**Context**: routes/api/items.js does not exist and route is commented out in app.js
+
+- [ ] **Files to modify**: 
+  - [ ] `routes/api/items.js` (CREATE NEW FILE)
+  - [ ] `app.js` (UNCOMMENT line 39)
+- [ ] Create `routes/api/items.js` following the pattern of `routes/api/properties.js`:
+  - [ ] Import `ItemController` from `controllers/ItemController.js`
+  - [ ] Import authentication middleware
+  - [ ] Set up Express router with middleware
+  - [ ] Define RESTful routes matching the endpoint specification
+  - [ ] Export router module
+- [ ] Update `app.js` to register Item routes:
+  - [ ] Uncomment line 39: `app.use('/api/items', require('./routes/api/items'));`
+  - [ ] Ensure route is placed after properties route registration
+- [ ] Test API endpoints:
+  - [ ] `GET /api/items?propertyId=550e8400-e29b-41d4-a716-446655440001` should return items
+  - [ ] Verify 404 error is resolved
+- [ ] **Root Cause**: API routes file missing and not registered in Express app
 
 ### 12. Implement QR Code Generation Service
 **Story Points**: 1  
@@ -246,6 +296,34 @@
 - [ ] Add proper headers for file downloads
 - [ ] Test all endpoints with generated QR codes
 
+### 15.1. **BUG FIX**: Implement Complete QR Code Management System
+**Story Points**: 3  
+**Context**: Entire QR code system is missing - services, DAO, controller, and routes
+
+- [ ] **Files to modify**: 
+  - [ ] `services/QRService.js` (CREATE NEW FILE)
+  - [ ] `dao/QRCodeDAO.js` (CREATE NEW FILE) 
+  - [ ] `controllers/QRController.js` (CREATE NEW FILE)
+  - [ ] `routes/api/qrcodes.js` (CREATE NEW FILE)
+  - [ ] `app.js` (UNCOMMENT line 40)
+- [ ] **Step 1**: Create `services/QRService.js`:
+  - [ ] Install missing dependency: `npm install qrcode uuid`
+  - [ ] Implement QR code generation using `qrcode` library
+  - [ ] Generate unique QR identifiers using `uuid`
+  - [ ] Create URL format for content pages
+- [ ] **Step 2**: Create `dao/QRCodeDAO.js`:
+  - [ ] Implement CRUD operations for qr_codes table
+  - [ ] Handle QR-to-item mapping
+  - [ ] Add status tracking (active/inactive)
+- [ ] **Step 3**: Create `controllers/QRController.js`:
+  - [ ] Import QRService and QRCodeDAO
+  - [ ] Implement business logic for QR operations
+  - [ ] Add validation and error handling
+- [ ] **Step 4**: Create `routes/api/qrcodes.js` and register:
+  - [ ] Define RESTful QR endpoints
+  - [ ] Uncomment line 40 in `app.js`
+- [ ] **Root Cause**: Complete QR system not implemented - all layers missing
+
 ## Phase 3: Frontend Application Development (Tasks 16-30)
 
 ### 16. Create Dashboard Layout Components
@@ -261,6 +339,31 @@
 - [ ] Create `components/Common/Button.js` reusable button component
 - [ ] Add basic CSS styling for layout components
 - [ ] Test responsive design on mobile and desktop
+
+### 16.1. **BUG FIX**: Create Missing Dashboard and Navigation Pages
+**Story Points**: 2  
+**Context**: Landing page exists but functional dashboard and navigation pages are missing
+
+- [ ] **Files to modify**: 
+  - [ ] `frontend/pages/dashboard.tsx` (CREATE NEW FILE)
+  - [ ] `frontend/components/Layout/DashboardLayout.js` (CREATE NEW FILE)
+  - [ ] `frontend/components/Common/Navigation.js` (CREATE NEW FILE)
+  - [ ] `frontend/pages/index.tsx` (MODIFY "Get Started" button)
+- [ ] **Step 1**: Create `frontend/pages/dashboard.tsx`:
+  - [ ] Create main dashboard page with navigation to properties, items, QR codes
+  - [ ] Add system status indicators
+  - [ ] Include quick action buttons
+- [ ] **Step 2**: Create `frontend/components/Layout/DashboardLayout.js`:
+  - [ ] Build reusable layout component with header, nav, footer
+  - [ ] Add responsive navigation menu
+  - [ ] Include demo user indicator
+- [ ] **Step 3**: Create `frontend/components/Common/Navigation.js`:
+  - [ ] Add navigation links: Properties, Items, QR Codes, Dashboard
+  - [ ] Implement active state for current page
+- [ ] **Step 4**: Fix "Get Started" button in `frontend/pages/index.tsx`:
+  - [ ] Replace placeholder alert with actual navigation to `/dashboard`
+  - [ ] Add proper routing using Next.js router
+- [ ] **Root Cause**: Frontend structure exists but missing functional pages and navigation routing
 
 ### 17. Implement Property Registration Form
 **Story Points**: 1  
@@ -291,6 +394,38 @@
 - [ ] Implement API integration for fetching properties
 - [ ] Test with multiple sample properties
 
+### 17.1 & 18.1. **BUG FIX**: Create Missing Property Frontend Pages and Components
+**Story Points**: 3  
+**Context**: Property API works but frontend pages return 404 - no property management interface
+
+- [ ] **Files to modify**: 
+  - [ ] `frontend/pages/properties/` (CREATE NEW DIRECTORY)
+  - [ ] `frontend/pages/properties/index.js` (CREATE NEW FILE)
+  - [ ] `frontend/pages/properties/create.js` (CREATE NEW FILE)
+  - [ ] `frontend/components/Property/` (CREATE NEW DIRECTORY)
+  - [ ] `frontend/components/Property/PropertyForm.js` (CREATE NEW FILE)
+  - [ ] `frontend/components/Property/PropertyList.js` (CREATE NEW FILE)
+  - [ ] `frontend/components/Property/PropertyCard.js` (CREATE NEW FILE)
+- [ ] **Step 1**: Create directory structure:
+  - [ ] Create `frontend/pages/properties/` directory
+  - [ ] Create `frontend/components/Property/` directory
+- [ ] **Step 2**: Create `frontend/pages/properties/index.js`:
+  - [ ] Property listing page using PropertyList component
+  - [ ] API integration with `http://localhost:3001/api/properties`
+  - [ ] Add "Create New Property" button linking to `/properties/create`
+- [ ] **Step 3**: Create `frontend/pages/properties/create.js`:
+  - [ ] Property creation page using PropertyForm component
+  - [ ] Form submission to Properties API
+  - [ ] Success/error handling and redirect
+- [ ] **Step 4**: Create Property components:
+  - [ ] `PropertyForm.js` - Form with validation for property creation
+  - [ ] `PropertyList.js` - Grid layout showing property cards
+  - [ ] `PropertyCard.js` - Individual property display with actions
+- [ ] **Step 5**: Test endpoints:
+  - [ ] Verify `http://localhost:3002/properties` loads property listing
+  - [ ] Verify `http://localhost:3002/properties/create` loads creation form
+- [ ] **Root Cause**: Frontend directory structure for properties missing entirely
+
 ### 19. Create Property Management Pages
 **Story Points**: 1  
 **Context**: Complete property management interface
@@ -318,6 +453,41 @@
 - [ ] Implement location suggestions based on item type
 - [ ] Add form submission with API integration
 - [ ] Test form validation and location tracking
+
+### 20.1. **BUG FIX**: Create Missing Item Frontend Pages and Components
+**Story Points**: 3  
+**Context**: Item backend exists but frontend pages return 404 - no item management interface
+
+- [ ] **Files to modify**: 
+  - [ ] `frontend/pages/items/` (CREATE NEW DIRECTORY)
+  - [ ] `frontend/pages/items/index.js` (CREATE NEW FILE)
+  - [ ] `frontend/pages/items/create.js` (CREATE NEW FILE)
+  - [ ] `frontend/components/Item/` (CREATE NEW DIRECTORY)
+  - [ ] `frontend/components/Item/ItemForm.js` (CREATE NEW FILE)
+  - [ ] `frontend/components/Item/ItemList.js` (CREATE NEW FILE)
+  - [ ] `frontend/components/Item/ItemCard.js` (CREATE NEW FILE)
+- [ ] **Step 1**: Create directory structure:
+  - [ ] Create `frontend/pages/items/` directory
+  - [ ] Create `frontend/components/Item/` directory
+- [ ] **Step 2**: Create `frontend/pages/items/index.js`:
+  - [ ] Item listing page using ItemList component
+  - [ ] API integration with Item API (once bug fix 11.1 is completed)
+  - [ ] Add "Create New Item" button linking to `/items/create`
+  - [ ] Add property filter dropdown
+- [ ] **Step 3**: Create `frontend/pages/items/create.js`:
+  - [ ] Item creation page using ItemForm component
+  - [ ] Property selection dropdown populated from Properties API
+  - [ ] Location suggestions based on item type
+  - [ ] Form submission to Items API
+- [ ] **Step 4**: Create Item components:
+  - [ ] `ItemForm.js` - Form with validation for item creation and location tracking
+  - [ ] `ItemList.js` - Grid layout showing item cards with property and location info
+  - [ ] `ItemCard.js` - Individual item display with QR generation button
+- [ ] **Step 5**: Test endpoints:
+  - [ ] Verify `http://localhost:3002/items` loads item listing
+  - [ ] Verify `http://localhost:3002/items/create` loads creation form
+- [ ] **Dependencies**: Requires completion of bug fix tasks 10.1 and 11.1 (Item Controller and API routes)
+- [ ] **Root Cause**: Frontend directory structure for items missing entirely
 
 ### 21. Implement Item Listing Interface  
 **Story Points**: 1  
@@ -406,6 +576,36 @@
   - [ ] Mobile-responsive content rendering
 - [ ] Create `routes/api/content.js` for content API endpoints
 - [ ] Test dynamic URL generation and access
+
+### 26.1. **BUG FIX**: Implement Complete Content Display System
+**Story Points**: 3  
+**Context**: Content display system is completely missing - no content pages or API endpoints
+
+- [ ] **Files to modify**: 
+  - [ ] `controllers/ContentController.js` (CREATE NEW FILE)
+  - [ ] `routes/api/content.js` (CREATE NEW FILE)
+  - [ ] `frontend/pages/content/` (CREATE NEW DIRECTORY)
+  - [ ] `frontend/pages/content/[qrCode].js` (CREATE NEW FILE)
+  - [ ] `frontend/components/Content/` (CREATE NEW DIRECTORY)
+  - [ ] `frontend/components/Content/ContentPage.js` (CREATE NEW FILE)
+  - [ ] `app.js` (UNCOMMENT line 41)
+- [ ] **Step 1**: Create backend content system:
+  - [ ] Create `controllers/ContentController.js` to handle content page requests
+  - [ ] Implement QR code to item lookup logic
+  - [ ] Add mobile-responsive content rendering
+  - [ ] Create `routes/api/content.js` for content API endpoints
+  - [ ] Uncomment line 41 in `app.js` to register content routes
+- [ ] **Step 2**: Create frontend content system:
+  - [ ] Create `frontend/pages/content/` directory
+  - [ ] Create `frontend/pages/content/[qrCode].js` for dynamic QR content pages
+  - [ ] Implement QR code parameter handling and item data fetching
+  - [ ] Create `frontend/components/Content/ContentPage.js` for content display
+- [ ] **Step 3**: Test content display workflow:
+  - [ ] Test URLs like `http://localhost:3002/content/[qrCode]` load properly
+  - [ ] Verify content is mobile-responsive
+  - [ ] Test invalid QR code error handling
+- [ ] **Dependencies**: Requires completion of bug fix task 15.1 (QR Code Management System)
+- [ ] **Root Cause**: Complete content display system not implemented - both backend and frontend missing
 
 ### 27. Build Mobile-Responsive Content Display Templates
 **Story Points**: 1  
@@ -768,9 +968,64 @@ CREATE TABLE media_assets (
 
 ---
 
-**Document Version**: 1.0  
-**Total Tasks**: 42 (1 story point each)  
-**Estimated Completion**: 3 days  
+---
+
+## BUG FIX TASKS SUMMARY
+
+**Total Original Tasks**: 42 (1 story point each)  
+**Total Bug Fix Tasks Added**: 8 (14.5 story points total)  
+**Combined Total Tasks**: 50  
+**Bug Fix Story Points**: 14.5  
+**Revised Total Story Points**: 56.5  
+
+### Bug Fix Tasks Added:
+
+1. **Task 9.1**: Verify Item Management Data Access Layer Implementation (0.5 points)
+   - **Status**: Verification only - ItemDAO already exists
+   - **Files**: None (verification)
+
+2. **Task 10.1**: Create Missing Item Management Controller (1 point)
+   - **Status**: Controller layer missing
+   - **Files**: `controllers/ItemController.js`
+
+3. **Task 11.1**: Create Missing Item API Routes and Register in App (1 point)
+   - **Status**: API routes missing and commented out
+   - **Files**: `routes/api/items.js`, `app.js`
+
+4. **Task 15.1**: Implement Complete QR Code Management System (3 points)
+   - **Status**: Entire QR system missing
+   - **Files**: `services/QRService.js`, `dao/QRCodeDAO.js`, `controllers/QRController.js`, `routes/api/qrcodes.js`, `app.js`
+
+5. **Task 16.1**: Create Missing Dashboard and Navigation Pages (2 points)
+   - **Status**: Landing page exists but functional pages missing
+   - **Files**: `frontend/pages/dashboard.tsx`, `frontend/components/Layout/DashboardLayout.js`, `frontend/components/Common/Navigation.js`, `frontend/pages/index.tsx`
+
+6. **Task 17.1 & 18.1**: Create Missing Property Frontend Pages and Components (3 points)
+   - **Status**: Property API works but frontend pages missing
+   - **Files**: `frontend/pages/properties/`, `frontend/components/Property/`
+
+7. **Task 20.1**: Create Missing Item Frontend Pages and Components (3 points)
+   - **Status**: Item backend exists but frontend pages missing
+   - **Files**: `frontend/pages/items/`, `frontend/components/Item/`
+
+8. **Task 26.1**: Implement Complete Content Display System (3 points)
+   - **Status**: Content display system completely missing
+   - **Files**: `controllers/ContentController.js`, `routes/api/content.js`, `frontend/pages/content/`, `frontend/components/Content/`, `app.js`
+
+### Implementation Priority:
+1. **Backend Foundation** (Tasks 10.1, 11.1) - 2 points
+2. **QR System** (Task 15.1) - 3 points  
+3. **Frontend Infrastructure** (Task 16.1) - 2 points
+4. **Property Frontend** (Tasks 17.1 & 18.1) - 3 points
+5. **Item Frontend** (Task 20.1) - 3 points
+6. **Content System** (Task 26.1) - 3 points
+
+---
+
+**Document Version**: 1.1  
+**Total Tasks**: 50 (Original: 42 + Bug Fixes: 8)  
+**Total Story Points**: 56.5 (Original: 42 + Bug Fixes: 14.5)  
+**Estimated Completion**: 5 days (revised)  
 **Reference**: [@docs/gen_requests.md](./gen_requests.md) - REQ-001  
 **Overview Reference**: [@docs/req-001-Sprint-MVP1-Content-Creation-QR-Generation-Overview.md](./req-001-Sprint-MVP1-Content-Creation-QR-Generation-Overview.md)  
-**Last Updated**: June 30, 2025 
+**Last Updated**: December 19, 2024 (Bug Fix Tasks Added) 
