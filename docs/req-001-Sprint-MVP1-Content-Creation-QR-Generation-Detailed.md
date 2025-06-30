@@ -121,15 +121,15 @@
 **Story Points**: 1  
 **Context**: Create business logic layer for property operations
 
-- [ ] Create `controllers/PropertyController.js` with business logic:
-  - [ ] `createProperty(req, res)` - Handle property creation with validation
-  - [ ] `listProperties(req, res)` - Return formatted property list
-  - [ ] `getProperty(req, res)` - Return single property details
-  - [ ] `updateProperty(req, res)` - Handle property updates
-  - [ ] `deleteProperty(req, res)` - Handle property deletion
-- [ ] Add proper error handling and HTTP status codes
-- [ ] Implement validation using Joi schemas
-- [ ] Test each controller method with sample data
+- [x] Create `controllers/PropertyController.js` with business logic:
+  - [x] `createProperty(req, res)` - Handle property creation with validation
+  - [x] `listProperties(req, res)` - Return formatted property list
+  - [x] `getProperty(req, res)` - Return single property details
+  - [x] `updateProperty(req, res)` - Handle property updates
+  - [x] `deleteProperty(req, res)` - Handle property deletion
+- [x] Add proper error handling and HTTP status codes
+- [x] Implement validation using Joi schemas
+- [x] Test each controller method with sample data
 
 ### 8. Create Property Management API Routes
 **Story Points**: 1  
