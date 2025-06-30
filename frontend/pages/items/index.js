@@ -1,6 +1,6 @@
 /**
  * Items Listing Page
- * QR Code-Based Instructional System - Item Management Interface with Property Filtering
+ * QR Code-Based Instructional System - Manage all items and generate QR codes
  */
 
 import { useState, useEffect } from 'react';
@@ -10,107 +10,63 @@ import ItemList from '../../components/Item/ItemList';
 
 const ItemsPage = () => {
   const router = useRouter();
-  const { propertyId } = router.query; // Support direct property filtering via URL
-  
   const [items, setItems] = useState([]);
   const [properties, setProperties] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Fetch both items and properties
-  const fetchData = async () => {
+  // Extract propertyId filter from URL params
+  const { propertyId } = router.query;
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const loadData = async () => {
+    setLoading(true);
+    setError(null);
+
     try {
-      setLoading(true);
-      setError(null);
-
-      // Fetch properties first (needed for filtering)
-      const propertiesResponse = await fetch('http://localhost:3001/api/properties', {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-
+      // Load properties first for the filter dropdown
+      const propertiesResponse = await fetch('http://localhost:8000/api/properties');
       if (!propertiesResponse.ok) {
-        throw new Error(`Failed to fetch properties: ${propertiesResponse.status}`);
+        throw new Error(`Properties API error: ${propertiesResponse.status}`);
       }
-
       const propertiesData = await propertiesResponse.json();
-      const propertiesList = propertiesData.success ? (propertiesData.data.properties || []) : [];
-      setProperties(propertiesList);
-
-      // Fetch items - if we have properties, fetch items for the first property or all items
-      let itemsUrl = 'http://localhost:3001/api/items';
-      if (propertyId) {
-        itemsUrl += `?propertyId=${propertyId}`;
-      } else if (propertiesList.length > 0) {
-        // Get items for all properties by making multiple requests or use the first property
-        itemsUrl += `?propertyId=${propertiesList[0].id}`;
+      
+      if (propertiesData.success) {
+        setProperties(propertiesData.data.properties || []);
+      } else {
+        throw new Error(propertiesData.error || 'Failed to load properties');
       }
 
-      const itemsResponse = await fetch(itemsUrl, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-
+      // Load items
+      const itemsResponse = await fetch('http://localhost:8000/api/items');
       if (!itemsResponse.ok) {
-        throw new Error(`Failed to fetch items: ${itemsResponse.status}`);
+        throw new Error(`Items API error: ${itemsResponse.status}`);
       }
-
       const itemsData = await itemsResponse.json();
       
       if (itemsData.success) {
-        // Enhance items with property names
-        const itemsWithPropertyNames = (itemsData.data.items || []).map(item => ({
+        // Enhance items with property information and QR count
+        const enhancedItems = (itemsData.data.items || []).map(item => ({
           ...item,
-          property_name: propertiesList.find(p => p.id === item.property_id)?.name || 'Unknown Property'
+          property: propertiesData.data.properties?.find(p => p.id === item.property_id),
+          qr_count: item.qr_count || 0
         }));
-        setItems(itemsWithPropertyNames);
+        setItems(enhancedItems);
       } else {
-        throw new Error(itemsData.message || 'Failed to fetch items');
+        throw new Error(itemsData.error || 'Failed to load items');
       }
-    } catch (error) {
-      console.error('Error fetching data:', error);
-      setError(error.message);
+
+    } catch (err) {
+      console.error('Error loading data:', err);
+      setError(err.message);
     } finally {
       setLoading(false);
     }
   };
 
-  // Delete item
-  const handleDeleteItem = async (itemId) => {
-    try {
-      const response = await fetch(`http://localhost:3001/api/items/${itemId}`, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-
-      if (data.success) {
-        // Remove the deleted item from the list
-        setItems(prev => prev.filter(item => item.id !== itemId));
-        
-        // Show success message
-        alert(`Item "${data.data.deleted_item.name}" was successfully deleted.`);
-      } else {
-        throw new Error(data.message || 'Failed to delete item');
-      }
-    } catch (error) {
-      console.error('Error deleting item:', error);
-      throw error; // Re-throw to be handled by ItemCard component
-    }
-  };
-
-  // Navigate to create item page
   const handleCreateItem = () => {
     if (propertyId) {
       router.push(`/items/create?propertyId=${propertyId}`);
@@ -119,200 +75,248 @@ const ItemsPage = () => {
     }
   };
 
-  // Load data on component mount
-  useEffect(() => {
-    fetchData();
-  }, [propertyId]); // Re-fetch when propertyId changes
+  const handleDeleteItem = async (itemId) => {
+    try {
+      const response = await fetch(`http://localhost:8000/api/items/${itemId}`, {
+        method: 'DELETE'
+      });
 
-  // Error state
-  if (error && !loading) {
+      if (!response.ok) {
+        throw new Error(`Delete failed: ${response.status}`);
+      }
+
+      const data = await response.json();
+      if (data.success) {
+        // Remove the deleted item from the list
+        setItems(prevItems => prevItems.filter(item => item.id !== itemId));
+        
+        // Show success message
+        alert('Item deleted successfully');
+      } else {
+        throw new Error(data.error || 'Delete failed');
+      }
+    } catch (error) {
+      console.error('Error deleting item:', error);
+      throw error; // Re-throw to let ItemCard handle the error display
+    }
+  };
+
+  const handleGenerateQR = async (itemId) => {
+    try {
+      const response = await fetch('http://localhost:8000/api/qrcodes', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          itemId: itemId,
+          options: {
+            width: 256
+          }
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`QR generation failed: ${response.status}`);
+      }
+
+      const data = await response.json();
+      if (data.success) {
+        // Update the item's QR count
+        setItems(prevItems => 
+          prevItems.map(item => 
+            item.id === itemId 
+              ? { ...item, qr_count: (item.qr_count || 0) + 1 }
+              : item
+          )
+        );
+        
+        // Show success message with option to download
+        const downloadQR = confirm(
+          `QR code generated successfully for "${data.data.item_name}"!\n\nWould you like to download the QR code now?`
+        );
+        
+        if (downloadQR) {
+          // Trigger download
+          const downloadUrl = `http://localhost:8000${data.data.download_url}`;
+          const link = document.createElement('a');
+          link.href = downloadUrl;
+          link.download = data.data.filename;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+        }
+      } else {
+        throw new Error(data.error || 'QR generation failed');
+      }
+    } catch (error) {
+      console.error('Error generating QR code:', error);
+      throw error; // Re-throw to let ItemCard handle the error display
+    }
+  };
+
+  const getFilteredPropertyName = () => {
+    if (!propertyId) return null;
+    const property = properties.find(p => p.id === propertyId);
+    return property?.name;
+  };
+
+  const filteredPropertyName = getFilteredPropertyName();
+
+  if (error) {
     return (
-      <DashboardLayout title="Items">
+      <DashboardLayout>
         <div className="error-container">
           <div className="error-content">
             <div className="error-icon">⚠️</div>
-            <h3 className="error-title">Failed to Load Items</h3>
+            <h1 className="error-title">Failed to Load Items</h1>
             <p className="error-message">{error}</p>
             <div className="error-actions">
               <button 
-                onClick={fetchData}
+                onClick={loadData}
                 className="btn-primary"
               >
                 Try Again
               </button>
               <button 
-                onClick={handleCreateItem}
+                onClick={() => router.push('/dashboard')}
                 className="btn-secondary"
               >
-                Create Item
+                Back to Dashboard
               </button>
             </div>
           </div>
-          
-          <style jsx>{`
-            .error-container {
-              display: flex;
-              justify-content: center;
-              align-items: center;
-              min-height: 400px;
-            }
-
-            .error-content {
-              text-align: center;
-              background: white;
-              padding: 3rem 2rem;
-              border-radius: 0.5rem;
-              box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
-              border: 1px solid #e5e7eb;
-              max-width: 400px;
-            }
-
-            .error-icon {
-              font-size: 3rem;
-              margin-bottom: 1rem;
-            }
-
-            .error-title {
-              font-size: 1.25rem;
-              font-weight: 600;
-              color: #1f2937;
-              margin: 0 0 0.5rem 0;
-            }
-
-            .error-message {
-              color: #6b7280;
-              margin: 0 0 2rem 0;
-              line-height: 1.5;
-            }
-
-            .error-actions {
-              display: flex;
-              gap: 1rem;
-              justify-content: center;
-            }
-
-            .btn-primary, .btn-secondary {
-              padding: 0.75rem 1.5rem;
-              border: none;
-              border-radius: 0.375rem;
-              font-size: 0.875rem;
-              font-weight: 500;
-              cursor: pointer;
-              transition: all 0.2s;
-            }
-
-            .btn-primary {
-              background: #3b82f6;
-              color: white;
-            }
-
-            .btn-primary:hover {
-              background: #2563eb;
-            }
-
-            .btn-secondary {
-              background: #6b7280;
-              color: white;
-            }
-
-            .btn-secondary:hover {
-              background: #4b5563;
-            }
-          `}</style>
         </div>
+
+        <style jsx>{`
+          .error-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 60vh;
+            padding: 2rem;
+          }
+
+          .error-content {
+            text-align: center;
+            max-width: 400px;
+          }
+
+          .error-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+          }
+
+          .error-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #1f2937;
+            margin: 0 0 0.5rem 0;
+          }
+
+          .error-message {
+            color: #6b7280;
+            margin: 0 0 2rem 0;
+            line-height: 1.5;
+          }
+
+          .error-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+          }
+
+          .btn-primary,
+          .btn-secondary {
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+          }
+
+          .btn-primary {
+            background: #3b82f6;
+            color: white;
+          }
+
+          .btn-primary:hover {
+            background: #2563eb;
+          }
+
+          .btn-secondary {
+            background: #f3f4f6;
+            color: #374151;
+            border: 1px solid #d1d5db;
+          }
+
+          .btn-secondary:hover {
+            background: #e5e7eb;
+          }
+        `}</style>
       </DashboardLayout>
     );
   }
 
-  const selectedProperty = properties.find(p => p.id === propertyId);
-
   return (
-    <DashboardLayout title="Items">
+    <DashboardLayout>
       <div className="items-page">
         <div className="page-header">
           <div className="header-content">
             <div className="header-text">
               <h1 className="page-title">
-                {selectedProperty ? `Items - ${selectedProperty.name}` : 'Item Management'}
+                {filteredPropertyName ? `Items - ${filteredPropertyName}` : 'Items'}
               </h1>
-              <p className="page-description">
-                {selectedProperty 
-                  ? `Manage items for ${selectedProperty.name}. Add appliances, instructions, or any content you want to share via QR codes.`
-                  : 'Manage your rental items across all properties. Add appliances, instructions, or any content you want to share with guests via QR codes.'
-                }
+              <p className="page-subtitle">
+                Manage items and generate QR codes for guest instructions
               </p>
             </div>
             <div className="header-actions">
-              <button 
+              <button
                 onClick={handleCreateItem}
                 className="btn-primary"
-                disabled={loading || properties.length === 0}
               >
-                <span className="btn-icon">+</span>
-                Create Item
+                + Create Item
               </button>
             </div>
           </div>
 
-          {selectedProperty && (
-            <div className="property-indicator">
-              <div className="indicator-content">
-                <span className="indicator-icon">🏢</span>
-                <span className="indicator-text">
-                  Showing items for <strong>{selectedProperty.name}</strong>
-                </span>
-                <button 
-                  onClick={() => router.push('/items')}
-                  className="btn-outline-small"
-                >
-                  View All Items
-                </button>
-              </div>
-            </div>
-          )}
-
-          {properties.length === 0 && !loading && (
-            <div className="no-properties-notice">
-              <span className="notice-icon">ℹ️</span>
-              <span className="notice-text">
-                You need to create a property first before adding items.
+          {filteredPropertyName && (
+            <div className="filter-notice">
+              <span className="filter-icon">🔍</span>
+              <span className="filter-text">
+                Showing items for: <strong>{filteredPropertyName}</strong>
               </span>
-              <button 
-                onClick={() => router.push('/properties/create')}
-                className="btn-outline"
+              <button
+                onClick={() => router.push('/items')}
+                className="clear-filter-btn"
               >
-                Create Property
+                Show All Items
               </button>
             </div>
           )}
         </div>
 
         <div className="page-content">
-          <ItemList 
+          <ItemList
             items={items}
             properties={properties}
             loading={loading}
             onDeleteItem={handleDeleteItem}
-            selectedPropertyId={propertyId}
+            onGenerateQR={handleGenerateQR}
           />
-        </div>
-
-        {/* Refresh button for development */}
-        <div className="page-footer">
-          <button 
-            onClick={fetchData}
-            className="btn-outline"
-            disabled={loading}
-          >
-            <span className="refresh-icon">🔄</span>
-            {loading ? 'Loading...' : 'Refresh'}
-          </button>
         </div>
       </div>
 
       <style jsx>{`
         .items-page {
-          max-width: 100%;
+          width: 100%;
+          max-width: 1200px;
+          margin: 0 auto;
+          padding: 2rem;
         }
 
         .page-header {
@@ -338,163 +342,102 @@ const ItemsPage = () => {
           margin: 0 0 0.5rem 0;
         }
 
-        .page-description {
+        .page-subtitle {
           color: #6b7280;
           margin: 0;
-          line-height: 1.5;
           font-size: 1rem;
+          line-height: 1.5;
         }
 
         .header-actions {
-          display: flex;
-          gap: 1rem;
+          flex-shrink: 0;
         }
 
         .btn-primary {
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-          padding: 0.75rem 1.5rem;
           background: #3b82f6;
           color: white;
           border: none;
+          padding: 0.75rem 1.5rem;
           border-radius: 0.375rem;
           font-size: 0.875rem;
           font-weight: 500;
           cursor: pointer;
           transition: all 0.2s;
-          white-space: nowrap;
-        }
-
-        .btn-primary:hover:not(:disabled) {
-          background: #2563eb;
-        }
-
-        .btn-primary:disabled {
-          opacity: 0.5;
-          cursor: not-allowed;
-        }
-
-        .btn-icon {
-          font-size: 1rem;
-          font-weight: bold;
-        }
-
-        .property-indicator {
-          background: #dbeafe;
-          border: 1px solid #3b82f6;
-          border-radius: 0.5rem;
-          padding: 1rem;
-          margin-bottom: 1rem;
-        }
-
-        .indicator-content {
-          display: flex;
-          align-items: center;
-          gap: 1rem;
-        }
-
-        .indicator-icon {
-          font-size: 1.25rem;
-        }
-
-        .indicator-text {
-          flex: 1;
-          color: #1d4ed8;
-          font-size: 0.875rem;
-        }
-
-        .btn-outline-small, .btn-outline {
-          padding: 0.5rem 1rem;
-          background: white;
-          color: #374151;
-          border: 1px solid #d1d5db;
-          border-radius: 0.375rem;
-          font-size: 0.875rem;
-          cursor: pointer;
-          transition: all 0.2s;
-        }
-
-        .btn-outline-small:hover, .btn-outline:hover:not(:disabled) {
-          background: #f9fafb;
-          border-color: #9ca3af;
-        }
-
-        .btn-outline:disabled {
-          opacity: 0.5;
-          cursor: not-allowed;
-        }
-
-        .no-properties-notice {
-          display: flex;
-          align-items: center;
-          gap: 1rem;
-          padding: 1rem;
-          background: #fef3c7;
-          border: 1px solid #f59e0b;
-          border-radius: 0.5rem;
-          font-size: 0.875rem;
-          color: #92400e;
-        }
-
-        .notice-icon {
-          font-size: 1.25rem;
-        }
-
-        .notice-text {
-          flex: 1;
-        }
-
-        .page-content {
-          margin-bottom: 2rem;
-        }
-
-        .page-footer {
-          display: flex;
-          justify-content: center;
-          padding-top: 2rem;
-          border-top: 1px solid #e5e7eb;
-        }
-
-        .btn-outline {
-          display: flex;
+          text-decoration: none;
+          display: inline-flex;
           align-items: center;
           gap: 0.5rem;
         }
 
-        .refresh-icon {
+        .btn-primary:hover {
+          background: #2563eb;
+          transform: translateY(-1px);
+        }
+
+        .filter-notice {
+          display: flex;
+          align-items: center;
+          gap: 0.75rem;
+          padding: 0.75rem 1rem;
+          background: #dbeafe;
+          border: 1px solid #3b82f6;
+          border-radius: 0.375rem;
           font-size: 0.875rem;
+          color: #1d4ed8;
+        }
+
+        .filter-icon {
+          font-size: 1rem;
+        }
+
+        .filter-text {
+          flex: 1;
+        }
+
+        .clear-filter-btn {
+          background: #3b82f6;
+          color: white;
+          border: none;
+          padding: 0.25rem 0.75rem;
+          border-radius: 0.25rem;
+          font-size: 0.75rem;
+          cursor: pointer;
+          transition: background 0.2s;
+        }
+
+        .clear-filter-btn:hover {
+          background: #2563eb;
+        }
+
+        .page-content {
+          min-height: 400px;
         }
 
         @media (max-width: 768px) {
+          .items-page {
+            padding: 1rem;
+          }
+
           .header-content {
             flex-direction: column;
+            align-items: stretch;
             gap: 1rem;
-          }
-
-          .header-actions {
-            width: 100%;
-          }
-
-          .btn-primary {
-            width: 100%;
-            justify-content: center;
           }
 
           .page-title {
             font-size: 1.5rem;
           }
 
-          .indicator-content {
+          .filter-notice {
             flex-direction: column;
-            gap: 0.75rem;
-            align-items: flex-start;
+            align-items: stretch;
+            gap: 0.5rem;
+            text-align: center;
           }
 
-          .no-properties-notice {
-            flex-direction: column;
-            align-items: center;
-            text-align: center;
+          .clear-filter-btn {
+            align-self: center;
+            width: fit-content;
           }
         }
       `}</style>

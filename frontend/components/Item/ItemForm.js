@@ -1,6 +1,6 @@
 /**
  * Item Form Component
- * QR Code-Based Instructional System - Item Creation and Editing Form with Property Selection
+ * QR Code-Based Instructional System - Item Creation and Editing Form
  */
 
 import { useState, useEffect } from 'react';
@@ -14,96 +14,80 @@ const ItemForm = ({
   mode = 'create' // 'create' or 'edit'
 }) => {
   const [formData, setFormData] = useState({
-    property_id: '',
     name: '',
     description: '',
     location: '',
+    property_id: '',
     media_url: '',
-    media_type: 'text'
+    media_type: 'text',
+    metadata: {
+      category: '',
+      difficulty: 'easy',
+      duration: ''
+    }
   });
 
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [locationSuggestions, setLocationSuggestions] = useState([]);
 
   const mediaTypes = [
-    { value: 'text', label: 'Text/Instructions' },
+    { value: 'text', label: 'Text Instructions' },
     { value: 'youtube', label: 'YouTube Video' },
-    { value: 'image', label: 'Image' },
-    { value: 'pdf', label: 'PDF Document' },
-    { value: 'other', label: 'Other' }
+    { value: 'image', label: 'Image Guide' },
+    { value: 'pdf', label: 'PDF Document' }
   ];
 
-  // Common location suggestions based on item types and rental properties
-  const getLocationSuggestions = (itemName = '') => {
-    const commonLocations = [
-      'Kitchen',
-      'Living Room',
-      'Bedroom',
-      'Bathroom',
-      'Balcony',
-      'Dining Room',
-      'Laundry Room',
-      'Garage',
-      'Basement',
-      'Storage Room',
-      'Office',
-      'Guest Room'
-    ];
+  const difficultyLevels = [
+    { value: 'easy', label: 'Easy' },
+    { value: 'medium', label: 'Medium' },
+    { value: 'hard', label: 'Hard' }
+  ];
 
-    const applianceLocations = [
-      'Kitchen Counter',
-      'Under Kitchen Sink',
-      'Next to Refrigerator',
-      'Laundry Area',
-      'Utility Closet',
-      'Bathroom Vanity',
-      'Living Room Entertainment Center'
-    ];
-
-    const name = itemName.toLowerCase();
-    if (name.includes('coffee') || name.includes('microwave') || name.includes('dish') || name.includes('kitchen')) {
-      return ['Kitchen', 'Kitchen Counter', 'Next to Refrigerator', ...commonLocations];
-    }
-    if (name.includes('washing') || name.includes('dryer') || name.includes('laundry')) {
-      return ['Laundry Room', 'Laundry Area', 'Utility Closet', ...commonLocations];
-    }
-    if (name.includes('tv') || name.includes('remote') || name.includes('sound')) {
-      return ['Living Room', 'Living Room Entertainment Center', 'Bedroom', ...commonLocations];
-    }
-    if (name.includes('wifi') || name.includes('router') || name.includes('internet')) {
-      return ['Office', 'Living Room', 'Utility Closet', ...commonLocations];
-    }
-
-    return [...commonLocations, ...applianceLocations];
-  };
+  const itemCategories = [
+    { value: '', label: 'Select category...' },
+    { value: 'kitchen', label: 'Kitchen Appliance' },
+    { value: 'bathroom', label: 'Bathroom Fixture' },
+    { value: 'bedroom', label: 'Bedroom Item' },
+    { value: 'living', label: 'Living Room Item' },
+    { value: 'appliance', label: 'General Appliance' },
+    { value: 'electronic', label: 'Electronics' },
+    { value: 'hvac', label: 'Heating/Cooling' },
+    { value: 'safety', label: 'Safety Equipment' },
+    { value: 'maintenance', label: 'Maintenance' },
+    { value: 'other', label: 'Other' }
+  ];
 
   // Initialize form with existing item data for editing
   useEffect(() => {
     if (item && mode === 'edit') {
       setFormData({
-        property_id: item.property_id || '',
         name: item.name || '',
         description: item.description || '',
         location: item.location || '',
+        property_id: item.property_id || '',
         media_url: item.media_url || '',
-        media_type: item.media_type || 'text'
+        media_type: item.media_type || 'text',
+        metadata: {
+          category: item.metadata?.category || '',
+          difficulty: item.metadata?.difficulty || 'easy',
+          duration: item.metadata?.duration || ''
+        }
       });
     }
   }, [item, mode]);
 
-  // Update location suggestions when item name changes
+  // Set default property if only one property available
   useEffect(() => {
-    setLocationSuggestions(getLocationSuggestions(formData.name));
-  }, [formData.name]);
+    if (properties.length === 1 && !formData.property_id && mode === 'create') {
+      setFormData(prev => ({
+        ...prev,
+        property_id: properties[0].id
+      }));
+    }
+  }, [properties, formData.property_id, mode]);
 
   const validateForm = () => {
     const newErrors = {};
-
-    // Property validation
-    if (!formData.property_id) {
-      newErrors.property_id = 'Property selection is required';
-    }
 
     // Name validation
     if (!formData.name.trim()) {
@@ -112,6 +96,11 @@ const ItemForm = ({
       newErrors.name = 'Item name must be at least 2 characters';
     } else if (formData.name.trim().length > 255) {
       newErrors.name = 'Item name must be less than 255 characters';
+    }
+
+    // Property validation
+    if (!formData.property_id) {
+      newErrors.property_id = 'Property selection is required';
     }
 
     // Description validation (optional but if provided should be reasonable length)
@@ -124,13 +113,32 @@ const ItemForm = ({
       newErrors.location = 'Location must be less than 255 characters';
     }
 
-    // Media URL validation (optional but if provided should be valid URL)
+    // Media URL validation
     if (formData.media_url) {
-      try {
-        new URL(formData.media_url);
-      } catch {
-        newErrors.media_url = 'Please enter a valid URL';
+      if (formData.media_type === 'youtube') {
+        const youtubeRegex = /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/.+/;
+        if (!youtubeRegex.test(formData.media_url)) {
+          newErrors.media_url = 'Please enter a valid YouTube URL';
+        }
+      } else if (formData.media_type === 'image') {
+        const imageRegex = /\.(jpg|jpeg|png|gif|webp)$/i;
+        const urlRegex = /^https?:\/\/.+/;
+        if (!urlRegex.test(formData.media_url)) {
+          newErrors.media_url = 'Please enter a valid image URL';
+        } else if (!imageRegex.test(formData.media_url)) {
+          newErrors.media_url = 'URL must point to an image file (jpg, png, gif, webp)';
+        }
+      } else if (formData.media_type === 'pdf') {
+        const urlRegex = /^https?:\/\/.+/;
+        if (!urlRegex.test(formData.media_url)) {
+          newErrors.media_url = 'Please enter a valid PDF URL';
+        }
       }
+    }
+
+    // Duration validation
+    if (formData.metadata.duration && formData.metadata.duration.length > 50) {
+      newErrors.duration = 'Duration must be less than 50 characters';
     }
 
     return newErrors;
@@ -138,29 +146,29 @@ const ItemForm = ({
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-
-    // Clear error when user starts typing
-    if (errors[name]) {
-      setErrors(prev => ({
+    
+    if (name.startsWith('metadata.')) {
+      const metadataKey = name.split('.')[1];
+      setFormData(prev => ({
         ...prev,
-        [name]: ''
+        metadata: {
+          ...prev.metadata,
+          [metadataKey]: value
+        }
+      }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [name]: value
       }));
     }
-  };
 
-  const handleLocationSelect = (location) => {
-    setFormData(prev => ({
-      ...prev,
-      location
-    }));
-    if (errors.location) {
+    // Clear error when user starts typing
+    const errorKey = name.startsWith('metadata.') ? name.split('.')[1] : name;
+    if (errors[errorKey]) {
       setErrors(prev => ({
         ...prev,
-        location: ''
+        [errorKey]: ''
       }));
     }
   };
@@ -180,12 +188,17 @@ const ItemForm = ({
     try {
       // Prepare submission data
       const submissionData = {
-        property_id: formData.property_id,
         name: formData.name.trim(),
         description: formData.description.trim() || null,
         location: formData.location.trim() || null,
+        property_id: formData.property_id,
         media_url: formData.media_url.trim() || null,
-        media_type: formData.media_type
+        media_type: formData.media_type,
+        metadata: {
+          category: formData.metadata.category || null,
+          difficulty: formData.metadata.difficulty,
+          duration: formData.metadata.duration.trim() || null
+        }
       };
 
       if (onSubmit) {
@@ -204,27 +217,53 @@ const ItemForm = ({
   const handleReset = () => {
     if (mode === 'edit' && item) {
       setFormData({
-        property_id: item.property_id || '',
         name: item.name || '',
         description: item.description || '',
         location: item.location || '',
+        property_id: item.property_id || '',
         media_url: item.media_url || '',
-        media_type: item.media_type || 'text'
+        media_type: item.media_type || 'text',
+        metadata: {
+          category: item.metadata?.category || '',
+          difficulty: item.metadata?.difficulty || 'easy',
+          duration: item.metadata?.duration || ''
+        }
       });
     } else {
       setFormData({
-        property_id: '',
         name: '',
         description: '',
         location: '',
+        property_id: properties.length === 1 ? properties[0].id : '',
         media_url: '',
-        media_type: 'text'
+        media_type: 'text',
+        metadata: {
+          category: '',
+          difficulty: 'easy',
+          duration: ''
+        }
       });
     }
     setErrors({});
   };
 
-  const selectedProperty = properties.find(p => p.id === formData.property_id);
+  const getLocationSuggestions = () => {
+    const category = formData.metadata.category;
+    switch (category) {
+      case 'kitchen':
+        return ['Kitchen Counter', 'Under Sink', 'Kitchen Island', 'Near Stove', 'Kitchen Cabinet'];
+      case 'bathroom':
+        return ['Bathroom Vanity', 'Shower Area', 'Bathroom Cabinet', 'Near Toilet', 'Bathroom Closet'];
+      case 'bedroom':
+        return ['Bedside Table', 'Bedroom Closet', 'Dresser', 'Under Bed', 'Bedroom Wall'];
+      case 'living':
+        return ['Coffee Table', 'TV Stand', 'Sofa Side', 'Living Room Cabinet', 'Entertainment Center'];
+      case 'hvac':
+        return ['Thermostat Wall', 'Utility Room', 'Basement', 'Attic Access', 'HVAC Closet'];
+      default:
+        return ['Living Room', 'Kitchen', 'Bedroom', 'Bathroom', 'Utility Room', 'Basement', 'Garage'];
+    }
+  };
 
   return (
     <div className="item-form">
@@ -234,93 +273,98 @@ const ItemForm = ({
         </h2>
         <p className="form-subtitle">
           {mode === 'edit' 
-            ? 'Update your item information below.'
-            : 'Add a new item to your property and start building your QR code system.'
+            ? 'Update your item information and instructions below.'
+            : 'Add a new item to generate QR codes and manage instructions for guests.'
           }
         </p>
-        {selectedProperty && (
-          <div className="selected-property">
-            <span className="property-icon">🏢</span>
-            <span className="property-text">Adding to: <strong>{selectedProperty.name}</strong></span>
-          </div>
-        )}
       </div>
 
       <form onSubmit={handleSubmit} className="form">
-        <div className="form-section">
-          <h3 className="section-title">Basic Information</h3>
-          
-          <div className="form-grid">
-            <div className="form-group">
-              <label htmlFor="property_id" className="form-label">
-                Property <span className="required">*</span>
-              </label>
-              <select
-                id="property_id"
-                name="property_id"
-                value={formData.property_id}
-                onChange={handleInputChange}
-                className={`form-select ${errors.property_id ? 'error' : ''}`}
-                disabled={isSubmitting || loading}
-              >
-                <option value="">Select a property...</option>
-                {properties.map(property => (
-                  <option key={property.id} value={property.id}>
-                    {property.name}
-                  </option>
-                ))}
-              </select>
-              {errors.property_id && (
-                <span className="form-error">{errors.property_id}</span>
-              )}
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="name" className="form-label">
-                Item Name <span className="required">*</span>
-              </label>
-              <input
-                type="text"
-                id="name"
-                name="name"
-                value={formData.name}
-                onChange={handleInputChange}
-                placeholder="e.g. Coffee Maker Instructions"
-                className={`form-input ${errors.name ? 'error' : ''}`}
-                disabled={isSubmitting || loading}
-              />
-              {errors.name && (
-                <span className="form-error">{errors.name}</span>
-              )}
-            </div>
+        <div className="form-grid">
+          <div className="form-group">
+            <label htmlFor="name" className="form-label">
+              Item Name <span className="required">*</span>
+            </label>
+            <input
+              type="text"
+              id="name"
+              name="name"
+              value={formData.name}
+              onChange={handleInputChange}
+              placeholder="e.g. Coffee Machine, TV Remote, WiFi Router"
+              className={`form-input ${errors.name ? 'error' : ''}`}
+              disabled={isSubmitting || loading}
+            />
+            {errors.name && (
+              <span className="form-error">{errors.name}</span>
+            )}
           </div>
 
           <div className="form-group">
-            <label htmlFor="description" className="form-label">
-              Description
+            <label htmlFor="property_id" className="form-label">
+              Property <span className="required">*</span>
             </label>
-            <textarea
-              id="description"
-              name="description"
-              value={formData.description}
+            <select
+              id="property_id"
+              name="property_id"
+              value={formData.property_id}
               onChange={handleInputChange}
-              placeholder="Brief description of the item or instructions (optional)"
-              rows={4}
-              className={`form-textarea ${errors.description ? 'error' : ''}`}
+              className={`form-select ${errors.property_id ? 'error' : ''}`}
               disabled={isSubmitting || loading}
-            />
-            {errors.description && (
-              <span className="form-error">{errors.description}</span>
+            >
+              <option value="">Select a property...</option>
+              {properties.map(property => (
+                <option key={property.id} value={property.id}>
+                  {property.name}
+                </option>
+              ))}
+            </select>
+            {errors.property_id && (
+              <span className="form-error">{errors.property_id}</span>
             )}
-            <span className="form-help">
-              {formData.description.length}/1000 characters
-            </span>
           </div>
         </div>
 
-        <div className="form-section">
-          <h3 className="section-title">Location & Media</h3>
-          
+        <div className="form-group">
+          <label htmlFor="description" className="form-label">
+            Description
+          </label>
+          <textarea
+            id="description"
+            name="description"
+            value={formData.description}
+            onChange={handleInputChange}
+            placeholder="Describe what this item is and how guests should use it..."
+            rows="3"
+            className="form-textarea"
+            disabled={isSubmitting || loading}
+          />
+          {errors.description && (
+            <span className="form-error">{errors.description}</span>
+          )}
+        </div>
+
+        <div className="form-grid">
+          <div className="form-group">
+            <label htmlFor="metadata.category" className="form-label">
+              Category
+            </label>
+            <select
+              id="metadata.category"
+              name="metadata.category"
+              value={formData.metadata.category}
+              onChange={handleInputChange}
+              className="form-select"
+              disabled={isSubmitting || loading}
+            >
+              {itemCategories.map(category => (
+                <option key={category.value} value={category.value}>
+                  {category.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
           <div className="form-group">
             <label htmlFor="location" className="form-label">
               Location
@@ -331,34 +375,25 @@ const ItemForm = ({
               name="location"
               value={formData.location}
               onChange={handleInputChange}
-              placeholder="Where is this item located? (optional)"
-              className={`form-input ${errors.location ? 'error' : ''}`}
+              placeholder="Where is this item located?"
+              className="form-input"
               disabled={isSubmitting || loading}
+              list="location-suggestions"
             />
+            <datalist id="location-suggestions">
+              {getLocationSuggestions().map((suggestion, index) => (
+                <option key={index} value={suggestion} />
+              ))}
+            </datalist>
             {errors.location && (
               <span className="form-error">{errors.location}</span>
             )}
-            
-            {locationSuggestions.length > 0 && (
-              <div className="location-suggestions">
-                <span className="suggestions-label">Suggestions:</span>
-                <div className="suggestions-list">
-                  {locationSuggestions.slice(0, 8).map((suggestion, index) => (
-                    <button
-                      key={index}
-                      type="button"
-                      onClick={() => handleLocationSelect(suggestion)}
-                      className="suggestion-button"
-                      disabled={isSubmitting || loading}
-                    >
-                      {suggestion}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
           </div>
+        </div>
 
+        <div className="form-section">
+          <h3 className="section-title">Instructions & Media</h3>
+          
           <div className="form-grid">
             <div className="form-group">
               <label htmlFor="media_type" className="form-label">
@@ -381,8 +416,31 @@ const ItemForm = ({
             </div>
 
             <div className="form-group">
+              <label htmlFor="metadata.difficulty" className="form-label">
+                Difficulty Level
+              </label>
+              <select
+                id="metadata.difficulty"
+                name="metadata.difficulty"
+                value={formData.metadata.difficulty}
+                onChange={handleInputChange}
+                className="form-select"
+                disabled={isSubmitting || loading}
+              >
+                {difficultyLevels.map(level => (
+                  <option key={level.value} value={level.value}>
+                    {level.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <div className="form-grid">
+            <div className="form-group">
               <label htmlFor="media_url" className="form-label">
                 Media URL
+                {formData.media_type !== 'text' && <span className="optional"> (Optional)</span>}
               </label>
               <input
                 type="url"
@@ -390,7 +448,12 @@ const ItemForm = ({
                 name="media_url"
                 value={formData.media_url}
                 onChange={handleInputChange}
-                placeholder="https://example.com/instructions (optional)"
+                placeholder={
+                  formData.media_type === 'youtube' ? 'https://www.youtube.com/watch?v=...' :
+                  formData.media_type === 'image' ? 'https://example.com/image.jpg' :
+                  formData.media_type === 'pdf' ? 'https://example.com/guide.pdf' :
+                  'URL to instructions (optional)'
+                }
                 className={`form-input ${errors.media_url ? 'error' : ''}`}
                 disabled={isSubmitting || loading}
               />
@@ -398,13 +461,31 @@ const ItemForm = ({
                 <span className="form-error">{errors.media_url}</span>
               )}
             </div>
+
+            <div className="form-group">
+              <label htmlFor="metadata.duration" className="form-label">
+                Estimated Duration
+              </label>
+              <input
+                type="text"
+                id="metadata.duration"
+                name="metadata.duration"
+                value={formData.metadata.duration}
+                onChange={handleInputChange}
+                placeholder="e.g. 2 minutes, 30 seconds"
+                className="form-input"
+                disabled={isSubmitting || loading}
+              />
+              {errors.duration && (
+                <span className="form-error">{errors.duration}</span>
+              )}
+            </div>
           </div>
         </div>
 
         {errors.submit && (
           <div className="form-error-banner">
-            <span className="error-icon">⚠️</span>
-            <span className="error-text">{errors.submit}</span>
+            {errors.submit}
           </div>
         )}
 
@@ -413,40 +494,42 @@ const ItemForm = ({
             type="button"
             onClick={onCancel}
             className="btn-secondary"
-            disabled={isSubmitting || loading}
+            disabled={isSubmitting}
           >
             Cancel
           </button>
+          
           <button
             type="button"
             onClick={handleReset}
-            className="btn-outline"
-            disabled={isSubmitting || loading}
+            className="btn-reset"
+            disabled={isSubmitting}
           >
             Reset
           </button>
+
           <button
             type="submit"
             className="btn-primary"
-            disabled={isSubmitting || loading || !formData.property_id}
+            disabled={isSubmitting || loading}
           >
-            {isSubmitting ? 'Saving...' : (mode === 'edit' ? 'Update Item' : 'Create Item')}
+            {isSubmitting ? 
+              (mode === 'edit' ? 'Updating...' : 'Creating...') : 
+              (mode === 'edit' ? 'Update Item' : 'Create Item')
+            }
           </button>
         </div>
       </form>
 
       <style jsx>{`
         .item-form {
-          background: white;
-          border-radius: 0.5rem;
-          box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
-          border: 1px solid #e5e7eb;
-          overflow: hidden;
+          width: 100%;
+          max-width: 800px;
+          margin: 0 auto;
         }
 
         .form-header {
-          padding: 2rem 2rem 1rem 2rem;
-          border-bottom: 1px solid #f3f4f6;
+          margin-bottom: 2rem;
         }
 
         .form-title {
@@ -458,42 +541,29 @@ const ItemForm = ({
 
         .form-subtitle {
           color: #6b7280;
-          margin: 0 0 1rem 0;
-          font-size: 0.875rem;
-          line-height: 1.4;
-        }
-
-        .selected-property {
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-          padding: 0.75rem 1rem;
-          background: #dbeafe;
-          border: 1px solid #3b82f6;
-          border-radius: 0.375rem;
-          font-size: 0.875rem;
-          color: #1d4ed8;
-        }
-
-        .property-icon {
-          font-size: 1rem;
+          margin: 0;
+          line-height: 1.5;
         }
 
         .form {
+          background: white;
           padding: 2rem;
+          border-radius: 0.5rem;
+          box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+          border: 1px solid #e5e7eb;
         }
 
         .form-section {
-          margin-bottom: 2rem;
+          margin-top: 2rem;
+          padding-top: 2rem;
+          border-top: 1px solid #f3f4f6;
         }
 
         .section-title {
           font-size: 1.125rem;
-          font-weight: 600;
+          font-weight: 500;
           color: #1f2937;
-          margin: 0 0 1rem 0;
-          padding-bottom: 0.5rem;
-          border-bottom: 1px solid #f3f4f6;
+          margin: 0 0 1.5rem 0;
         }
 
         .form-grid {
@@ -519,124 +589,75 @@ const ItemForm = ({
           color: #ef4444;
         }
 
-        .form-input, .form-textarea, .form-select {
+        .optional {
+          color: #9ca3af;
+          font-weight: 400;
+        }
+
+        .form-input,
+        .form-select,
+        .form-textarea {
           padding: 0.75rem;
           border: 1px solid #d1d5db;
           border-radius: 0.375rem;
           font-size: 0.875rem;
           transition: border-color 0.2s, box-shadow 0.2s;
-          background: white;
         }
 
-        .form-input:focus, .form-textarea:focus, .form-select:focus {
+        .form-input:focus,
+        .form-select:focus,
+        .form-textarea:focus {
           outline: none;
           border-color: #3b82f6;
           box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
         }
 
-        .form-input.error, .form-textarea.error, .form-select.error {
+        .form-input.error,
+        .form-select.error,
+        .form-textarea.error {
           border-color: #ef4444;
-          box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
-        }
-
-        .form-input:disabled, .form-textarea:disabled, .form-select:disabled {
-          background: #f9fafb;
-          color: #6b7280;
-          cursor: not-allowed;
         }
 
         .form-textarea {
           resize: vertical;
-          min-height: 100px;
+          min-height: 80px;
         }
 
         .form-error {
-          font-size: 0.75rem;
           color: #ef4444;
+          font-size: 0.75rem;
           margin-top: 0.25rem;
-        }
-
-        .form-help {
-          font-size: 0.75rem;
-          color: #6b7280;
-          margin-top: 0.25rem;
-        }
-
-        .location-suggestions {
-          margin-top: 0.5rem;
-        }
-
-        .suggestions-label {
-          font-size: 0.75rem;
-          color: #6b7280;
-          font-weight: 500;
-          display: block;
-          margin-bottom: 0.5rem;
-        }
-
-        .suggestions-list {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 0.5rem;
-        }
-
-        .suggestion-button {
-          padding: 0.25rem 0.5rem;
-          background: #f3f4f6;
-          border: 1px solid #d1d5db;
-          border-radius: 0.25rem;
-          font-size: 0.75rem;
-          cursor: pointer;
-          transition: all 0.2s;
-          color: #374151;
-        }
-
-        .suggestion-button:hover:not(:disabled) {
-          background: #e5e7eb;
-          border-color: #9ca3af;
-        }
-
-        .suggestion-button:disabled {
-          opacity: 0.5;
-          cursor: not-allowed;
         }
 
         .form-error-banner {
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-          padding: 1rem;
           background: #fef2f2;
           border: 1px solid #fecaca;
-          border-radius: 0.375rem;
-          margin-bottom: 1.5rem;
-        }
-
-        .error-icon {
-          font-size: 1.25rem;
-        }
-
-        .error-text {
           color: #dc2626;
+          padding: 0.75rem;
+          border-radius: 0.375rem;
           font-size: 0.875rem;
+          margin-bottom: 1.5rem;
         }
 
         .form-actions {
           display: flex;
           gap: 1rem;
           justify-content: flex-end;
-          padding-top: 1.5rem;
+          margin-top: 2rem;
+          padding-top: 2rem;
           border-top: 1px solid #f3f4f6;
         }
 
-        .btn-primary, .btn-secondary, .btn-outline {
+        .btn-primary,
+        .btn-secondary,
+        .btn-reset {
           padding: 0.75rem 1.5rem;
           border-radius: 0.375rem;
           font-size: 0.875rem;
           font-weight: 500;
           cursor: pointer;
           transition: all 0.2s;
-          border: 1px solid transparent;
+          border: none;
         }
 
         .btn-primary {
@@ -649,35 +670,32 @@ const ItemForm = ({
         }
 
         .btn-secondary {
-          background: #6b7280;
-          color: white;
+          background: #f3f4f6;
+          color: #374151;
+          border: 1px solid #d1d5db;
         }
 
         .btn-secondary:hover:not(:disabled) {
-          background: #4b5563;
+          background: #e5e7eb;
         }
 
-        .btn-outline {
-          background: white;
-          color: #374151;
-          border-color: #d1d5db;
+        .btn-reset {
+          background: #f59e0b;
+          color: white;
         }
 
-        .btn-outline:hover:not(:disabled) {
-          background: #f9fafb;
-          border-color: #9ca3af;
+        .btn-reset:hover:not(:disabled) {
+          background: #d97706;
         }
 
-        .btn-primary:disabled, .btn-secondary:disabled, .btn-outline:disabled {
+        .btn-primary:disabled,
+        .btn-secondary:disabled,
+        .btn-reset:disabled {
           opacity: 0.5;
           cursor: not-allowed;
         }
 
         @media (max-width: 768px) {
-          .form-header {
-            padding: 1.5rem 1.5rem 1rem 1.5rem;
-          }
-
           .form {
             padding: 1.5rem;
           }
@@ -691,17 +709,10 @@ const ItemForm = ({
             flex-direction: column-reverse;
           }
 
-          .btn-primary, .btn-secondary, .btn-outline {
+          .btn-primary,
+          .btn-secondary,
+          .btn-reset {
             width: 100%;
-          }
-
-          .suggestions-list {
-            gap: 0.25rem;
-          }
-
-          .suggestion-button {
-            font-size: 0.6875rem;
-            padding: 0.25rem 0.375rem;
           }
         }
       `}</style>

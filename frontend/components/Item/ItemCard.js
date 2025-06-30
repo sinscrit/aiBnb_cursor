@@ -6,25 +6,21 @@
 import { useState } from 'react';
 import { useRouter } from 'next/router';
 
-const ItemCard = ({ item, onDelete }) => {
+const ItemCard = ({ item, onDelete, onGenerateQR }) => {
   const router = useRouter();
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isGeneratingQR, setIsGeneratingQR] = useState(false);
 
-  const handleViewProperty = () => {
-    router.push(`/properties`);
+  const handleViewQRCodes = () => {
+    router.push(`/qrcodes?itemId=${item.id}`);
   };
 
   const handleEdit = () => {
     router.push(`/items/${item.id}/edit`);
   };
 
-  const handleGenerateQR = () => {
-    // Will be implemented when QR system is available
-    alert('QR Code generation will be available once the QR system is implemented!');
-  };
-
   const handleDelete = async () => {
-    if (window.confirm(`Are you sure you want to delete "${item.name}"? This will also delete all associated QR codes.`)) {
+    if (window.confirm(`Are you sure you want to delete "${item.name}"? This will also deactivate all associated QR codes.`)) {
       setIsDeleting(true);
       try {
         if (onDelete) {
@@ -39,6 +35,20 @@ const ItemCard = ({ item, onDelete }) => {
     }
   };
 
+  const handleGenerateQR = async () => {
+    setIsGeneratingQR(true);
+    try {
+      if (onGenerateQR) {
+        await onGenerateQR(item.id);
+      }
+    } catch (error) {
+      console.error('QR generation failed:', error);
+      alert('Failed to generate QR code. Please try again.');
+    } finally {
+      setIsGeneratingQR(false);
+    }
+  };
+
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
@@ -47,22 +57,15 @@ const ItemCard = ({ item, onDelete }) => {
     });
   };
 
-  const getMediaTypeIcon = (mediaType) => {
-    switch (mediaType) {
-      case 'youtube': return '📹';
-      case 'image': return '🖼️';
-      case 'pdf': return '📄';
-      case 'text': return '📝';
-      default: return '📋';
-    }
-  };
-
-  const getStatusColor = (hasQR) => {
-    return hasQR ? '#10b981' : '#6b7280';
-  };
-
-  const getStatusText = (hasQR) => {
-    return hasQR ? 'QR Ready' : 'No QR Code';
+  const getItemCategoryIcon = (category) => {
+    const categoryLower = (category || '').toLowerCase();
+    if (categoryLower.includes('kitchen')) return '🍳';
+    if (categoryLower.includes('bathroom')) return '🚿';
+    if (categoryLower.includes('bedroom')) return '🛏️';
+    if (categoryLower.includes('living')) return '🛋️';
+    if (categoryLower.includes('appliance')) return '⚡';
+    if (categoryLower.includes('electronic')) return '📱';
+    return '📦';
   };
 
   return (
@@ -70,30 +73,21 @@ const ItemCard = ({ item, onDelete }) => {
       <div className="card-header">
         <div className="item-info">
           <h3 className="item-name">{item.name}</h3>
-          <div className="item-metadata">
-            <div className="metadata-item">
-              <span className="metadata-icon">🏢</span>
-              <span className="metadata-text">{item.property_name || 'Unknown Property'}</span>
+          <div className="item-location">
+            <span className="location-icon">📍</span>
+            <span className="location-text">{item.location || 'No location specified'}</span>
+          </div>
+          {item.property && (
+            <div className="property-ref">
+              <span className="property-icon">🏠</span>
+              <span className="property-text">{item.property.name}</span>
             </div>
-            {item.location && (
-              <div className="metadata-item">
-                <span className="metadata-icon">📍</span>
-                <span className="metadata-text">{item.location}</span>
-              </div>
-            )}
-          </div>
+          )}
         </div>
-        <div className="item-status">
-          <div className="status-indicator">
-            <div 
-              className="status-dot"
-              style={{ backgroundColor: getStatusColor(item.has_qr_code) }}
-            ></div>
-            <span className="status-text">{getStatusText(item.has_qr_code)}</span>
-          </div>
-          <div className="media-type">
-            <span className="media-icon">{getMediaTypeIcon(item.media_type)}</span>
-            <span className="media-text">{item.media_type || 'text'}</span>
+        <div className="item-stats">
+          <div className="stat">
+            <span className="stat-value">{item.qr_count || 0}</span>
+            <span className="stat-label">QR Codes</span>
           </div>
         </div>
       </div>
@@ -103,30 +97,49 @@ const ItemCard = ({ item, onDelete }) => {
           <p className="item-description">{item.description}</p>
         )}
         
-        {item.media_url && (
-          <div className="item-media">
-            <span className="media-icon">🔗</span>
-            <span className="media-label">Media:</span>
-            <a 
-              href={item.media_url} 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="media-link"
-            >
-              View Content
-            </a>
-          </div>
-        )}
-
         <div className="item-details">
-          <div className="detail-item">
-            <span className="detail-label">Created:</span>
-            <span className="detail-value">{formatDate(item.created_at)}</span>
+          {item.media_type && (
+            <div className="detail-item">
+              <span className="detail-icon">
+                {getItemCategoryIcon(item.media_type)}
+              </span>
+              <span className="detail-text">
+                {item.media_type === 'youtube' ? 'Video Instructions' : 
+                 item.media_type === 'pdf' ? 'PDF Guide' : 
+                 item.media_type === 'image' ? 'Image Guide' : 
+                 'Instructions Available'}
+              </span>
+            </div>
+          )}
+          
+          {item.metadata?.difficulty && (
+            <div className="detail-item">
+              <span className="detail-icon">📊</span>
+              <span className="detail-text">
+                Difficulty: {item.metadata.difficulty}
+              </span>
+            </div>
+          )}
+
+          {item.metadata?.duration && (
+            <div className="detail-item">
+              <span className="detail-icon">⏱️</span>
+              <span className="detail-text">
+                Duration: {item.metadata.duration}
+              </span>
+            </div>
+          )}
+        </div>
+
+        <div className="item-metadata">
+          <div className="metadata-item">
+            <span className="metadata-label">Created:</span>
+            <span className="metadata-value">{formatDate(item.created_at)}</span>
           </div>
           {item.updated_at !== item.created_at && (
-            <div className="detail-item">
-              <span className="detail-label">Updated:</span>
-              <span className="detail-value">{formatDate(item.updated_at)}</span>
+            <div className="metadata-item">
+              <span className="metadata-label">Updated:</span>
+              <span className="metadata-value">{formatDate(item.updated_at)}</span>
             </div>
           )}
         </div>
@@ -136,11 +149,18 @@ const ItemCard = ({ item, onDelete }) => {
         <button 
           className="btn-qr"
           onClick={handleGenerateQR}
+          disabled={isGeneratingQR}
         >
-          {item.has_qr_code ? 'View QR' : 'Generate QR'}
+          {isGeneratingQR ? 'Generating...' : '+ QR Code'}
         </button>
         <button 
           className="btn-secondary"
+          onClick={handleViewQRCodes}
+        >
+          View QRs
+        </button>
+        <button 
+          className="btn-primary"
           onClick={handleEdit}
         >
           Edit
@@ -185,73 +205,46 @@ const ItemCard = ({ item, onDelete }) => {
           font-size: 1.25rem;
           font-weight: 600;
           color: #1f2937;
-          margin: 0 0 0.75rem 0;
+          margin: 0 0 0.5rem 0;
           line-height: 1.3;
         }
 
-        .item-metadata {
-          display: flex;
-          flex-direction: column;
-          gap: 0.25rem;
-        }
-
-        .metadata-item {
+        .item-location,
+        .property-ref {
           display: flex;
           align-items: center;
           gap: 0.5rem;
           font-size: 0.875rem;
           color: #6b7280;
+          margin-bottom: 0.25rem;
         }
 
-        .metadata-icon {
+        .location-icon,
+        .property-icon {
           font-size: 1rem;
         }
 
-        .metadata-text {
-          font-weight: 500;
+        .item-stats {
+          text-align: center;
         }
 
-        .item-status {
-          text-align: right;
+        .stat {
           display: flex;
           flex-direction: column;
-          gap: 0.5rem;
-          align-items: flex-end;
-        }
-
-        .status-indicator {
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-        }
-
-        .status-dot {
-          width: 0.5rem;
-          height: 0.5rem;
-          border-radius: 50%;
-        }
-
-        .status-text {
-          font-size: 0.75rem;
-          font-weight: 600;
-          color: #374151;
-          text-transform: uppercase;
-        }
-
-        .media-type {
-          display: flex;
           align-items: center;
           gap: 0.25rem;
+        }
+
+        .stat-value {
+          font-size: 1.5rem;
+          font-weight: 700;
+          color: #10b981;
+        }
+
+        .stat-label {
           font-size: 0.75rem;
-          color: #9ca3af;
-        }
-
-        .media-icon {
-          font-size: 0.875rem;
-        }
-
-        .media-text {
-          text-transform: capitalize;
+          color: #6b7280;
+          text-transform: uppercase;
         }
 
         .card-content {
@@ -265,30 +258,26 @@ const ItemCard = ({ item, onDelete }) => {
           font-size: 0.875rem;
         }
 
-        .item-media {
+        .item-details {
+          display: flex;
+          flex-direction: column;
+          gap: 0.5rem;
+          margin-bottom: 1rem;
+        }
+
+        .detail-item {
           display: flex;
           align-items: center;
           gap: 0.5rem;
-          margin-bottom: 1rem;
           font-size: 0.875rem;
-        }
-
-        .media-label {
           color: #6b7280;
-          font-weight: 500;
         }
 
-        .media-link {
-          color: #3b82f6;
-          text-decoration: underline;
-          transition: color 0.2s;
+        .detail-icon {
+          font-size: 1rem;
         }
 
-        .media-link:hover {
-          color: #2563eb;
-        }
-
-        .item-details {
+        .item-metadata {
           display: flex;
           flex-direction: column;
           gap: 0.25rem;
@@ -296,12 +285,12 @@ const ItemCard = ({ item, onDelete }) => {
           color: #9ca3af;
         }
 
-        .detail-item {
+        .metadata-item {
           display: flex;
           justify-content: space-between;
         }
 
-        .detail-label {
+        .metadata-label {
           font-weight: 500;
         }
 
@@ -313,7 +302,7 @@ const ItemCard = ({ item, onDelete }) => {
           gap: 0.5rem;
         }
 
-        .btn-qr, .btn-secondary, .btn-danger {
+        .btn-primary, .btn-secondary, .btn-danger, .btn-qr {
           flex: 1;
           padding: 0.5rem 1rem;
           border: none;
@@ -322,6 +311,29 @@ const ItemCard = ({ item, onDelete }) => {
           font-weight: 500;
           cursor: pointer;
           transition: all 0.2s;
+          text-decoration: none;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .btn-primary {
+          background: #3b82f6;
+          color: white;
+        }
+
+        .btn-primary:hover {
+          background: #2563eb;
+        }
+
+        .btn-secondary {
+          background: #f3f4f6;
+          color: #374151;
+          border: 1px solid #d1d5db;
+        }
+
+        .btn-secondary:hover {
+          background: #e5e7eb;
         }
 
         .btn-qr {
@@ -329,17 +341,8 @@ const ItemCard = ({ item, onDelete }) => {
           color: white;
         }
 
-        .btn-qr:hover:not(:disabled) {
+        .btn-qr:hover {
           background: #059669;
-        }
-
-        .btn-secondary {
-          background: #6b7280;
-          color: white;
-        }
-
-        .btn-secondary:hover:not(:disabled) {
-          background: #4b5563;
         }
 
         .btn-danger {
@@ -347,29 +350,26 @@ const ItemCard = ({ item, onDelete }) => {
           color: white;
         }
 
-        .btn-danger:hover:not(:disabled) {
+        .btn-danger:hover {
           background: #dc2626;
         }
 
-        .btn-qr:disabled, .btn-secondary:disabled, .btn-danger:disabled {
+        .btn-primary:disabled,
+        .btn-secondary:disabled,
+        .btn-danger:disabled,
+        .btn-qr:disabled {
           opacity: 0.5;
           cursor: not-allowed;
         }
 
         @media (max-width: 768px) {
-          .card-header {
-            flex-direction: column;
-            gap: 1rem;
-          }
-
-          .item-status {
-            align-self: stretch;
-            flex-direction: row;
-            justify-content: space-between;
-          }
-
           .card-actions {
             flex-direction: column;
+            gap: 0.5rem;
+          }
+
+          .item-name {
+            font-size: 1.125rem;
           }
         }
       `}</style>

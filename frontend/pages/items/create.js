@@ -1,6 +1,6 @@
 /**
  * Create Item Page
- * QR Code-Based Instructional System - New Item Creation Interface
+ * QR Code-Based Instructional System - Create new items for properties
  */
 
 import { useState, useEffect } from 'react';
@@ -10,247 +10,405 @@ import ItemForm from '../../components/Item/ItemForm';
 
 const CreateItemPage = () => {
   const router = useRouter();
-  const { propertyId } = router.query; // Support pre-selecting property via URL
-  
   const [properties, setProperties] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
 
-  // Fetch available properties
-  const fetchProperties = async () => {
+  // Extract propertyId from URL params if provided
+  const { propertyId } = router.query;
+
+  useEffect(() => {
+    loadProperties();
+  }, []);
+
+  const loadProperties = async () => {
     try {
       setLoading(true);
       setError(null);
 
-      const response = await fetch('http://localhost:3001/api/properties', {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-
+      const response = await fetch('http://localhost:8000/api/properties');
       if (!response.ok) {
-        throw new Error(`Failed to fetch properties: ${response.status}`);
+        throw new Error(`Properties API error: ${response.status}`);
       }
 
       const data = await response.json();
-
       if (data.success) {
         setProperties(data.data.properties || []);
       } else {
-        throw new Error(data.message || 'Failed to fetch properties');
+        throw new Error(data.error || 'Failed to load properties');
       }
-    } catch (error) {
-      console.error('Error fetching properties:', error);
-      setError(error.message);
+    } catch (err) {
+      console.error('Error loading properties:', err);
+      setError(err.message);
     } finally {
       setLoading(false);
     }
   };
 
-  // Submit new item
-  const handleSubmit = async (itemData) => {
+  const handleSubmit = async (formData) => {
     try {
-      setSubmitting(true);
-      setError(null);
-
-      const response = await fetch('http://localhost:3001/api/items', {
+      const response = await fetch('http://localhost:8000/api/items', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': 'application/json'
         },
-        body: JSON.stringify(itemData),
+        body: JSON.stringify(formData)
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        throw new Error(`Create failed: ${response.status}`);
       }
 
       const data = await response.json();
-
       if (data.success) {
-        // Success! Navigate back to items list or the specific property's items
-        const createdItem = data.data.item;
-        
         // Show success message
-        alert(`Item "${createdItem.name}" was successfully created!`);
+        alert(`Item "${data.data.item.name}" created successfully!`);
         
-        // Navigate back to items list, filtering by property if we came from a specific property
+        // Navigate back to items list
         if (propertyId) {
           router.push(`/items?propertyId=${propertyId}`);
         } else {
           router.push('/items');
         }
       } else {
-        throw new Error(data.message || 'Failed to create item');
+        throw new Error(data.error || 'Failed to create item');
       }
     } catch (error) {
       console.error('Error creating item:', error);
-      setError(error.message);
-    } finally {
-      setSubmitting(false);
+      throw error; // Re-throw to let ItemForm handle the error display
     }
   };
 
-  // Load properties on component mount
-  useEffect(() => {
-    fetchProperties();
-  }, []);
+  const handleCancel = () => {
+    if (propertyId) {
+      router.push(`/items?propertyId=${propertyId}`);
+    } else {
+      router.push('/items');
+    }
+  };
 
-  // Get selected property for breadcrumbs
-  const selectedProperty = properties.find(p => p.id === propertyId);
+  const getSelectedProperty = () => {
+    if (!propertyId) return null;
+    return properties.find(p => p.id === propertyId);
+  };
 
-  return (
-    <DashboardLayout title="Create Item">
-      <div className="create-item-page">
-        {/* Breadcrumbs */}
-        <nav className="breadcrumbs">
-          <button 
-            onClick={() => router.push('/dashboard')}
-            className="breadcrumb-link"
-          >
-            Dashboard
-          </button>
-          <span className="breadcrumb-separator">›</span>
-          <button 
-            onClick={() => router.push('/items')}
-            className="breadcrumb-link"
-          >
-            Items
-          </button>
-          {selectedProperty && (
-            <>
-              <span className="breadcrumb-separator">›</span>
+  const selectedProperty = getSelectedProperty();
+
+  if (error) {
+    return (
+      <DashboardLayout>
+        <div className="error-container">
+          <div className="error-content">
+            <div className="error-icon">⚠️</div>
+            <h1 className="error-title">Failed to Load Properties</h1>
+            <p className="error-message">{error}</p>
+            <div className="error-actions">
               <button 
-                onClick={() => router.push(`/items?propertyId=${propertyId}`)}
-                className="breadcrumb-link"
+                onClick={loadProperties}
+                className="btn-primary"
               >
-                {selectedProperty.name}
+                Try Again
               </button>
-            </>
-          )}
-          <span className="breadcrumb-separator">›</span>
-          <span className="breadcrumb-current">Create</span>
-        </nav>
-
-        {/* Page Header */}
-        <div className="page-header">
-          <div className="header-content">
-            <h1 className="page-title">Create New Item</h1>
-            <p className="page-description">
-              {selectedProperty 
-                ? `Add a new item to ${selectedProperty.name}. This could be an appliance, instruction set, or any content you want to share with guests via QR codes.`
-                : 'Add a new item to your property. This could be an appliance, instruction set, or any content you want to share with guests via QR codes.'
-              }
-            </p>
-          </div>
-        </div>
-
-        {/* Error Display */}
-        {error && (
-          <div className="error-banner">
-            <div className="error-content">
-              <span className="error-icon">⚠️</span>
-              <span className="error-message">{error}</span>
               <button 
-                onClick={() => setError(null)}
-                className="error-dismiss"
+                onClick={() => router.push('/dashboard')}
+                className="btn-secondary"
               >
-                ×
+                Back to Dashboard
               </button>
             </div>
           </div>
-        )}
+        </div>
 
-        {/* No Properties Notice */}
-        {!loading && properties.length === 0 && (
-          <div className="no-properties-notice">
-            <div className="notice-content">
-              <span className="notice-icon">ℹ️</span>
-              <div className="notice-text">
-                <strong>No Properties Found</strong>
-                <p>You need to create a property before you can add items. Properties help organize your items by location.</p>
-              </div>
+        <style jsx>{`
+          .error-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 60vh;
+            padding: 2rem;
+          }
+
+          .error-content {
+            text-align: center;
+            max-width: 400px;
+          }
+
+          .error-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+          }
+
+          .error-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #1f2937;
+            margin: 0 0 0.5rem 0;
+          }
+
+          .error-message {
+            color: #6b7280;
+            margin: 0 0 2rem 0;
+            line-height: 1.5;
+          }
+
+          .error-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+          }
+
+          .btn-primary,
+          .btn-secondary {
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+          }
+
+          .btn-primary {
+            background: #3b82f6;
+            color: white;
+          }
+
+          .btn-primary:hover {
+            background: #2563eb;
+          }
+
+          .btn-secondary {
+            background: #f3f4f6;
+            color: #374151;
+            border: 1px solid #d1d5db;
+          }
+
+          .btn-secondary:hover {
+            background: #e5e7eb;
+          }
+        `}</style>
+      </DashboardLayout>
+    );
+  }
+
+  if (loading) {
+    return (
+      <DashboardLayout>
+        <div className="loading-container">
+          <div className="loading-content">
+            <div className="loading-spinner"></div>
+            <p className="loading-text">Loading properties...</p>
+          </div>
+        </div>
+
+        <style jsx>{`
+          .loading-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 60vh;
+            padding: 2rem;
+          }
+
+          .loading-content {
+            text-align: center;
+          }
+
+          .loading-spinner {
+            width: 2rem;
+            height: 2rem;
+            border: 3px solid #f3f4f6;
+            border-top: 3px solid #3b82f6;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem auto;
+          }
+
+          .loading-text {
+            color: #6b7280;
+            margin: 0;
+          }
+
+          @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+          }
+        `}</style>
+      </DashboardLayout>
+    );
+  }
+
+  if (properties.length === 0) {
+    return (
+      <DashboardLayout>
+        <div className="no-properties-container">
+          <div className="no-properties-content">
+            <div className="no-properties-icon">🏠</div>
+            <h1 className="no-properties-title">No Properties Found</h1>
+            <p className="no-properties-message">
+              You need to create a property first before adding items. Properties help organize your items and QR codes.
+            </p>
+            <div className="no-properties-actions">
               <button 
                 onClick={() => router.push('/properties/create')}
                 className="btn-primary"
               >
                 Create Property
               </button>
+              <button 
+                onClick={() => router.push('/dashboard')}
+                className="btn-secondary"
+              >
+                Back to Dashboard
+              </button>
             </div>
           </div>
-        )}
+        </div>
 
-        {/* Form Content */}
-        {!loading && properties.length > 0 && (
-          <div className="form-container">
-            <ItemForm 
-              properties={properties}
-              defaultPropertyId={propertyId}
-              onSubmit={handleSubmit}
-              loading={submitting}
-              onCancel={() => {
-                if (propertyId) {
-                  router.push(`/items?propertyId=${propertyId}`);
-                } else {
-                  router.push('/items');
-                }
-              }}
-            />
-          </div>
-        )}
+        <style jsx>{`
+          .no-properties-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 60vh;
+            padding: 2rem;
+          }
 
-        {/* Loading State */}
-        {loading && (
-          <div className="loading-container">
-            <div className="loading-content">
-              <div className="loading-spinner"></div>
-              <p className="loading-text">Loading properties...</p>
+          .no-properties-content {
+            text-align: center;
+            max-width: 500px;
+          }
+
+          .no-properties-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.7;
+          }
+
+          .no-properties-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #1f2937;
+            margin: 0 0 0.5rem 0;
+          }
+
+          .no-properties-message {
+            color: #6b7280;
+            margin: 0 0 2rem 0;
+            line-height: 1.6;
+          }
+
+          .no-properties-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+          }
+
+          .btn-primary,
+          .btn-secondary {
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+          }
+
+          .btn-primary {
+            background: #3b82f6;
+            color: white;
+          }
+
+          .btn-primary:hover {
+            background: #2563eb;
+          }
+
+          .btn-secondary {
+            background: #f3f4f6;
+            color: #374151;
+            border: 1px solid #d1d5db;
+          }
+
+          .btn-secondary:hover {
+            background: #e5e7eb;
+          }
+        `}</style>
+      </DashboardLayout>
+    );
+  }
+
+  return (
+    <DashboardLayout>
+      <div className="create-item-page">
+        <div className="page-header">
+          <div className="header-content">
+            <div className="header-text">
+              <h1 className="page-title">Create New Item</h1>
+              <p className="page-subtitle">
+                Add a new item to generate QR codes and manage guest instructions
+              </p>
+            </div>
+            <div className="header-actions">
+              <button
+                onClick={handleCancel}
+                className="btn-secondary"
+              >
+                Cancel
+              </button>
             </div>
           </div>
-        )}
+
+          {selectedProperty && (
+            <div className="property-notice">
+              <span className="property-icon">🏠</span>
+              <span className="property-text">
+                Adding item to: <strong>{selectedProperty.name}</strong>
+              </span>
+              <button
+                onClick={() => router.push('/items/create')}
+                className="change-property-btn"
+              >
+                Change Property
+              </button>
+            </div>
+          )}
+        </div>
+
+        <div className="page-content">
+          <ItemForm
+            properties={properties}
+            onSubmit={handleSubmit}
+            onCancel={handleCancel}
+            mode="create"
+          />
+        </div>
       </div>
 
       <style jsx>{`
         .create-item-page {
-          max-width: 800px;
+          width: 100%;
+          max-width: 1000px;
           margin: 0 auto;
-        }
-
-        .breadcrumbs {
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-          margin-bottom: 2rem;
-          font-size: 0.875rem;
-        }
-
-        .breadcrumb-link {
-          color: #3b82f6;
-          background: none;
-          border: none;
-          cursor: pointer;
-          text-decoration: none;
-          padding: 0;
-          font-size: inherit;
-        }
-
-        .breadcrumb-link:hover {
-          text-decoration: underline;
-        }
-
-        .breadcrumb-separator {
-          color: #9ca3af;
-        }
-
-        .breadcrumb-current {
-          color: #6b7280;
-          font-weight: 500;
+          padding: 2rem;
         }
 
         .page-header {
           margin-bottom: 2rem;
+        }
+
+        .header-content {
+          display: flex;
+          justify-content: space-between;
+          align-items: flex-start;
+          gap: 2rem;
+          margin-bottom: 1rem;
+        }
+
+        .header-text {
+          flex: 1;
         }
 
         .page-title {
@@ -260,161 +418,100 @@ const CreateItemPage = () => {
           margin: 0 0 0.5rem 0;
         }
 
-        .page-description {
+        .page-subtitle {
           color: #6b7280;
           margin: 0;
+          font-size: 1rem;
           line-height: 1.5;
         }
 
-        .error-banner {
-          margin-bottom: 2rem;
+        .header-actions {
+          flex-shrink: 0;
         }
 
-        .error-content {
-          display: flex;
-          align-items: center;
-          gap: 1rem;
-          padding: 1rem;
-          background: #fee2e2;
-          border: 1px solid #f87171;
-          border-radius: 0.5rem;
-          color: #dc2626;
-        }
-
-        .error-icon {
-          font-size: 1.25rem;
-        }
-
-        .error-message {
-          flex: 1;
-          font-size: 0.875rem;
-        }
-
-        .error-dismiss {
-          background: none;
-          border: none;
-          color: #dc2626;
-          cursor: pointer;
-          font-size: 1.25rem;
-          padding: 0;
-          width: 1.5rem;
-          height: 1.5rem;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        }
-
-        .error-dismiss:hover {
-          background: rgba(239, 68, 68, 0.1);
-          border-radius: 0.25rem;
-        }
-
-        .no-properties-notice {
-          display: flex;
-          justify-content: center;
-          padding: 3rem 1rem;
-        }
-
-        .notice-content {
-          text-align: center;
-          background: white;
-          padding: 2rem;
-          border-radius: 0.5rem;
-          box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
-          border: 1px solid #e5e7eb;
-          max-width: 400px;
-        }
-
-        .notice-icon {
-          font-size: 3rem;
-          margin-bottom: 1rem;
-          display: block;
-        }
-
-        .notice-text strong {
-          display: block;
-          font-size: 1.125rem;
-          color: #1f2937;
-          margin-bottom: 0.5rem;
-        }
-
-        .notice-text p {
-          color: #6b7280;
-          margin: 0 0 2rem 0;
-          line-height: 1.5;
-        }
-
-        .btn-primary {
+        .btn-secondary {
+          background: #f3f4f6;
+          color: #374151;
+          border: 1px solid #d1d5db;
           padding: 0.75rem 1.5rem;
-          background: #3b82f6;
-          color: white;
-          border: none;
           border-radius: 0.375rem;
           font-size: 0.875rem;
           font-weight: 500;
           cursor: pointer;
           transition: all 0.2s;
-        }
-
-        .btn-primary:hover {
-          background: #2563eb;
-        }
-
-        .form-container {
-          background: white;
-          border-radius: 0.5rem;
-          box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
-          border: 1px solid #e5e7eb;
-          overflow: hidden;
-        }
-
-        .loading-container {
-          display: flex;
-          justify-content: center;
+          text-decoration: none;
+          display: inline-flex;
           align-items: center;
+        }
+
+        .btn-secondary:hover {
+          background: #e5e7eb;
+        }
+
+        .property-notice {
+          display: flex;
+          align-items: center;
+          gap: 0.75rem;
+          padding: 0.75rem 1rem;
+          background: #ecfdf5;
+          border: 1px solid #10b981;
+          border-radius: 0.375rem;
+          font-size: 0.875rem;
+          color: #047857;
+        }
+
+        .property-icon {
+          font-size: 1rem;
+        }
+
+        .property-text {
+          flex: 1;
+        }
+
+        .change-property-btn {
+          background: #10b981;
+          color: white;
+          border: none;
+          padding: 0.25rem 0.75rem;
+          border-radius: 0.25rem;
+          font-size: 0.75rem;
+          cursor: pointer;
+          transition: background 0.2s;
+        }
+
+        .change-property-btn:hover {
+          background: #059669;
+        }
+
+        .page-content {
           min-height: 400px;
-        }
-
-        .loading-content {
-          text-align: center;
-        }
-
-        .loading-spinner {
-          width: 2rem;
-          height: 2rem;
-          border: 2px solid #e5e7eb;
-          border-top: 2px solid #3b82f6;
-          border-radius: 50%;
-          animation: spin 1s linear infinite;
-          margin: 0 auto 1rem auto;
-        }
-
-        .loading-text {
-          color: #6b7280;
-          margin: 0;
-        }
-
-        @keyframes spin {
-          to {
-            transform: rotate(360deg);
-          }
         }
 
         @media (max-width: 768px) {
           .create-item-page {
-            margin: 0 1rem;
+            padding: 1rem;
+          }
+
+          .header-content {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 1rem;
           }
 
           .page-title {
             font-size: 1.5rem;
           }
 
-          .breadcrumbs {
-            margin-bottom: 1rem;
+          .property-notice {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 0.5rem;
+            text-align: center;
           }
 
-          .page-header {
-            margin-bottom: 1.5rem;
+          .change-property-btn {
+            align-self: center;
+            width: fit-content;
           }
         }
       `}</style>

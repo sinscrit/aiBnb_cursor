@@ -1,29 +1,23 @@
 /**
  * Item List Component
- * QR Code-Based Instructional System - Item Grid Display with Property Filtering
+ * QR Code-Based Instructional System - Item Grid Display
  */
 
 import { useState, useMemo } from 'react';
 import ItemCard from './ItemCard';
 
-const ItemList = ({ 
-  items = [], 
-  properties = [], 
-  loading = false, 
-  onDeleteItem,
-  selectedPropertyId = null 
-}) => {
+const ItemList = ({ items = [], properties = [], loading = false, onDeleteItem, onGenerateQR }) => {
   const [sortBy, setSortBy] = useState('name');
   const [sortOrder, setSortOrder] = useState('asc');
   const [searchTerm, setSearchTerm] = useState('');
-  const [propertyFilter, setPropertyFilter] = useState(selectedPropertyId || '');
+  const [filterProperty, setFilterProperty] = useState('');
 
   const sortedAndFilteredItems = useMemo(() => {
     let filtered = items;
 
     // Filter by property
-    if (propertyFilter) {
-      filtered = items.filter(item => item.property_id === propertyFilter);
+    if (filterProperty) {
+      filtered = items.filter(item => item.property_id === filterProperty);
     }
 
     // Filter by search term
@@ -33,8 +27,7 @@ const ItemList = ({
         item.name.toLowerCase().includes(term) ||
         (item.description && item.description.toLowerCase().includes(term)) ||
         (item.location && item.location.toLowerCase().includes(term)) ||
-        (item.property_name && item.property_name.toLowerCase().includes(term)) ||
-        (item.media_type && item.media_type.toLowerCase().includes(term))
+        (item.property?.name && item.property.name.toLowerCase().includes(term))
       );
     }
 
@@ -55,21 +48,17 @@ const ItemList = ({
           valueA = new Date(a.updated_at);
           valueB = new Date(b.updated_at);
           break;
-        case 'property':
-          valueA = a.property_name || '';
-          valueB = b.property_name || '';
-          break;
         case 'location':
           valueA = a.location || '';
           valueB = b.location || '';
           break;
-        case 'media_type':
-          valueA = a.media_type || 'text';
-          valueB = b.media_type || 'text';
+        case 'property':
+          valueA = a.property?.name || '';
+          valueB = b.property?.name || '';
           break;
-        case 'qr_status':
-          valueA = a.has_qr_code ? 1 : 0;
-          valueB = b.has_qr_code ? 1 : 0;
+        case 'qr_count':
+          valueA = a.qr_count || 0;
+          valueB = b.qr_count || 0;
           break;
         default:
           return 0;
@@ -79,7 +68,7 @@ const ItemList = ({
       if (valueA > valueB) return sortOrder === 'asc' ? 1 : -1;
       return 0;
     });
-  }, [items, sortBy, sortOrder, searchTerm, propertyFilter]);
+  }, [items, sortBy, sortOrder, searchTerm, filterProperty]);
 
   const handleSortChange = (newSortBy) => {
     if (sortBy === newSortBy) {
@@ -90,16 +79,15 @@ const ItemList = ({
     }
   };
 
-  const getPropertyStats = () => {
-    const totalItems = items.length;
-    const itemsWithQR = items.filter(item => item.has_qr_code).length;
-    const uniqueProperties = new Set(items.map(item => item.property_id)).size;
-    const filteredCount = sortedAndFilteredItems.length;
-
-    return { totalItems, itemsWithQR, uniqueProperties, filteredCount };
+  const getItemStats = () => {
+    const total = items.length;
+    const withQR = items.filter(item => (item.qr_count || 0) > 0).length;
+    const withoutQR = total - withQR;
+    
+    return { total, withQR, withoutQR };
   };
 
-  const stats = getPropertyStats();
+  const stats = getItemStats();
 
   if (loading) {
     return (
@@ -151,33 +139,38 @@ const ItemList = ({
       <div className="list-header">
         <div className="list-info">
           <h2 className="list-title">
-            {searchTerm || propertyFilter ? 
-              `Filtered Items (${stats.filteredCount})` : 
-              `Items (${stats.totalItems})`
+            {searchTerm || filterProperty ? 
+              `Filtered Items (${sortedAndFilteredItems.length})` : 
+              `Items (${items.length})`
             }
           </h2>
-          {stats.totalItems > 0 && (
-            <div className="list-stats">
-              <span className="stat-item">
-                <span className="stat-value">{stats.itemsWithQR}</span> with QR codes
-              </span>
-              <span className="stat-separator">•</span>
-              <span className="stat-item">
-                <span className="stat-value">{stats.uniqueProperties}</span> properties
-              </span>
+          {items.length > 0 && (
+            <div className="list-subtitle">
+              <p className="subtitle-text">
+                Manage items and generate QR codes for instructions
+              </p>
+              <div className="stats-summary">
+                <span className="stat-item">
+                  <span className="stat-number">{stats.withQR}</span> with QR codes
+                </span>
+                <span className="stat-separator">•</span>
+                <span className="stat-item">
+                  <span className="stat-number">{stats.withoutQR}</span> without QR codes
+                </span>
+              </div>
             </div>
           )}
         </div>
       </div>
 
-      {stats.totalItems > 0 && (
+      {items.length > 0 && (
         <div className="list-controls">
           <div className="filter-controls">
             <div className="filter-group">
               <label className="filter-label">Property:</label>
               <select
-                value={propertyFilter}
-                onChange={(e) => setPropertyFilter(e.target.value)}
+                value={filterProperty}
+                onChange={(e) => setFilterProperty(e.target.value)}
                 className="filter-select"
               >
                 <option value="">All Properties</option>
@@ -205,12 +198,11 @@ const ItemList = ({
             <div className="sort-buttons">
               {[
                 { value: 'name', label: 'Name' },
-                { value: 'property', label: 'Property' },
-                { value: 'location', label: 'Location' },
-                { value: 'media_type', label: 'Media Type' },
-                { value: 'qr_status', label: 'QR Status' },
                 { value: 'created_at', label: 'Created' },
-                { value: 'updated_at', label: 'Updated' }
+                { value: 'updated_at', label: 'Updated' },
+                { value: 'location', label: 'Location' },
+                { value: 'property', label: 'Property' },
+                { value: 'qr_count', label: 'QR Codes' }
               ].map((option) => (
                 <button
                   key={option.value}
@@ -233,7 +225,7 @@ const ItemList = ({
       <div className="list-content">
         {sortedAndFilteredItems.length === 0 ? (
           <div className="empty-state">
-            {searchTerm || propertyFilter ? (
+            {searchTerm || filterProperty ? (
               <>
                 <div className="empty-icon">🔍</div>
                 <h3 className="empty-title">No items found</h3>
@@ -249,12 +241,12 @@ const ItemList = ({
                       Clear Search
                     </button>
                   )}
-                  {propertyFilter && (
+                  {filterProperty && (
                     <button 
                       className="btn-secondary"
-                      onClick={() => setPropertyFilter('')}
+                      onClick={() => setFilterProperty('')}
                     >
-                      Show All Properties
+                      Clear Property Filter
                     </button>
                   )}
                 </div>
@@ -264,7 +256,7 @@ const ItemList = ({
                 <div className="empty-icon">📦</div>
                 <h3 className="empty-title">No items yet</h3>
                 <p className="empty-text">
-                  Create your first item to start building your QR code system. Items can be appliances, instructions, or any content you want to share with guests.
+                  Create your first item to start generating QR codes and managing instructions.
                 </p>
               </>
             )}
@@ -276,6 +268,7 @@ const ItemList = ({
                 key={item.id}
                 item={item}
                 onDelete={onDeleteItem}
+                onGenerateQR={onGenerateQR}
               />
             ))}
           </div>
@@ -298,12 +291,24 @@ const ItemList = ({
           margin: 0 0 0.5rem 0;
         }
 
-        .list-stats {
+        .list-subtitle {
+          display: flex;
+          flex-direction: column;
+          gap: 0.5rem;
+        }
+
+        .subtitle-text {
+          color: #6b7280;
+          margin: 0;
+          font-size: 0.875rem;
+        }
+
+        .stats-summary {
           display: flex;
           align-items: center;
           gap: 0.5rem;
-          font-size: 0.875rem;
-          color: #6b7280;
+          font-size: 0.75rem;
+          color: #9ca3af;
         }
 
         .stat-item {
@@ -312,9 +317,9 @@ const ItemList = ({
           gap: 0.25rem;
         }
 
-        .stat-value {
+        .stat-number {
           font-weight: 600;
-          color: #374151;
+          color: #6b7280;
         }
 
         .stat-separator {
@@ -330,13 +335,14 @@ const ItemList = ({
           margin-bottom: 2rem;
           display: flex;
           flex-direction: column;
-          gap: 1rem;
+          gap: 1.5rem;
         }
 
         .filter-controls {
           display: flex;
           gap: 1rem;
-          align-items: flex-end;
+          flex-wrap: wrap;
+          align-items: end;
         }
 
         .filter-group {
@@ -344,6 +350,14 @@ const ItemList = ({
           flex-direction: column;
           gap: 0.5rem;
           min-width: 200px;
+        }
+
+        .search-group {
+          display: flex;
+          flex-direction: column;
+          gap: 0.5rem;
+          flex: 1;
+          min-width: 250px;
         }
 
         .filter-label {
@@ -358,7 +372,7 @@ const ItemList = ({
           border-radius: 0.375rem;
           font-size: 0.875rem;
           background: white;
-          transition: border-color 0.2s;
+          color: #374151;
         }
 
         .filter-select:focus {
@@ -367,17 +381,12 @@ const ItemList = ({
           box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
         }
 
-        .search-group {
-          flex: 1;
-        }
-
         .search-input {
-          width: 100%;
           padding: 0.5rem 0.75rem;
           border: 1px solid #d1d5db;
           border-radius: 0.375rem;
           font-size: 0.875rem;
-          transition: border-color 0.2s;
+          width: 100%;
         }
 
         .search-input:focus {
@@ -397,6 +406,7 @@ const ItemList = ({
           font-size: 0.875rem;
           font-weight: 500;
           color: #374151;
+          white-space: nowrap;
         }
 
         .sort-buttons {
@@ -406,25 +416,25 @@ const ItemList = ({
         }
 
         .sort-button {
-          padding: 0.375rem 0.75rem;
+          padding: 0.5rem 0.75rem;
           border: 1px solid #d1d5db;
           background: white;
+          color: #374151;
           border-radius: 0.375rem;
-          font-size: 0.875rem;
+          font-size: 0.75rem;
           cursor: pointer;
           transition: all 0.2s;
-          color: #374151;
+          white-space: nowrap;
         }
 
         .sort-button:hover {
-          background: #f9fafb;
-          border-color: #9ca3af;
+          background: #f3f4f6;
         }
 
         .sort-button.active {
           background: #3b82f6;
-          border-color: #3b82f6;
           color: white;
+          border-color: #3b82f6;
         }
 
         .sort-direction {
@@ -432,31 +442,26 @@ const ItemList = ({
         }
 
         .list-content {
-          min-height: 200px;
-        }
-
-        .items-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
-          gap: 1.5rem;
+          min-height: 400px;
         }
 
         .empty-state {
-          text-align: center;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
           padding: 4rem 2rem;
-          background: white;
-          border-radius: 0.5rem;
-          box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
-          border: 1px solid #e5e7eb;
+          text-align: center;
         }
 
         .empty-icon {
           font-size: 4rem;
           margin-bottom: 1rem;
+          opacity: 0.5;
         }
 
         .empty-title {
-          font-size: 1.25rem;
+          font-size: 1.5rem;
           font-weight: 600;
           color: #1f2937;
           margin: 0 0 0.5rem 0;
@@ -465,74 +470,66 @@ const ItemList = ({
         .empty-text {
           color: #6b7280;
           margin: 0 0 1.5rem 0;
+          max-width: 400px;
           line-height: 1.5;
         }
 
         .empty-actions {
           display: flex;
-          gap: 1rem;
-          justify-content: center;
+          gap: 0.5rem;
           flex-wrap: wrap;
         }
 
         .btn-secondary {
           padding: 0.5rem 1rem;
-          background: #6b7280;
-          color: white;
-          border: none;
+          border: 1px solid #d1d5db;
+          background: white;
+          color: #374151;
           border-radius: 0.375rem;
           font-size: 0.875rem;
-          font-weight: 500;
           cursor: pointer;
-          transition: background 0.2s;
+          transition: all 0.2s;
         }
 
         .btn-secondary:hover {
-          background: #4b5563;
+          background: #f3f4f6;
+        }
+
+        .items-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+          gap: 1.5rem;
         }
 
         @media (max-width: 768px) {
-          .items-grid {
-            grid-template-columns: 1fr;
-            gap: 1rem;
-          }
-
           .filter-controls {
             flex-direction: column;
             align-items: stretch;
           }
 
-          .filter-group {
+          .filter-group,
+          .search-group {
             min-width: auto;
           }
 
           .sort-controls {
             flex-direction: column;
-            align-items: flex-start;
+            align-items: stretch;
+            gap: 0.75rem;
           }
 
           .sort-buttons {
-            width: 100%;
-            justify-content: flex-start;
+            justify-content: center;
+          }
+
+          .items-grid {
+            grid-template-columns: 1fr;
           }
 
           .empty-actions {
             flex-direction: column;
-            align-items: center;
-          }
-
-          .btn-secondary {
-            width: 200px;
-          }
-        }
-
-        @media (max-width: 480px) {
-          .empty-state {
-            padding: 2rem 1rem;
-          }
-
-          .empty-icon {
-            font-size: 3rem;
+            align-items: stretch;
+            max-width: 200px;
           }
         }
       `}</style>
