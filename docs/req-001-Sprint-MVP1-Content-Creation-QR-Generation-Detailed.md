@@ -107,15 +107,15 @@
 **Story Points**: 1  
 **Context**: Create database operations for property management (Story 2.1.1, 2.2.1)
 
-- [ ] Create `dao/PropertyDAO.js` with CRUD operations:
-  - [ ] `createProperty(userId, propertyData)` - Insert new property
-  - [ ] `getPropertiesByUserId(userId)` - Retrieve user's properties
-  - [ ] `getPropertyById(propertyId)` - Retrieve single property
-  - [ ] `updateProperty(propertyId, updates)` - Update property data
-  - [ ] `deleteProperty(propertyId)` - Soft delete property
-- [ ] Add input validation and error handling
-- [ ] Write unit tests for each DAO function
-- [ ] Test with demo user data
+- [x] Create `dao/PropertyDAO.js` with CRUD operations:
+  - [x] `createProperty(userId, propertyData)` - Insert new property
+  - [x] `getPropertiesByUserId(userId)` - Retrieve user's properties
+  - [x] `getPropertyById(propertyId)` - Retrieve single property
+  - [x] `updateProperty(propertyId, updates)` - Update property data
+  - [x] `deleteProperty(propertyId)` - Soft delete property
+- [x] Add input validation and error handling
+- [x] Write unit tests for each DAO function
+- [x] Test with demo user data
 
 ### 7. Implement Property Management Controllers
 **Story Points**: 1  
