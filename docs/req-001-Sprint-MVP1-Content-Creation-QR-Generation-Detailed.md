@@ -1008,42 +1008,42 @@
 **Story Points**: 1  
 **Context**: Validate end-to-end property operations (Stories 2.1.1, 2.2.1)
 
-- [ ] Test property creation from frontend form
-- [ ] Verify property appears in listing immediately
-- [ ] Test property editing and updates
-- [ ] Verify property deletion (with items) works correctly
-- [ ] Test property listing sorting and filtering
-- [ ] Validate all acceptance criteria are met
+- [x] Test property creation from frontend form
+- [x] Verify property appears in listing immediately
+- [x] Test property editing and updates
+- [x] Verify property deletion (with items) works correctly
+- [x] Test property listing sorting and filtering
+- [x] Validate all acceptance criteria are met
 
 ### 33.1. **BUG FIX**: Unblock Property Management Workflow Testing
 **Story Points**: 1  
 **Context**: Property workflow testing blocked by frontend connectivity and missing edit/delete functionality
 
-- [ ] **Files to modify**: 
-  - [ ] `frontend/pages/properties/` (VERIFY from tasks 19.1, 25.1)
-  - [ ] Test workflows end-to-end
-- [ ] **Step 1**: Test property creation workflow:
-  - [ ] Test property creation form loads and submits correctly
-  - [ ] Verify property appears in listing immediately after creation
-  - [ ] Test property creation with all required and optional fields
-  - [ ] Verify property validation works correctly
-- [ ] **Step 2**: Test property editing workflow:
-  - [ ] Test property edit page loads with pre-populated data
-  - [ ] Test property updates save and reflect immediately
-  - [ ] Test partial property updates work correctly
-  - [ ] Verify property edit validation works
-- [ ] **Step 3**: Test property deletion workflow:
-  - [ ] Test property deletion confirmation modal appears
-  - [ ] Test property deletion with associated items (cascade)
-  - [ ] Verify property deletion redirects to properties list
-  - [ ] Test property deletion cleanup works correctly
-- [ ] **Step 4**: Test property listing and filtering:
-  - [ ] Test property listing displays all properties
-  - [ ] Test property sorting by name, date, status
-  - [ ] Test property filtering if implemented
-  - [ ] Verify property count displays correctly
-- [ ] **Dependencies**: Requires completion of bug fix tasks 19.1, 25.1, 32.1
-- [ ] **Root Cause**: Connectivity and missing edit/delete functionality blocking workflow tests
+- [x] **Files to modify**: 
+  - [x] `frontend/pages/properties/` (VERIFY from tasks 19.1, 25.1)
+  - [x] Test workflows end-to-end
+- [x] **Step 1**: Test property creation workflow:
+  - [x] Test property creation form loads and submits correctly
+  - [x] Verify property appears in listing immediately after creation
+  - [x] Test property creation with all required and optional fields
+  - [x] Verify property validation works correctly
+- [x] **Step 2**: Test property editing workflow:
+  - [x] Test property edit page loads with pre-populated data
+  - [x] Test property updates save and reflect immediately
+  - [x] Test partial property updates work correctly
+  - [x] Verify property edit validation works
+- [x] **Step 3**: Test property deletion workflow:
+  - [x] Test property deletion confirmation modal appears
+  - [x] Test property deletion with associated items (cascade)
+  - [x] Verify property deletion redirects to properties list
+  - [x] Test property deletion cleanup works correctly
+- [x] **Step 4**: Test property listing and filtering:
+  - [x] Test property listing displays all properties
+  - [x] Test property sorting by name, date, status
+  - [x] Test property filtering if implemented
+  - [x] Verify property count displays correctly
+- [x] **Dependencies**: Requires completion of bug fix tasks 19.1, 25.1, 32.1
+- [x] **Root Cause**: Connectivity and missing edit/delete functionality blocking workflow tests
 
 ### 34. Test Complete Item Management Workflow
 **Story Points**: 1  
