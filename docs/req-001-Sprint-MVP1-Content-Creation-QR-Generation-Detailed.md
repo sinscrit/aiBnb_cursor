@@ -1090,42 +1090,42 @@
 **Story Points**: 1  
 **Context**: Validate end-to-end QR operations (Stories 4.1.1, 4.2.1)
 
-- [ ] Test QR code generation for items
-- [ ] Verify QR codes link to correct content pages
-- [ ] Test QR code download functionality
-- [ ] Verify QR-to-item mapping accuracy
-- [ ] Test QR code status management
-- [ ] Validate all acceptance criteria are met
+- [x] Test QR code generation for items
+- [x] Verify QR codes link to correct content pages
+- [x] Test QR code download functionality
+- [x] Verify QR-to-item mapping accuracy
+- [x] Test QR code status management
+- [x] Validate all acceptance criteria are met
 
 ### 35.1. **BUG FIX**: Unblock QR Code Workflow Testing
 **Story Points**: 1  
 **Context**: QR workflow testing blocked by frontend connectivity preventing QR management functionality
 
-- [ ] **Files to modify**: 
-  - [ ] `frontend/pages/qrcodes/` (VERIFY from tasks 24.2, 25.1)
-  - [ ] Test workflows end-to-end
-- [ ] **Step 1**: Test QR code generation workflow:
-  - [ ] Test QR code generation for items from QR management page
-  - [ ] Test QR code generation from item management interface
-  - [ ] Verify QR code generation creates unique identifiers
-  - [ ] Test QR code generation validation and error handling
-- [ ] **Step 2**: Test QR code management workflow:
-  - [ ] Test QR code listing displays with statistics
-  - [ ] Test QR code filtering by property and item
-  - [ ] Test QR code status management (active/inactive)
-  - [ ] Test QR code download functionality (PNG files)
-- [ ] **Step 3**: Test QR-to-item mapping workflow:
-  - [ ] Test QR codes correctly map to associated items
-  - [ ] Test QR code to content page URL generation
-  - [ ] Verify QR-to-item mapping accuracy in database
-  - [ ] Test QR code mapping updates when items change
-- [ ] **Step 4**: Test QR code content access workflow:
-  - [ ] Test QR codes link to correct content pages
-  - [ ] Test QR code scanning increments scan count
-  - [ ] Test QR code content displays item information correctly
-  - [ ] Verify QR code statistics tracking works
-- [ ] **Dependencies**: Requires completion of bug fix tasks 24.2, 25.1, 32.1
-- [ ] **Root Cause**: Frontend connectivity preventing QR code functionality testing
+- [x] **Files to modify**: 
+  - [x] `frontend/pages/qrcodes/` (VERIFY from tasks 24.2, 25.1)
+  - [x] Test workflows end-to-end
+- [x] **Step 1**: Test QR code generation workflow:
+  - [x] Test QR code generation for items from QR management page
+  - [x] Test QR code generation from item management interface
+  - [x] Verify QR code generation creates unique identifiers
+  - [x] Test QR code generation validation and error handling
+- [x] **Step 2**: Test QR code management workflow:
+  - [x] Test QR code listing displays with statistics
+  - [x] Test QR code filtering by property and item
+  - [x] Test QR code status management (active/inactive)
+  - [x] Test QR code download functionality (PNG files)
+- [x] **Step 3**: Test QR-to-item mapping workflow:
+  - [x] Test QR codes correctly map to associated items
+  - [x] Test QR code to content page URL generation
+  - [x] Verify QR-to-item mapping accuracy in database
+  - [x] Test QR code mapping updates when items change
+- [x] **Step 4**: Test QR code content access workflow:
+  - [x] Test QR codes link to correct content pages
+  - [x] Test QR code scanning increments scan count
+  - [x] Test QR code content displays item information correctly
+  - [x] Verify QR code statistics tracking works
+- [x] **Dependencies**: Requires completion of bug fix tasks 24.2, 25.1, 32.1
+- [x] **Root Cause**: Frontend connectivity preventing QR code functionality testing
 
 ### 36. Test Content Display Workflow
 **Story Points**: 1  
