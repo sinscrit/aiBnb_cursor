@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import QRDisplay from './QRDisplay';
+import { apiService, apiHelpers } from '../../utils/api';
 
 const QRList = ({ itemId, propertyId, showFilters = true }) => {
   const [qrCodes, setQrCodes] = useState([]);
@@ -30,38 +31,20 @@ const QRList = ({ itemId, propertyId, showFilters = true }) => {
     setError('');
 
     try {
-      let url = 'http://localhost:8000/api/qrcodes';
-      const params = new URLSearchParams();
+      const params = {};
+      if (filters.itemId) params.itemId = filters.itemId;
+      if (filters.propertyId) params.propertyId = filters.propertyId;
+      if (filters.status !== 'all') params.status = filters.status;
 
-      if (filters.itemId) params.append('itemId', filters.itemId);
-      if (filters.propertyId) params.append('propertyId', filters.propertyId);
-      if (filters.status !== 'all') params.append('status', filters.status);
-
-      if (params.toString()) {
-        url += '?' + params.toString();
-      }
-
-      const response = await fetch(url, {
-        headers: {
-          'Authorization': 'Demo demo-user-token',
-        },
-      });
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.message || 'Failed to fetch QR codes');
-      }
-
-      if (result.success) {
-        setQrCodes(result.data.qrCodes || []);
-        setStats(result.data.statistics || null);
-      } else {
-        throw new Error(result.message || 'Failed to load QR codes');
-      }
+      const response = await apiService.qrcodes.getAll(params);
+      const result = apiHelpers.extractData(response);
+      
+      setQrCodes(result.qrCodes || []);
+      setStats(result.statistics || null);
     } catch (err) {
       console.error('Fetch QR Codes Error:', err);
-      setError(err.message || 'Failed to load QR codes');
+      const errorInfo = apiHelpers.handleError(err);
+      setError(errorInfo.message || 'Failed to load QR codes');
     } finally {
       setLoading(false);
     }
@@ -69,16 +52,9 @@ const QRList = ({ itemId, propertyId, showFilters = true }) => {
 
   const fetchProperties = async () => {
     try {
-      const response = await fetch('http://localhost:8000/api/properties', {
-        headers: {
-          'Authorization': 'Demo demo-user-token',
-        },
-      });
-
-      const result = await response.json();
-      if (result.success) {
-        setProperties(result.data.properties || []);
-      }
+      const response = await apiService.properties.getAll();
+      const result = apiHelpers.extractData(response);
+      setProperties(result.properties || []);
     } catch (err) {
       console.error('Fetch Properties Error:', err);
     }
@@ -86,21 +62,12 @@ const QRList = ({ itemId, propertyId, showFilters = true }) => {
 
   const fetchItems = async () => {
     try {
-      let url = 'http://localhost:8000/api/items';
-      if (filters.propertyId) {
-        url += `?propertyId=${filters.propertyId}`;
-      }
+      const params = {};
+      if (filters.propertyId) params.propertyId = filters.propertyId;
 
-      const response = await fetch(url, {
-        headers: {
-          'Authorization': 'Demo demo-user-token',
-        },
-      });
-
-      const result = await response.json();
-      if (result.success) {
-        setItems(result.data.items || []);
-      }
+      const response = await apiService.items.getAll(params);
+      const result = apiHelpers.extractData(response);
+      setItems(result.items || []);
     } catch (err) {
       console.error('Fetch Items Error:', err);
     }

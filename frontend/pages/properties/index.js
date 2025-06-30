@@ -7,6 +7,8 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import DashboardLayout from '../../components/Layout/DashboardLayout';
 import PropertyList from '../../components/Property/PropertyList';
+import { apiService, apiHelpers } from '../../utils/api';
+import { SUCCESS_MESSAGES, ERROR_MESSAGES } from '../../utils/constants';
 
 const PropertiesPage = () => {
   const router = useRouter();
@@ -14,65 +16,40 @@ const PropertiesPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Fetch properties from API
+  // Fetch properties from API using centralized service
   const fetchProperties = async () => {
     try {
       setLoading(true);
       setError(null);
 
-      const response = await fetch('http://localhost:3001/api/properties', {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-
-      if (data.success) {
-        setProperties(data.data.properties || []);
-      } else {
-        throw new Error(data.message || 'Failed to fetch properties');
-      }
+      const response = await apiService.properties.getAll();
+      const data = apiHelpers.extractData(response);
+      
+      setProperties(data.properties || []);
     } catch (error) {
       console.error('Error fetching properties:', error);
-      setError(error.message);
+      const errorInfo = apiHelpers.handleError(error);
+      setError(errorInfo.message);
     } finally {
       setLoading(false);
     }
   };
 
-  // Delete property
+  // Delete property using centralized service
   const handleDeleteProperty = async (propertyId) => {
     try {
-      const response = await fetch(`http://localhost:3001/api/properties/${propertyId}`, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
+      const response = await apiService.properties.delete(propertyId);
+      const data = apiHelpers.extractData(response);
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-
-      if (data.success) {
-        // Remove the deleted property from the list
-        setProperties(prev => prev.filter(property => property.id !== propertyId));
-        
-        // Show success message
-        alert(`Property "${data.data.deleted_property.name}" was successfully deleted.`);
-      } else {
-        throw new Error(data.message || 'Failed to delete property');
-      }
+      // Remove the deleted property from the list
+      setProperties(prev => prev.filter(property => property.property_id !== propertyId));
+      
+      // Show success message
+      alert(`Property "${data.deleted_property?.name || 'Property'}" was successfully deleted.`);
     } catch (error) {
       console.error('Error deleting property:', error);
+      const errorInfo = apiHelpers.handleError(error);
+      alert(`Failed to delete property: ${errorInfo.message}`);
       throw error; // Re-throw to be handled by PropertyCard component
     }
   };

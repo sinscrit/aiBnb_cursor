@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/router';
+import { apiService, apiHelpers } from '../../utils/api';
+import { SUCCESS_MESSAGES } from '../../utils/constants';
 
 const QRGenerator = ({ item, onQRGenerated }) => {
   const [isGenerating, setIsGenerating] = useState(false);
@@ -18,37 +20,23 @@ const QRGenerator = ({ item, onQRGenerated }) => {
     setSuccess('');
 
     try {
-      const response = await fetch(`http://localhost:8000/api/qrcodes`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Demo demo-user-token',
-        },
-        body: JSON.stringify({
-          itemId: item.item_id,
-          format: 'png',
-          size: 256
-        }),
+      const response = await apiService.qrcodes.create({
+        itemId: item.item_id,
+        format: 'png',
+        size: 256
       });
 
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.message || 'Failed to generate QR code');
-      }
-
-      if (result.success) {
-        setGeneratedQR(result.data.qrCode);
-        setSuccess('QR code generated successfully!');
-        if (onQRGenerated) {
-          onQRGenerated(result.data.qrCode);
-        }
-      } else {
-        throw new Error(result.message || 'QR generation failed');
+      const result = apiHelpers.extractData(response);
+      setGeneratedQR(result.qrCode);
+      setSuccess(SUCCESS_MESSAGES.QR_GENERATED);
+      
+      if (onQRGenerated) {
+        onQRGenerated(result.qrCode);
       }
     } catch (err) {
       console.error('QR Generation Error:', err);
-      setError(err.message || 'Failed to generate QR code. Please try again.');
+      const errorInfo = apiHelpers.handleError(err);
+      setError(errorInfo.message || 'Failed to generate QR code. Please try again.');
     } finally {
       setIsGenerating(false);
     }
@@ -56,30 +44,13 @@ const QRGenerator = ({ item, onQRGenerated }) => {
 
   const downloadQRCode = async (qrId) => {
     try {
-      const response = await fetch(`http://localhost:8000/api/qrcodes/${qrId}/download`, {
-        method: 'GET',
-        headers: {
-          'Authorization': 'Demo demo-user-token',
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to download QR code');
-      }
-
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.style.display = 'none';
-      a.href = url;
-      a.download = `qr-code-${item.name || item.item_id}.png`;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
+      const response = await apiService.qrcodes.download(qrId);
+      const blob = response.data;
+      apiHelpers.downloadFile(blob, `qr-code-${item.name || item.item_id}.png`);
     } catch (err) {
       console.error('Download Error:', err);
-      setError('Failed to download QR code');
+      const errorInfo = apiHelpers.handleError(err);
+      setError(errorInfo.message || 'Failed to download QR code');
     }
   };
 

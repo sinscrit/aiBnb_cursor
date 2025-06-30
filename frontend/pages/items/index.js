@@ -7,6 +7,8 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import DashboardLayout from '../../components/Layout/DashboardLayout';
 import ItemList from '../../components/Item/ItemList';
+import { apiService, apiHelpers } from '../../utils/api';
+import { SUCCESS_MESSAGES, ERROR_MESSAGES } from '../../utils/constants';
 
 const ItemsPage = () => {
   const router = useRouter();
@@ -28,40 +30,26 @@ const ItemsPage = () => {
 
     try {
       // Load properties first for the filter dropdown
-      const propertiesResponse = await fetch('http://localhost:8000/api/properties');
-      if (!propertiesResponse.ok) {
-        throw new Error(`Properties API error: ${propertiesResponse.status}`);
-      }
-      const propertiesData = await propertiesResponse.json();
-      
-      if (propertiesData.success) {
-        setProperties(propertiesData.data.properties || []);
-      } else {
-        throw new Error(propertiesData.error || 'Failed to load properties');
-      }
+      const propertiesResponse = await apiService.properties.getAll();
+      const propertiesData = apiHelpers.extractData(propertiesResponse);
+      setProperties(propertiesData.properties || []);
 
       // Load items
-      const itemsResponse = await fetch('http://localhost:8000/api/items');
-      if (!itemsResponse.ok) {
-        throw new Error(`Items API error: ${itemsResponse.status}`);
-      }
-      const itemsData = await itemsResponse.json();
+      const itemsResponse = await apiService.items.getAll();
+      const itemsData = apiHelpers.extractData(itemsResponse);
       
-      if (itemsData.success) {
-        // Enhance items with property information and QR count
-        const enhancedItems = (itemsData.data.items || []).map(item => ({
-          ...item,
-          property: propertiesData.data.properties?.find(p => p.id === item.property_id),
-          qr_count: item.qr_count || 0
-        }));
-        setItems(enhancedItems);
-      } else {
-        throw new Error(itemsData.error || 'Failed to load items');
-      }
+      // Enhance items with property information
+      const enhancedItems = (itemsData.items || []).map(item => ({
+        ...item,
+        property: propertiesData.properties?.find(p => p.property_id === item.property_id),
+        qr_count: item.qr_count || 0
+      }));
+      setItems(enhancedItems);
 
     } catch (err) {
       console.error('Error loading data:', err);
-      setError(err.message);
+      const errorInfo = apiHelpers.handleError(err);
+      setError(errorInfo.message);
     } finally {
       setLoading(false);
     }
@@ -77,87 +65,62 @@ const ItemsPage = () => {
 
   const handleDeleteItem = async (itemId) => {
     try {
-      const response = await fetch(`http://localhost:8000/api/items/${itemId}`, {
-        method: 'DELETE'
-      });
-
-      if (!response.ok) {
-        throw new Error(`Delete failed: ${response.status}`);
-      }
-
-      const data = await response.json();
-      if (data.success) {
-        // Remove the deleted item from the list
-        setItems(prevItems => prevItems.filter(item => item.id !== itemId));
-        
-        // Show success message
-        alert('Item deleted successfully');
-      } else {
-        throw new Error(data.error || 'Delete failed');
-      }
+      const response = await apiService.items.delete(itemId);
+      const data = apiHelpers.extractData(response);
+      
+      // Remove the deleted item from the list
+      setItems(prevItems => prevItems.filter(item => item.item_id !== itemId));
+      
+      // Show success message
+      alert(SUCCESS_MESSAGES.ITEM_DELETED);
     } catch (error) {
       console.error('Error deleting item:', error);
+      const errorInfo = apiHelpers.handleError(error);
+      alert(`Failed to delete item: ${errorInfo.message}`);
       throw error; // Re-throw to let ItemCard handle the error display
     }
   };
 
   const handleGenerateQR = async (itemId) => {
     try {
-      const response = await fetch('http://localhost:8000/api/qrcodes', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          itemId: itemId,
-          options: {
-            width: 256
-          }
-        })
+      const response = await apiService.qrcodes.create({
+        itemId: itemId,
+        format: 'png',
+        size: 256
       });
-
-      if (!response.ok) {
-        throw new Error(`QR generation failed: ${response.status}`);
-      }
-
-      const data = await response.json();
-      if (data.success) {
-        // Update the item's QR count
-        setItems(prevItems => 
-          prevItems.map(item => 
-            item.id === itemId 
-              ? { ...item, qr_count: (item.qr_count || 0) + 1 }
-              : item
-          )
-        );
-        
-        // Show success message with option to download
-        const downloadQR = confirm(
-          `QR code generated successfully for "${data.data.item_name}"!\n\nWould you like to download the QR code now?`
-        );
-        
-        if (downloadQR) {
-          // Trigger download
-          const downloadUrl = `http://localhost:8000${data.data.download_url}`;
-          const link = document.createElement('a');
-          link.href = downloadUrl;
-          link.download = data.data.filename;
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-        }
-      } else {
-        throw new Error(data.error || 'QR generation failed');
+      const data = apiHelpers.extractData(response);
+      
+      // Update the item's QR count
+      setItems(prevItems => 
+        prevItems.map(item => 
+          item.item_id === itemId 
+            ? { ...item, qr_count: (item.qr_count || 0) + 1 }
+            : item
+        )
+      );
+      
+      // Show success message with option to download
+      const downloadQR = confirm(
+        `${SUCCESS_MESSAGES.QR_GENERATED}\n\nWould you like to download the QR code now?`
+      );
+      
+      if (downloadQR) {
+        // Download QR code using the API service
+        const downloadResponse = await apiService.qrcodes.download(data.qrCode.qr_id);
+        const blob = downloadResponse.data;
+        apiHelpers.downloadFile(blob, `qr-code-${data.qrCode.qr_id}.png`);
       }
     } catch (error) {
       console.error('Error generating QR code:', error);
+      const errorInfo = apiHelpers.handleError(error);
+      alert(`Failed to generate QR code: ${errorInfo.message}`);
       throw error; // Re-throw to let ItemCard handle the error display
     }
   };
 
   const getFilteredPropertyName = () => {
     if (!propertyId) return null;
-    const property = properties.find(p => p.id === propertyId);
+    const property = properties.find(p => p.property_id === propertyId);
     return property?.name;
   };
 

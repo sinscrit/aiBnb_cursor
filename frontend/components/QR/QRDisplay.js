@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { apiService, apiHelpers } from '../../utils/api';
+import { API_BASE_URL } from '../../utils/constants';
 
 const QRDisplay = ({ qrCode, item, showDetails = true, size = 'medium' }) => {
   const [isDownloading, setIsDownloading] = useState(false);
@@ -20,30 +22,13 @@ const QRDisplay = ({ qrCode, item, showDetails = true, size = 'medium' }) => {
     setError('');
 
     try {
-      const response = await fetch(`http://localhost:8000/api/qrcodes/${qrCode.qr_id}/download`, {
-        method: 'GET',
-        headers: {
-          'Authorization': 'Demo demo-user-token',
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to download QR code');
-      }
-
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.style.display = 'none';
-      a.href = url;
-      a.download = `qr-code-${item?.name || qrCode.qr_id}.png`;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
+      const response = await apiService.qrcodes.download(qrCode.qr_id);
+      const blob = response.data;
+      apiHelpers.downloadFile(blob, `qr-code-${item?.name || qrCode.qr_id}.png`);
     } catch (err) {
       console.error('Download Error:', err);
-      setError('Failed to download QR code');
+      const errorInfo = apiHelpers.handleError(err);
+      setError(errorInfo.message || 'Failed to download QR code');
     } finally {
       setIsDownloading(false);
     }
@@ -51,7 +36,7 @@ const QRDisplay = ({ qrCode, item, showDetails = true, size = 'medium' }) => {
 
   const getQRCodeImageUrl = () => {
     if (!qrCode?.qr_id) return null;
-    return `http://localhost:8000/api/qrcodes/${qrCode.qr_id}/download`;
+    return `${API_BASE_URL}/qrcodes/${qrCode.qr_id}/download`;
   };
 
   const getStatusColor = (isActive) => {

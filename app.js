@@ -38,7 +38,7 @@ app.get('/health', (req, res) => {
 app.use('/api/properties', require('./routes/api/properties'));
 app.use('/api/items', require('./routes/api/items'));
 app.use('/api/qrcodes', require('./routes/api/qrcodes'));
-// app.use('/api/content', require('./routes/api/content'));
+app.use('/api/content', require('./routes/api/content'));
 
 // Error handling middleware
 app.use((err, req, res, next) => {
