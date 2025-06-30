@@ -222,22 +222,22 @@
 **Story Points**: 1  
 **Context**: routes/api/items.js does not exist and route is commented out in app.js
 
-- [ ] **Files to modify**: 
-  - [ ] `routes/api/items.js` (CREATE NEW FILE)
-  - [ ] `app.js` (UNCOMMENT line 39)
-- [ ] Create `routes/api/items.js` following the pattern of `routes/api/properties.js`:
-  - [ ] Import `ItemController` from `controllers/ItemController.js`
-  - [ ] Import authentication middleware
-  - [ ] Set up Express router with middleware
-  - [ ] Define RESTful routes matching the endpoint specification
-  - [ ] Export router module
-- [ ] Update `app.js` to register Item routes:
-  - [ ] Uncomment line 39: `app.use('/api/items', require('./routes/api/items'));`
-  - [ ] Ensure route is placed after properties route registration
-- [ ] Test API endpoints:
-  - [ ] `GET /api/items?propertyId=550e8400-e29b-41d4-a716-446655440001` should return items
-  - [ ] Verify 404 error is resolved
-- [ ] **Root Cause**: API routes file missing and not registered in Express app
+- [x] **Files to modify**: 
+  - [x] `routes/api/items.js` (CREATE NEW FILE)
+  - [x] `app.js` (UNCOMMENT line 39)
+- [x] Create `routes/api/items.js` following the pattern of `routes/api/properties.js`:
+  - [x] Import `ItemController` from `controllers/ItemController.js`
+  - [x] Import authentication middleware
+  - [x] Set up Express router with middleware
+  - [x] Define RESTful routes matching the endpoint specification
+  - [x] Export router module
+- [x] Update `app.js` to register Item routes:
+  - [x] Uncomment line 39: `app.use('/api/items', require('./routes/api/items'));`
+  - [x] Ensure route is placed after properties route registration
+- [x] Test API endpoints:
+  - [x] `GET /api/items?propertyId=550e8400-e29b-41d4-a716-446655440001` should return items
+  - [x] Verify 404 error is resolved
+- [x] **Root Cause**: API routes file missing and not registered in Express app
 
 ### 12. Implement QR Code Generation Service
 **Story Points**: 1  
