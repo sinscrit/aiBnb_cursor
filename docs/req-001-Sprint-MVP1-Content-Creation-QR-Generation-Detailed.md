@@ -49,14 +49,14 @@
 **Story Points**: 1  
 **Context**: Create the frontend foundation using Next.js with TypeScript support
 
-- [ ] Create frontend `package.json` with Next.js, React, and required dependencies
-- [ ] Initialize Next.js project structure in frontend directory
-- [ ] Install dependencies: `react`, `next`, `typescript`, `@types/react`, `axios`, `react-hook-form`, `react-query`
-- [ ] Create `next.config.js` configuration file
-- [ ] Create `tsconfig.json` for TypeScript configuration
-- [ ] Set up basic folder structure: `pages/`, `components/`, `utils/`, `hooks/`, `styles/`
-- [ ] Create initial `pages/_app.tsx` and `pages/index.tsx`
-- [ ] Test frontend startup with `npm run dev`
+- [x] Create frontend `package.json` with Next.js, React, and required dependencies
+- [x] Initialize Next.js project structure in frontend directory
+- [x] Install dependencies: `react`, `next`, `typescript`, `@types/react`, `axios`, `react-hook-form`, `react-query`
+- [x] Create `next.config.js` configuration file
+- [x] Create `tsconfig.json` for TypeScript configuration
+- [x] Set up basic folder structure: `pages/`, `components/`, `utils/`, `hooks/`, `styles/`
+- [x] Create initial `pages/_app.tsx` and `pages/index.tsx`
+- [x] Test frontend startup with `npm run dev`
 
 ### 3. Configure Environment Variables and Supabase Connection
 **Story Points**: 1  
