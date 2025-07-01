@@ -1,175 +1,393 @@
-import { cache } from '../utils/cache';
-import { apiHelpers } from '../utils/api';
-
 /**
  * Cache Service
- * Handles caching operations and integration with API client
+ * QR Code-Based Instructional System - Frontend Data Caching
+ * Task 25.5: Implement Frontend Data Caching
  */
 
-// Cache configuration by resource type
-const CACHE_CONFIG = {
-  properties: {
-    maxAge: 5 * 60 * 1000, // 5 minutes
-    staleWhileRevalidate: true,
-    backgroundRefresh: true,
-    persistToStorage: true
+import {
+  cacheManager,
+  createCacheKey,
+  CACHE_STRATEGIES,
+  CACHE_CONFIG
+} from '../utils/cache';
+
+/**
+ * API-specific cache configuration
+ */
+const API_CACHE_CONFIG = {
+  PROPERTIES: {
+    ttl: 10 * 60 * 1000, // 10 minutes
+    strategy: CACHE_STRATEGIES.STALE_WHILE_REVALIDATE,
+    persistent: true
   },
-  items: {
-    maxAge: 5 * 60 * 1000, // 5 minutes
-    staleWhileRevalidate: true,
-    backgroundRefresh: true,
-    persistToStorage: true
+  ITEMS: {
+    ttl: 5 * 60 * 1000, // 5 minutes
+    strategy: CACHE_STRATEGIES.CACHE_FIRST,
+    persistent: false
   },
-  qrcodes: {
-    maxAge: 15 * 60 * 1000, // 15 minutes
-    staleWhileRevalidate: true,
-    backgroundRefresh: false,
-    persistToStorage: true
+  QR_CODES: {
+    ttl: 15 * 60 * 1000, // 15 minutes
+    strategy: CACHE_STRATEGIES.CACHE_FIRST,
+    persistent: true
+  },
+  CONTENT: {
+    ttl: 30 * 60 * 1000, // 30 minutes
+    strategy: CACHE_STRATEGIES.STALE_WHILE_REVALIDATE,
+    persistent: true
   }
 };
 
-// Cache key prefixes
-const CACHE_KEYS = {
-  PROPERTIES: 'properties',
-  ITEMS: 'items',
-  QRCODES: 'qrcodes'
-};
-
 /**
- * Create cache key for a resource
- * @param {string} type - Resource type (properties, items, qrcodes)
- * @param {Object} params - Query parameters
- * @returns {string} Cache key
+ * Cache Service Class
+ * Provides high-level caching functionality for the application
  */
-const createCacheKey = (type, params = {}) => {
-  return cache.generateKey(type, params);
-};
+class CacheService {
+  constructor() {
+    this.cache = cacheManager;
+    this.apiBaseURL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000';
+  }
 
-/**
- * Cache API response data
- * @param {string} key - Cache key
- * @param {Object} data - Data to cache
- * @param {string} type - Resource type for config
- */
-const cacheResponse = (key, data, type) => {
-  const config = CACHE_CONFIG[type] || {};
-  cache.store.set(key, data, config);
-};
+  /**
+   * Generate cache key for API requests
+   * @param {string} endpoint - API endpoint
+   * @param {Object} params - Request parameters
+   * @param {Object} headers - Request headers
+   * @returns {string} Cache key
+   */
+  generateAPIKey(endpoint, params = {}, headers = {}) {
+    const url = `${this.apiBaseURL}${endpoint}`;
+    const keyData = {
+      ...params,
+      // Include relevant headers that affect response
+      userId: headers['X-Demo-User-ID'] || headers['X-User-ID'],
+      contentType: headers['Content-Type']
+    };
+    return createCacheKey(url, keyData);
+  }
 
-/**
- * Get cached data
- * @param {string} key - Cache key
- * @returns {*} Cached data or null
- */
-const getCachedData = (key) => {
-  return cache.store.get(key);
-};
+  /**
+   * Cache API response
+   * @param {string} endpoint - API endpoint
+   * @param {Object} data - Response data to cache
+   * @param {Object} options - Cache options
+   * @returns {void}
+   */
+  cacheAPIResponse(endpoint, data, options = {}) {
+    const {
+      params = {},
+      headers = {},
+      config = API_CACHE_CONFIG.PROPERTIES
+    } = options;
 
-/**
- * Invalidate cached data
- * @param {string} key - Cache key
- */
-const invalidateCache = (key) => {
-  cache.store.delete(key);
-};
+    const key = this.generateAPIKey(endpoint, params, headers);
+    this.cache.set(key, data, {
+      ttl: config.ttl,
+      storage: config.persistent ? 'persistent' : 'memory',
+      persistent: config.persistent
+    });
+  }
 
-/**
- * Clear all cached data
- */
-const clearCache = () => {
-  cache.store.clear();
-};
+  /**
+   * Get cached API response
+   * @param {string} endpoint - API endpoint
+   * @param {Object} options - Request options
+   * @returns {any} Cached data or null
+   */
+  getCachedAPIResponse(endpoint, options = {}) {
+    const {
+      params = {},
+      headers = {}
+    } = options;
 
-/**
- * Cache-wrapped API client methods
- */
-export const cachedApiClient = {
-  properties: {
-    getAll: async () => {
-      const key = createCacheKey(CACHE_KEYS.PROPERTIES);
-      const cachedData = getCachedData(key);
-      
-      if (cachedData) return cachedData;
+    const key = this.generateAPIKey(endpoint, params, headers);
+    return this.cache.get(key);
+  }
 
-      const response = await fetch('/api/properties');
-      const data = await apiHelpers.extractData(response);
-      cacheResponse(key, data, 'properties');
-      return data;
-    },
+  /**
+   * Invalidate API cache by endpoint pattern
+   * @param {string} endpointPattern - Pattern to match endpoints
+   * @returns {void}
+   */
+  invalidateAPICache(endpointPattern) {
+    const pattern = new RegExp(`${this.apiBaseURL}${endpointPattern}`);
+    this.cache.invalidate(pattern);
+  }
 
-    getById: async (id) => {
-      const key = createCacheKey(CACHE_KEYS.PROPERTIES, { id });
-      const cachedData = getCachedData(key);
-      
-      if (cachedData) return cachedData;
+  /**
+   * Properties Cache Methods
+   */
+  cacheProperties(properties, userId = null) {
+    const key = this.generateAPIKey('/api/properties', {}, { 'X-Demo-User-ID': userId });
+    this.cache.set(key, properties, API_CACHE_CONFIG.PROPERTIES);
+  }
 
-      const response = await fetch(`/api/properties/${id}`);
-      const data = await apiHelpers.extractData(response);
-      cacheResponse(key, data, 'properties');
-      return data;
-    }
-  },
+  getCachedProperties(userId = null) {
+    const key = this.generateAPIKey('/api/properties', {}, { 'X-Demo-User-ID': userId });
+    return this.cache.get(key);
+  }
 
-  items: {
-    getAll: async (propertyId) => {
-      const key = createCacheKey(CACHE_KEYS.ITEMS, { propertyId });
-      const cachedData = getCachedData(key);
-      
-      if (cachedData) return cachedData;
-
-      const response = await fetch(`/api/items?propertyId=${propertyId}`);
-      const data = await apiHelpers.extractData(response);
-      cacheResponse(key, data, 'items');
-      return data;
-    },
-
-    getById: async (id) => {
-      const key = createCacheKey(CACHE_KEYS.ITEMS, { id });
-      const cachedData = getCachedData(key);
-      
-      if (cachedData) return cachedData;
-
-      const response = await fetch(`/api/items/${id}`);
-      const data = await apiHelpers.extractData(response);
-      cacheResponse(key, data, 'items');
-      return data;
-    }
-  },
-
-  qrcodes: {
-    getAll: async () => {
-      const key = createCacheKey(CACHE_KEYS.QRCODES);
-      const cachedData = getCachedData(key);
-      
-      if (cachedData) return cachedData;
-
-      const response = await fetch('/api/qrcodes');
-      const data = await apiHelpers.extractData(response);
-      cacheResponse(key, data, 'qrcodes');
-      return data;
-    },
-
-    getByItemId: async (itemId) => {
-      const key = createCacheKey(CACHE_KEYS.QRCODES, { itemId });
-      const cachedData = getCachedData(key);
-      
-      if (cachedData) return cachedData;
-
-      const response = await fetch(`/api/qrcodes/${itemId}`);
-      const data = await apiHelpers.extractData(response);
-      cacheResponse(key, data, 'qrcodes');
-      return data;
+  invalidateProperties(userId = null) {
+    if (userId) {
+      const key = this.generateAPIKey('/api/properties', {}, { 'X-Demo-User-ID': userId });
+      this.cache.delete(key);
+    } else {
+      this.invalidateAPICache('/api/properties');
     }
   }
-};
 
-// Export cache utilities
-export const cacheService = {
-  createKey: createCacheKey,
-  get: getCachedData,
-  set: cacheResponse,
-  invalidate: invalidateCache,
-  clear: clearCache,
-  config: CACHE_CONFIG,
-  keys: CACHE_KEYS
-}; 
+  cacheProperty(propertyId, property, userId = null) {
+    const key = this.generateAPIKey(`/api/properties/${propertyId}`, {}, { 'X-Demo-User-ID': userId });
+    this.cache.set(key, property, API_CACHE_CONFIG.PROPERTIES);
+  }
+
+  getCachedProperty(propertyId, userId = null) {
+    const key = this.generateAPIKey(`/api/properties/${propertyId}`, {}, { 'X-Demo-User-ID': userId });
+    return this.cache.get(key);
+  }
+
+  /**
+   * Items Cache Methods
+   */
+  cacheItems(items, propertyId = null, userId = null) {
+    const params = propertyId ? { propertyId } : {};
+    const key = this.generateAPIKey('/api/items', params, { 'X-Demo-User-ID': userId });
+    this.cache.set(key, items, API_CACHE_CONFIG.ITEMS);
+  }
+
+  getCachedItems(propertyId = null, userId = null) {
+    const params = propertyId ? { propertyId } : {};
+    const key = this.generateAPIKey('/api/items', params, { 'X-Demo-User-ID': userId });
+    return this.cache.get(key);
+  }
+
+  invalidateItems(propertyId = null, userId = null) {
+    if (propertyId) {
+      const key = this.generateAPIKey('/api/items', { propertyId }, { 'X-Demo-User-ID': userId });
+      this.cache.delete(key);
+    } else {
+      this.invalidateAPICache('/api/items');
+    }
+  }
+
+  cacheItem(itemId, item, userId = null) {
+    const key = this.generateAPIKey(`/api/items/${itemId}`, {}, { 'X-Demo-User-ID': userId });
+    this.cache.set(key, item, API_CACHE_CONFIG.ITEMS);
+  }
+
+  getCachedItem(itemId, userId = null) {
+    const key = this.generateAPIKey(`/api/items/${itemId}`, {}, { 'X-Demo-User-ID': userId });
+    return this.cache.get(key);
+  }
+
+  /**
+   * QR Codes Cache Methods
+   */
+  cacheQRCodes(qrCodes, itemId = null, userId = null) {
+    const params = itemId ? { itemId } : {};
+    const key = this.generateAPIKey('/api/qrcodes', params, { 'X-Demo-User-ID': userId });
+    this.cache.set(key, qrCodes, API_CACHE_CONFIG.QR_CODES);
+  }
+
+  getCachedQRCodes(itemId = null, userId = null) {
+    const params = itemId ? { itemId } : {};
+    const key = this.generateAPIKey('/api/qrcodes', params, { 'X-Demo-User-ID': userId });
+    return this.cache.get(key);
+  }
+
+  invalidateQRCodes(itemId = null, userId = null) {
+    if (itemId) {
+      const key = this.generateAPIKey('/api/qrcodes', { itemId }, { 'X-Demo-User-ID': userId });
+      this.cache.delete(key);
+    } else {
+      this.invalidateAPICache('/api/qrcodes');
+    }
+  }
+
+  cacheQRCode(qrId, qrCode, userId = null) {
+    const key = this.generateAPIKey(`/api/qrcodes/${qrId}`, {}, { 'X-Demo-User-ID': userId });
+    this.cache.set(key, qrCode, API_CACHE_CONFIG.QR_CODES);
+  }
+
+  getCachedQRCode(qrId, userId = null) {
+    const key = this.generateAPIKey(`/api/qrcodes/${qrId}`, {}, { 'X-Demo-User-ID': userId });
+    return this.cache.get(key);
+  }
+
+  /**
+   * Content Cache Methods
+   */
+  cacheContent(qrId, content) {
+    const key = this.generateAPIKey(`/api/content/${qrId}`);
+    this.cache.set(key, content, API_CACHE_CONFIG.CONTENT);
+  }
+
+  getCachedContent(qrId) {
+    const key = this.generateAPIKey(`/api/content/${qrId}`);
+    return this.cache.get(key);
+  }
+
+  invalidateContent(qrId = null) {
+    if (qrId) {
+      const key = this.generateAPIKey(`/api/content/${qrId}`);
+      this.cache.delete(key);
+    } else {
+      this.invalidateAPICache('/api/content');
+    }
+  }
+
+  /**
+   * Cache Invalidation Strategies
+   */
+
+  /**
+   * Invalidate related caches when property is updated
+   * @param {string} propertyId - Property ID
+   * @param {string} userId - User ID
+   */
+  invalidatePropertyRelated(propertyId, userId = null) {
+    // Invalidate property cache
+    this.cacheProperty(propertyId, null, userId);
+    this.invalidateProperties(userId);
+    
+    // Invalidate related items cache
+    this.invalidateItems(propertyId, userId);
+    
+    // Invalidate QR codes for items in this property
+    this.invalidateAPICache(`/api/qrcodes.*propertyId=${propertyId}`);
+  }
+
+  /**
+   * Invalidate related caches when item is updated
+   * @param {string} itemId - Item ID
+   * @param {string} propertyId - Property ID
+   * @param {string} userId - User ID
+   */
+  invalidateItemRelated(itemId, propertyId = null, userId = null) {
+    // Invalidate item cache
+    this.cacheItem(itemId, null, userId);
+    
+    // Invalidate items list cache
+    this.invalidateItems(propertyId, userId);
+    
+    // Invalidate QR codes for this item
+    this.invalidateQRCodes(itemId, userId);
+    
+    // Invalidate property cache if provided
+    if (propertyId) {
+      this.cacheProperty(propertyId, null, userId);
+    }
+  }
+
+  /**
+   * Invalidate related caches when QR code is updated
+   * @param {string} qrId - QR code ID
+   * @param {string} itemId - Item ID
+   * @param {string} userId - User ID
+   */
+  invalidateQRRelated(qrId, itemId = null, userId = null) {
+    // Invalidate QR code cache
+    this.cacheQRCode(qrId, null, userId);
+    
+    // Invalidate QR codes list cache
+    this.invalidateQRCodes(itemId, userId);
+    
+    // Invalidate content cache
+    this.invalidateContent(qrId);
+    
+    // Invalidate item cache if provided
+    if (itemId) {
+      this.cacheItem(itemId, null, userId);
+    }
+  }
+
+  /**
+   * Cache Statistics and Management
+   */
+
+  /**
+   * Get cache statistics
+   * @returns {Object} Cache statistics
+   */
+  getStats() {
+    return this.cache.stats();
+  }
+
+  /**
+   * Clean up expired cache entries
+   * @returns {Object} Cleanup results
+   */
+  cleanup() {
+    return this.cache.cleanup();
+  }
+
+  /**
+   * Clear all cache
+   */
+  clearAll() {
+    this.cache.clear();
+  }
+
+  /**
+   * Preload cache with initial data
+   * @param {Object} initialData - Initial data to cache
+   */
+  preload(initialData = {}) {
+    const { properties, items, qrCodes, content } = initialData;
+
+    if (properties) {
+      this.cacheProperties(properties);
+    }
+
+    if (items) {
+      this.cacheItems(items);
+    }
+
+    if (qrCodes) {
+      this.cacheQRCodes(qrCodes);
+    }
+
+    if (content) {
+      Object.entries(content).forEach(([qrId, contentData]) => {
+        this.cacheContent(qrId, contentData);
+      });
+    }
+  }
+
+  /**
+   * Export cache data for backup
+   * @returns {Object} Cache data
+   */
+  export() {
+    const stats = this.getStats();
+    return {
+      stats,
+      timestamp: Date.now(),
+      version: CACHE_CONFIG.VERSION
+    };
+  }
+
+  /**
+   * Warm up cache with common data
+   * @param {Function} fetchFn - Function to fetch data
+   */
+  async warmup(fetchFn) {
+    if (typeof fetchFn === 'function') {
+      try {
+        const data = await fetchFn();
+        this.preload(data);
+      } catch (error) {
+        console.warn('Cache warmup failed:', error);
+      }
+    }
+  }
+}
+
+/**
+ * Default cache service instance
+ */
+export const cacheService = new CacheService();
+
+/**
+ * Export cache service class for custom instances
+ */
+export default CacheService; 

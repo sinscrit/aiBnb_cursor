@@ -1,202 +1,493 @@
 /**
- * Cache Utilities
- * QR Code-Based Instructional System - Data Caching
+ * Frontend Data Caching Utilities
+ * QR Code-Based Instructional System - Frontend Data Caching
+ * Task 25.5: Implement Frontend Data Caching
  */
 
-// Cache configuration
-const DEFAULT_CACHE_CONFIG = {
-  maxAge: 5 * 60 * 1000, // 5 minutes
-  staleWhileRevalidate: true,
-  backgroundRefresh: true,
-  persistToStorage: false
+/**
+ * Cache configuration and constants
+ */
+export const CACHE_CONFIG = {
+  DEFAULT_TTL: 5 * 60 * 1000, // 5 minutes
+  MAX_CACHE_SIZE: 100, // Maximum number of cached items
+  STORAGE_KEY: 'qr_system_cache',
+  VERSION: '1.0.0'
 };
 
-// Cache entry structure
-class CacheEntry {
-  constructor(key, value, config = {}) {
-    this.key = key;
-    this.value = value;
-    this.timestamp = Date.now();
-    this.config = { ...DEFAULT_CACHE_CONFIG, ...config };
+/**
+ * Cache strategies
+ */
+export const CACHE_STRATEGIES = {
+  CACHE_FIRST: 'cache-first', // Use cache if available, otherwise fetch
+  CACHE_ONLY: 'cache-only', // Only use cache, don't fetch if not found
+  NETWORK_FIRST: 'network-first', // Try network first, fallback to cache
+  NETWORK_ONLY: 'network-only', // Always fetch from network
+  STALE_WHILE_REVALIDATE: 'stale-while-revalidate' // Return cached data and update in background
+};
+
+/**
+ * In-memory cache implementation
+ */
+class MemoryCache {
+  constructor(maxSize = CACHE_CONFIG.MAX_CACHE_SIZE) {
+    this.cache = new Map();
+    this.maxSize = maxSize;
+    this.accessOrder = new Map(); // Track access order for LRU
   }
 
-  isStale() {
-    return Date.now() - this.timestamp > this.config.maxAge;
+  /**
+   * Set item in cache
+   * @param {string} key - Cache key
+   * @param {any} value - Value to cache
+   * @param {number} ttl - Time to live in milliseconds
+   */
+  set(key, value, ttl = CACHE_CONFIG.DEFAULT_TTL) {
+    const expiresAt = Date.now() + ttl;
+    
+    // Remove oldest item if cache is full
+    if (this.cache.size >= this.maxSize && !this.cache.has(key)) {
+      this._evictOldest();
+    }
+
+    const cacheItem = {
+      value,
+      expiresAt,
+      createdAt: Date.now(),
+      accessCount: 0
+    };
+
+    this.cache.set(key, cacheItem);
+    this.accessOrder.set(key, Date.now());
   }
 
-  isValid() {
-    return !this.isStale() || this.config.staleWhileRevalidate;
+  /**
+   * Get item from cache
+   * @param {string} key - Cache key
+   * @returns {any} Cached value or null
+   */
+  get(key) {
+    const item = this.cache.get(key);
+    
+    if (!item) {
+      return null;
+    }
+
+    // Check if expired
+    if (Date.now() > item.expiresAt) {
+      this.delete(key);
+      return null;
+    }
+
+    // Update access tracking
+    item.accessCount++;
+    this.accessOrder.set(key, Date.now());
+
+    return item.value;
   }
 
-  serialize() {
+  /**
+   * Check if key exists and is valid
+   * @param {string} key - Cache key
+   * @returns {boolean} True if key exists and is valid
+   */
+  has(key) {
+    const item = this.cache.get(key);
+    
+    if (!item) {
+      return false;
+    }
+
+    if (Date.now() > item.expiresAt) {
+      this.delete(key);
+      return false;
+    }
+
+    return true;
+  }
+
+  /**
+   * Delete item from cache
+   * @param {string} key - Cache key
+   * @returns {boolean} True if item was deleted
+   */
+  delete(key) {
+    this.accessOrder.delete(key);
+    return this.cache.delete(key);
+  }
+
+  /**
+   * Clear all items from cache
+   */
+  clear() {
+    this.cache.clear();
+    this.accessOrder.clear();
+  }
+
+  /**
+   * Get cache statistics
+   * @returns {Object} Cache statistics
+   */
+  stats() {
+    const now = Date.now();
+    let validItems = 0;
+    let expiredItems = 0;
+
+    for (const [key, item] of this.cache.entries()) {
+      if (now <= item.expiresAt) {
+        validItems++;
+      } else {
+        expiredItems++;
+      }
+    }
+
     return {
-      key: this.key,
-      value: this.value,
-      timestamp: this.timestamp,
-      config: this.config
+      size: this.cache.size,
+      maxSize: this.maxSize,
+      validItems,
+      expiredItems,
+      utilization: (this.cache.size / this.maxSize) * 100
     };
   }
 
-  static deserialize(data) {
-    const entry = new CacheEntry(data.key, data.value, data.config);
-    entry.timestamp = data.timestamp;
-    return entry;
+  /**
+   * Evict oldest item (LRU)
+   * @private
+   */
+  _evictOldest() {
+    let oldestKey = null;
+    let oldestTime = Infinity;
+
+    for (const [key, time] of this.accessOrder.entries()) {
+      if (time < oldestTime) {
+        oldestTime = time;
+        oldestKey = key;
+      }
+    }
+
+    if (oldestKey) {
+      this.delete(oldestKey);
+    }
+  }
+
+  /**
+   * Clean up expired items
+   */
+  cleanup() {
+    const now = Date.now();
+    const keysToDelete = [];
+
+    for (const [key, item] of this.cache.entries()) {
+      if (now > item.expiresAt) {
+        keysToDelete.push(key);
+      }
+    }
+
+    keysToDelete.forEach(key => this.delete(key));
+    return keysToDelete.length;
   }
 }
 
-// In-memory cache store
-class CacheStore {
-  constructor() {
-    this.cache = new Map();
-    this.refreshCallbacks = new Map();
-    
-    // Load persisted cache on initialization
-    this.loadFromStorage();
+/**
+ * Browser storage cache implementation
+ */
+class StorageCache {
+  constructor(storage = localStorage, keyPrefix = CACHE_CONFIG.STORAGE_KEY) {
+    this.storage = storage;
+    this.keyPrefix = keyPrefix;
   }
 
-  // Get cache entry
-  get(key) {
-    const entry = this.cache.get(key);
-    if (!entry) return null;
+  /**
+   * Generate storage key
+   * @param {string} key - Cache key
+   * @returns {string} Storage key
+   */
+  _getStorageKey(key) {
+    return `${this.keyPrefix}:${key}`;
+  }
 
-    // Check if entry is stale
-    if (entry.isStale()) {
-      // If stale but can serve stale data, trigger background refresh
-      if (entry.config.staleWhileRevalidate) {
-        this.triggerBackgroundRefresh(key);
-      } else {
-        // If can't serve stale data, remove entry
+  /**
+   * Set item in storage
+   * @param {string} key - Cache key
+   * @param {any} value - Value to cache
+   * @param {number} ttl - Time to live in milliseconds
+   */
+  set(key, value, ttl = CACHE_CONFIG.DEFAULT_TTL) {
+    const expiresAt = Date.now() + ttl;
+    const cacheItem = {
+      value,
+      expiresAt,
+      createdAt: Date.now(),
+      version: CACHE_CONFIG.VERSION
+    };
+
+    try {
+      this.storage.setItem(
+        this._getStorageKey(key),
+        JSON.stringify(cacheItem)
+      );
+    } catch (error) {
+      // Handle storage quota exceeded
+      console.warn('Cache storage full, cleaning up expired items');
+      this.cleanup();
+      try {
+        this.storage.setItem(
+          this._getStorageKey(key),
+          JSON.stringify(cacheItem)
+        );
+      } catch (e) {
+        console.error('Failed to cache item:', e);
+      }
+    }
+  }
+
+  /**
+   * Get item from storage
+   * @param {string} key - Cache key
+   * @returns {any} Cached value or null
+   */
+  get(key) {
+    try {
+      const stored = this.storage.getItem(this._getStorageKey(key));
+      
+      if (!stored) {
+        return null;
+      }
+
+      const item = JSON.parse(stored);
+
+      // Check version compatibility
+      if (item.version !== CACHE_CONFIG.VERSION) {
         this.delete(key);
         return null;
       }
-    }
 
-    return entry.isValid() ? entry.value : null;
+      // Check if expired
+      if (Date.now() > item.expiresAt) {
+        this.delete(key);
+        return null;
+      }
+
+      return item.value;
+    } catch (error) {
+      console.error('Error reading from cache:', error);
+      this.delete(key);
+      return null;
+    }
   }
 
-  // Set cache entry
-  set(key, value, config = {}) {
-    const entry = new CacheEntry(key, value, config);
-    this.cache.set(key, entry);
-
-    // Persist to storage if configured
-    if (entry.config.persistToStorage) {
-      this.saveToStorage();
-    }
-
-    return entry;
+  /**
+   * Check if key exists and is valid
+   * @param {string} key - Cache key
+   * @returns {boolean} True if key exists and is valid
+   */
+  has(key) {
+    return this.get(key) !== null;
   }
 
-  // Delete cache entry
+  /**
+   * Delete item from storage
+   * @param {string} key - Cache key
+   */
   delete(key) {
-    const deleted = this.cache.delete(key);
-    if (deleted) {
-      this.saveToStorage();
-    }
-    return deleted;
+    this.storage.removeItem(this._getStorageKey(key));
   }
 
-  // Clear all cache entries
+  /**
+   * Clear all cache items from storage
+   */
   clear() {
-    this.cache.clear();
-    this.refreshCallbacks.clear();
-    this.clearStorage();
-  }
-
-  // Register refresh callback
-  onRefresh(key, callback) {
-    if (!this.refreshCallbacks.has(key)) {
-      this.refreshCallbacks.set(key, new Set());
-    }
-    this.refreshCallbacks.get(key).add(callback);
-  }
-
-  // Trigger background refresh
-  triggerBackgroundRefresh(key) {
-    if (!this.refreshCallbacks.has(key)) return;
-
-    const callbacks = this.refreshCallbacks.get(key);
-    callbacks.forEach(callback => {
-      if (typeof callback === 'function') {
-        // Execute callback in background
-        setTimeout(() => {
-          try {
-            callback();
-          } catch (error) {
-            console.error('Cache refresh error:', error);
-          }
-        }, 0);
+    const keysToDelete = [];
+    
+    for (let i = 0; i < this.storage.length; i++) {
+      const key = this.storage.key(i);
+      if (key && key.startsWith(this.keyPrefix)) {
+        keysToDelete.push(key);
       }
-    });
+    }
+
+    keysToDelete.forEach(key => this.storage.removeItem(key));
   }
 
-  // Save cache to local storage
-  saveToStorage() {
-    if (typeof window === 'undefined') return;
+  /**
+   * Clean up expired items
+   */
+  cleanup() {
+    const now = Date.now();
+    const keysToDelete = [];
 
-    const persistentData = {};
-    this.cache.forEach((entry, key) => {
-      if (entry.config.persistToStorage) {
-        persistentData[key] = entry.serialize();
+    for (let i = 0; i < this.storage.length; i++) {
+      const storageKey = this.storage.key(i);
+      
+      if (!storageKey || !storageKey.startsWith(this.keyPrefix)) {
+        continue;
       }
-    });
 
-    try {
-      localStorage.setItem('app_cache', JSON.stringify(persistentData));
-    } catch (error) {
-      console.error('Failed to save cache to storage:', error);
-    }
-  }
+      try {
+        const stored = this.storage.getItem(storageKey);
+        if (!stored) continue;
 
-  // Load cache from local storage
-  loadFromStorage() {
-    if (typeof window === 'undefined') return;
-
-    try {
-      const data = localStorage.getItem('app_cache');
-      if (data) {
-        const persistentData = JSON.parse(data);
-        Object.entries(persistentData).forEach(([key, value]) => {
-          const entry = CacheEntry.deserialize(value);
-          if (entry.isValid()) {
-            this.cache.set(key, entry);
-          }
-        });
+        const item = JSON.parse(stored);
+        
+        if (now > item.expiresAt || item.version !== CACHE_CONFIG.VERSION) {
+          keysToDelete.push(storageKey);
+        }
+      } catch (error) {
+        // Invalid JSON, remove it
+        keysToDelete.push(storageKey);
       }
-    } catch (error) {
-      console.error('Failed to load cache from storage:', error);
     }
-  }
 
-  // Clear storage
-  clearStorage() {
-    if (typeof window === 'undefined') return;
-    try {
-      localStorage.removeItem('app_cache');
-    } catch (error) {
-      console.error('Failed to clear cache storage:', error);
-    }
+    keysToDelete.forEach(key => this.storage.removeItem(key));
+    return keysToDelete.length;
   }
 }
 
-// Create singleton cache instance
-export const cacheStore = new CacheStore();
-
-// Cache key generator
-export const generateCacheKey = (prefix, params = {}) => {
-  const sortedParams = Object.entries(params)
-    .sort(([a], [b]) => a.localeCompare(b))
-    .reduce((acc, [key, value]) => {
-      acc[key] = value;
-      return acc;
-    }, {});
-
-  return `${prefix}:${JSON.stringify(sortedParams)}`;
+/**
+ * Create cache key from URL and parameters
+ * @param {string} url - Request URL
+ * @param {Object} params - Request parameters
+ * @returns {string} Cache key
+ */
+export const createCacheKey = (url, params = {}) => {
+  const sortedParams = Object.keys(params)
+    .sort()
+    .map(key => `${key}=${params[key]}`)
+    .join('&');
+  
+  return sortedParams ? `${url}?${sortedParams}` : url;
 };
 
-// Export cache utilities
-export const cache = {
-  store: cacheStore,
-  generateKey: generateCacheKey,
-  defaultConfig: DEFAULT_CACHE_CONFIG
-}; 
+/**
+ * Default cache instances
+ */
+export const memoryCache = new MemoryCache();
+export const sessionCache = new StorageCache(sessionStorage, `${CACHE_CONFIG.STORAGE_KEY}_session`);
+export const persistentCache = new StorageCache(localStorage, `${CACHE_CONFIG.STORAGE_KEY}_persistent`);
+
+/**
+ * Cache manager with multiple storage strategies
+ */
+export class CacheManager {
+  constructor() {
+    this.memory = memoryCache;
+    this.session = sessionCache;
+    this.persistent = persistentCache;
+  }
+
+  /**
+   * Set item with storage strategy
+   * @param {string} key - Cache key
+   * @param {any} value - Value to cache
+   * @param {Object} options - Cache options
+   */
+  set(key, value, options = {}) {
+    const {
+      ttl = CACHE_CONFIG.DEFAULT_TTL,
+      storage = 'memory',
+      persistent = false
+    } = options;
+
+    if (persistent) {
+      this.persistent.set(key, value, ttl);
+    } else if (storage === 'session') {
+      this.session.set(key, value, ttl);
+    } else {
+      this.memory.set(key, value, ttl);
+    }
+  }
+
+  /**
+   * Get item with fallback strategy
+   * @param {string} key - Cache key
+   * @param {Object} options - Get options
+   * @returns {any} Cached value or null
+   */
+  get(key, options = {}) {
+    const { fallback = true } = options;
+
+    // Try memory first
+    let value = this.memory.get(key);
+    if (value !== null) return value;
+
+    if (!fallback) return null;
+
+    // Try session storage
+    value = this.session.get(key);
+    if (value !== null) {
+      // Promote to memory cache
+      this.memory.set(key, value);
+      return value;
+    }
+
+    // Try persistent storage
+    value = this.persistent.get(key);
+    if (value !== null) {
+      // Promote to memory cache
+      this.memory.set(key, value);
+      return value;
+    }
+
+    return null;
+  }
+
+  /**
+   * Delete from all storage types
+   * @param {string} key - Cache key
+   */
+  delete(key) {
+    this.memory.delete(key);
+    this.session.delete(key);
+    this.persistent.delete(key);
+  }
+
+  /**
+   * Clear all caches
+   */
+  clear() {
+    this.memory.clear();
+    this.session.clear();
+    this.persistent.clear();
+  }
+
+  /**
+   * Clean up expired items in all caches
+   */
+  cleanup() {
+    const memoryCleanup = this.memory.cleanup();
+    const sessionCleanup = this.session.cleanup();
+    const persistentCleanup = this.persistent.cleanup();
+
+    return {
+      memory: memoryCleanup,
+      session: sessionCleanup,
+      persistent: persistentCleanup,
+      total: memoryCleanup + sessionCleanup + persistentCleanup
+    };
+  }
+
+  /**
+   * Get cache statistics
+   * @returns {Object} Cache statistics
+   */
+  stats() {
+    return {
+      memory: this.memory.stats(),
+      session: { supported: typeof sessionStorage !== 'undefined' },
+      persistent: { supported: typeof localStorage !== 'undefined' }
+    };
+  }
+}
+
+/**
+ * Default cache manager instance
+ */
+export const cacheManager = new CacheManager();
+
+/**
+ * Auto cleanup expired items every 5 minutes
+ */
+if (typeof window !== 'undefined') {
+  setInterval(() => {
+    cacheManager.cleanup();
+  }, 5 * 60 * 1000);
+} 
