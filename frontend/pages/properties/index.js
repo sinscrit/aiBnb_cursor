@@ -41,17 +41,22 @@ const PropertiesPage = () => {
       const response = await apiService.properties.getAll();
       const data = apiHelpers.extractData(response);
       
-      setProperties(data.properties || []);
-      setRetryCount(0); // Reset retry count on success
-      
-      console.log('=== FETCH PROPERTIES SUCCESS ===');
-      console.log('Properties loaded:', data.properties?.length);
+      if (data && Array.isArray(data.properties)) {
+        setProperties(data.properties);
+        setRetryCount(0); // Reset retry count on success
+        
+        console.log('=== FETCH PROPERTIES SUCCESS ===');
+        console.log('Properties loaded:', data.properties.length);
+      } else {
+        throw new Error('Invalid data format received from API');
+      }
     } catch (error) {
       console.error('=== FETCH PROPERTIES ERROR ===');
       const errorInfo = apiHelpers.handleError(error);
       
       setError(errorInfo);
       setRetryCount(prev => prev + 1);
+      setProperties([]); // Reset properties on error
       
       console.error('Error details:', errorInfo);
     } finally {
@@ -110,7 +115,7 @@ const PropertiesPage = () => {
 
             .loading-spinner {
               border: 4px solid #f3f3f3;
-              border-top: 4px solid #3498db;
+              border-top: 4px solid #3b82f6;
               border-radius: 50%;
               width: 40px;
               height: 40px;

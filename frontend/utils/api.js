@@ -134,12 +134,36 @@ const apiService = {
 export const apiHelpers = {
   // Extract data from successful API response
   extractData: (response) => {
-    if (response.data?.success) {
+    if (!response || !response.data) {
+      throw new Error('Invalid API response');
+    }
+
+    if (response.data.success === false) {
+      const error = new Error(response.data.message || 'API response indicates failure');
+      error.userMessage = response.data.message || ERROR_MESSAGES.UNKNOWN_ERROR;
+      throw error;
+    }
+
+    if (response.data.success === true && response.data.data) {
       return response.data.data;
     }
-    const error = new Error(response.data?.message || 'API response indicates failure');
-    error.userMessage = response.data?.message || ERROR_MESSAGES.UNKNOWN_ERROR;
-    throw error;
+
+    // If success is not explicitly false and we have data, return it
+    if (response.data.data) {
+      return response.data.data;
+    }
+
+    // If we have properties array directly in response.data
+    if (Array.isArray(response.data.properties)) {
+      return { properties: response.data.properties };
+    }
+
+    // If we have the data directly in response.data
+    if (typeof response.data === 'object' && !Array.isArray(response.data)) {
+      return response.data;
+    }
+
+    throw new Error('Unexpected API response format');
   },
 
   // Handle API errors with user-friendly messages
