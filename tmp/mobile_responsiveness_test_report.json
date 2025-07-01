@@ -1,0 +1,395 @@
+{
+  "testSummary": {
+    "testDate": "2025-07-01T18:02:20.548Z",
+    "totalTests": 11,
+    "passed": 9,
+    "failed": 2,
+    "successRate": "82%"
+  },
+  "testResults": {
+    "screenSizes": {
+      "small": {
+        "device": "iPhone SE",
+        "width": 320,
+        "height": 568,
+        "tests": {
+          "layoutIntegrity": {
+            "passed": false,
+            "issues": [
+              "Forms not optimized for mobile"
+            ],
+            "description": "Layout maintains integrity across screen sizes"
+          },
+          "contentOverflow": {
+            "passed": true,
+            "issues": [],
+            "description": "Content does not overflow container boundaries"
+          },
+          "responsiveImages": {
+            "passed": true,
+            "issues": [],
+            "description": "Images scale appropriately for screen size",
+            "qrCodeSize": 192
+          },
+          "horizontalScroll": {
+            "passed": true,
+            "issues": [],
+            "description": "No unwanted horizontal scrolling"
+          },
+          "textScaling": {
+            "passed": true,
+            "issues": [],
+            "description": "Text scales appropriately for readability"
+          }
+        },
+        "score": "4/5",
+        "passed": false
+      },
+      "medium": {
+        "device": "iPhone 8",
+        "width": 375,
+        "height": 667,
+        "tests": {
+          "layoutIntegrity": {
+            "passed": true,
+            "issues": [],
+            "description": "Layout maintains integrity across screen sizes"
+          },
+          "contentOverflow": {
+            "passed": true,
+            "issues": [],
+            "description": "Content does not overflow container boundaries"
+          },
+          "responsiveImages": {
+            "passed": true,
+            "issues": [],
+            "description": "Images scale appropriately for screen size",
+            "qrCodeSize": 225
+          },
+          "horizontalScroll": {
+            "passed": true,
+            "issues": [],
+            "description": "No unwanted horizontal scrolling"
+          },
+          "textScaling": {
+            "passed": true,
+            "issues": [],
+            "description": "Text scales appropriately for readability"
+          }
+        },
+        "score": "5/5",
+        "passed": true
+      },
+      "large": {
+        "device": "iPhone XR",
+        "width": 414,
+        "height": 896,
+        "tests": {
+          "layoutIntegrity": {
+            "passed": true,
+            "issues": [],
+            "description": "Layout maintains integrity across screen sizes"
+          },
+          "contentOverflow": {
+            "passed": true,
+            "issues": [],
+            "description": "Content does not overflow container boundaries"
+          },
+          "responsiveImages": {
+            "passed": true,
+            "issues": [],
+            "description": "Images scale appropriately for screen size",
+            "qrCodeSize": 248.39999999999998
+          },
+          "horizontalScroll": {
+            "passed": true,
+            "issues": [],
+            "description": "No unwanted horizontal scrolling"
+          },
+          "textScaling": {
+            "passed": true,
+            "issues": [],
+            "description": "Text scales appropriately for readability"
+          }
+        },
+        "score": "5/5",
+        "passed": true
+      },
+      "tablet": {
+        "device": "iPad",
+        "width": 768,
+        "height": 1024,
+        "tests": {
+          "layoutIntegrity": {
+            "passed": true,
+            "issues": [],
+            "description": "Layout maintains integrity across screen sizes"
+          },
+          "contentOverflow": {
+            "passed": true,
+            "issues": [],
+            "description": "Content does not overflow container boundaries"
+          },
+          "responsiveImages": {
+            "passed": true,
+            "issues": [],
+            "description": "Images scale appropriately for screen size",
+            "qrCodeSize": 300
+          },
+          "horizontalScroll": {
+            "passed": true,
+            "issues": [],
+            "description": "No unwanted horizontal scrolling"
+          },
+          "textScaling": {
+            "passed": true,
+            "issues": [],
+            "description": "Text scales appropriately for readability"
+          }
+        },
+        "score": "5/5",
+        "passed": true
+      },
+      "androidSmall": {
+        "device": "Android Small",
+        "width": 360,
+        "height": 640,
+        "tests": {
+          "layoutIntegrity": {
+            "passed": true,
+            "issues": [],
+            "description": "Layout maintains integrity across screen sizes"
+          },
+          "contentOverflow": {
+            "passed": true,
+            "issues": [],
+            "description": "Content does not overflow container boundaries"
+          },
+          "responsiveImages": {
+            "passed": true,
+            "issues": [],
+            "description": "Images scale appropriately for screen size",
+            "qrCodeSize": 216
+          },
+          "horizontalScroll": {
+            "passed": true,
+            "issues": [],
+            "description": "No unwanted horizontal scrolling"
+          },
+          "textScaling": {
+            "passed": true,
+            "issues": [],
+            "description": "Text scales appropriately for readability"
+          }
+        },
+        "score": "5/5",
+        "passed": true
+      },
+      "androidMedium": {
+        "device": "Pixel 5",
+        "width": 393,
+        "height": 851,
+        "tests": {
+          "layoutIntegrity": {
+            "passed": true,
+            "issues": [],
+            "description": "Layout maintains integrity across screen sizes"
+          },
+          "contentOverflow": {
+            "passed": true,
+            "issues": [],
+            "description": "Content does not overflow container boundaries"
+          },
+          "responsiveImages": {
+            "passed": true,
+            "issues": [],
+            "description": "Images scale appropriately for screen size",
+            "qrCodeSize": 235.79999999999998
+          },
+          "horizontalScroll": {
+            "passed": true,
+            "issues": [],
+            "description": "No unwanted horizontal scrolling"
+          },
+          "textScaling": {
+            "passed": true,
+            "issues": [],
+            "description": "Text scales appropriately for readability"
+          }
+        },
+        "score": "5/5",
+        "passed": true
+      }
+    },
+    "touchInteractions": {
+      "tests": {
+        "touchTargetSize": {
+          "passed": true,
+          "issues": [],
+          "description": "Touch targets meet minimum size requirements (44px)"
+        },
+        "touchSpacing": {
+          "passed": true,
+          "issues": [],
+          "description": "Adequate spacing between touch targets (8px minimum)"
+        },
+        "gestureSupport": {
+          "passed": false,
+          "issues": [
+            "Swipe navigation not implemented",
+            "Pull to refresh not implemented",
+            "Long press menus not implemented"
+          ],
+          "description": "Basic gesture support implemented"
+        },
+        "scrollPerformance": {
+          "passed": true,
+          "issues": [],
+          "description": "Smooth scrolling performance (30+ FPS)"
+        },
+        "tapResponse": {
+          "passed": true,
+          "issues": [],
+          "description": "Quick tap response times (<200ms)"
+        }
+      },
+      "score": "4/5",
+      "passed": false
+    },
+    "contentReadability": {
+      "tests": {
+        "fontSizes": {
+          "passed": true,
+          "issues": [],
+          "description": "Font sizes meet readability requirements"
+        },
+        "contrast": {
+          "passed": true,
+          "issues": [],
+          "description": "Color contrast meets WCAG AA standards (4.5:1)"
+        },
+        "lineHeight": {
+          "passed": true,
+          "issues": [],
+          "description": "Line heights provide adequate readability"
+        },
+        "textSpacing": {
+          "passed": true,
+          "issues": [],
+          "description": "Text spacing supports easy reading"
+        },
+        "contentHierarchy": {
+          "passed": true,
+          "issues": [],
+          "description": "Clear content hierarchy implemented"
+        }
+      },
+      "score": "5/5",
+      "passed": true
+    },
+    "navigation": {
+      "tests": {
+        "reachability": {
+          "passed": true,
+          "issues": [],
+          "description": "Important elements within thumb reach zones"
+        },
+        "menuDesign": {
+          "passed": true,
+          "issues": [],
+          "description": "Mobile menu designed for thumb navigation"
+        },
+        "breadcrumbs": {
+          "passed": true,
+          "issues": [],
+          "description": "Breadcrumb navigation helps users orient"
+        },
+        "backButton": {
+          "passed": true,
+          "issues": [],
+          "description": "Back navigation works consistently"
+        },
+        "tabOrder": {
+          "passed": true,
+          "issues": [],
+          "description": "Logical tab order for keyboard navigation"
+        }
+      },
+      "score": "5/5",
+      "passed": true
+    },
+    "performance": {
+      "tests": {
+        "pageLoad": {
+          "passed": true,
+          "issues": [],
+          "description": "Page load times under 3 seconds on mobile"
+        },
+        "assetLoad": {
+          "passed": true,
+          "issues": [],
+          "description": "Assets load quickly on mobile connections"
+        },
+        "apiResponse": {
+          "passed": true,
+          "issues": [],
+          "description": "API responses quick on mobile networks"
+        },
+        "rendering": {
+          "passed": true,
+          "issues": [],
+          "description": "Core Web Vitals meet mobile thresholds"
+        },
+        "memory": {
+          "passed": true,
+          "issues": [],
+          "description": "Memory usage reasonable on mobile devices"
+        }
+      },
+      "score": "5/5",
+      "passed": true
+    }
+  },
+  "recommendations": [
+    {
+      "priority": "High",
+      "category": "Touch Interactions",
+      "issue": "Touch targets or spacing issues detected",
+      "recommendation": "Ensure all interactive elements are at least 44px and have 8px spacing"
+    },
+    {
+      "priority": "Low",
+      "category": "Enhancement",
+      "issue": "General mobile optimization",
+      "recommendation": "Consider implementing progressive web app features for better mobile experience"
+    }
+  ],
+  "testLog": [
+    "[2025-07-01T18:02:20.542Z] [INFO] Starting mobile responsiveness testing suite...",
+    "[2025-07-01T18:02:20.545Z] [INFO] Testing mobile screen sizes (320px to 768px)...",
+    "[2025-07-01T18:02:20.546Z] [INFO] Testing iPhone SE (320x568)...",
+    "[2025-07-01T18:02:20.546Z] [ERROR] ❌ iPhone SE: Some responsive tests failed",
+    "[2025-07-01T18:02:20.546Z] [INFO] Testing iPhone 8 (375x667)...",
+    "[2025-07-01T18:02:20.546Z] [SUCCESS] ✅ iPhone 8: All responsive tests passed",
+    "[2025-07-01T18:02:20.546Z] [INFO] Testing iPhone XR (414x896)...",
+    "[2025-07-01T18:02:20.546Z] [SUCCESS] ✅ iPhone XR: All responsive tests passed",
+    "[2025-07-01T18:02:20.546Z] [INFO] Testing iPad (768x1024)...",
+    "[2025-07-01T18:02:20.546Z] [SUCCESS] ✅ iPad: All responsive tests passed",
+    "[2025-07-01T18:02:20.546Z] [INFO] Testing Android Small (360x640)...",
+    "[2025-07-01T18:02:20.546Z] [SUCCESS] ✅ Android Small: All responsive tests passed",
+    "[2025-07-01T18:02:20.546Z] [INFO] Testing Pixel 5 (393x851)...",
+    "[2025-07-01T18:02:20.547Z] [SUCCESS] ✅ Pixel 5: All responsive tests passed",
+    "[2025-07-01T18:02:20.547Z] [INFO] Testing touch interactions...",
+    "[2025-07-01T18:02:20.547Z] [ERROR] ❌ Touch interactions: Some tests failed",
+    "[2025-07-01T18:02:20.547Z] [INFO] Testing content readability without zooming...",
+    "[2025-07-01T18:02:20.547Z] [SUCCESS] ✅ Content readability: All tests passed",
+    "[2025-07-01T18:02:20.547Z] [INFO] Testing thumb-friendly navigation...",
+    "[2025-07-01T18:02:20.547Z] [SUCCESS] ✅ Navigation: All tests passed",
+    "[2025-07-01T18:02:20.547Z] [INFO] Testing QR code display on mobile devices...",
+    "[2025-07-01T18:02:20.548Z] [SUCCESS] ✅ QR Code mobile display: All tests passed",
+    "[2025-07-01T18:02:20.548Z] [INFO] Testing loading performance on mobile...",
+    "[2025-07-01T18:02:20.548Z] [SUCCESS] ✅ Mobile performance: All tests passed",
+    "[2025-07-01T18:02:20.548Z] [INFO] Generating mobile responsiveness test report...",
+    "[2025-07-01T18:02:20.548Z] [INFO] Mobile responsiveness testing completed: 9/11 tests passed"
+  ]
+}
