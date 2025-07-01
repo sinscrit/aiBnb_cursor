@@ -2,9 +2,36 @@
 const isDevelopment = process.env.NODE_ENV === 'development';
 const isProduction = process.env.NODE_ENV === 'production';
 
-// API Base URLs - configurable by environment
-// Using Next.js proxy to avoid CORS issues and leverage the rewrite rule in next.config.js
-export const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3000/api';
+// Debug environment information
+console.log('=== CONSTANTS DEBUG INFO ===');
+console.log('isDevelopment:', isDevelopment);
+console.log('isProduction:', isProduction);
+console.log('process.env.NODE_ENV:', process.env.NODE_ENV);
+console.log('process.env.NEXT_PUBLIC_API_BASE_URL:', process.env.NEXT_PUBLIC_API_BASE_URL);
+console.log('typeof window:', typeof window);
+console.log('=============================');
+
+// API Base URLs - always use Next.js proxy to avoid CORS issues
+export const API_BASE_URL = '/api';
+
+// Debug logging to see what API_BASE_URL is actually set to
+if (typeof window !== 'undefined' && isDevelopment) {
+  console.log('=== CLIENT-SIDE API CONFIG ===');
+  console.log('API_BASE_URL:', API_BASE_URL);
+  console.log('process.env.NEXT_PUBLIC_API_BASE_URL:', process.env.NEXT_PUBLIC_API_BASE_URL);
+  console.log('process.env.NODE_ENV:', process.env.NODE_ENV);
+  console.log('window.location.origin:', window.location.origin);
+  console.log('===============================');
+}
+
+// Server-side logging
+if (typeof window === 'undefined') {
+  console.log('=== SERVER-SIDE API CONFIG ===');
+  console.log('API_BASE_URL:', API_BASE_URL);
+  console.log('process.env.NEXT_PUBLIC_API_BASE_URL:', process.env.NEXT_PUBLIC_API_BASE_URL);
+  console.log('process.env.NODE_ENV:', process.env.NODE_ENV);
+  console.log('===============================');
+}
 
 // API Endpoints
 export const API_ENDPOINTS = {

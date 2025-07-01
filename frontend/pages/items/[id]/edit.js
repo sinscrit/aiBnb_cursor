@@ -58,7 +58,7 @@ const EditItemPage = () => {
       const response = await apiService.items.update(id, itemData);
       const result = apiHelpers.extractData(response);
       
-      // Success! Navigate back to items list
+        // Success! Navigate back to items list
       router.push({
         pathname: '/items',
         query: { 
@@ -94,32 +94,32 @@ const EditItemPage = () => {
         </Head>
         
         <DashboardLayout>
-          <div className="loading-container">
+        <div className="loading-container">
             <div className="loading-spinner"></div>
             <p>Loading item...</p>
-          </div>
+        </div>
 
-          <style jsx>{`
-            .loading-container {
-              display: flex;
+        <style jsx>{`
+          .loading-container {
+            display: flex;
               flex-direction: column;
               align-items: center;
-              justify-content: center;
+            justify-content: center;
               padding: 60px 20px;
-              text-align: center;
-            }
+            text-align: center;
+          }
 
-            .loading-spinner {
+          .loading-spinner {
               width: 40px;
               height: 40px;
               border: 4px solid #f3f4f6;
               border-top: 4px solid #3b82f6;
-              border-radius: 50%;
-              animation: spin 1s linear infinite;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
               margin-bottom: 16px;
-            }
+          }
 
-            @keyframes spin {
+          @keyframes spin {
               0% { transform: rotate(0deg); }
               100% { transform: rotate(360deg); }
             }
@@ -127,9 +127,9 @@ const EditItemPage = () => {
             .loading-container p {
               color: #6b7280;
               margin: 0;
-            }
-          `}</style>
-        </DashboardLayout>
+          }
+        `}</style>
+      </DashboardLayout>
       </>
     );
   }

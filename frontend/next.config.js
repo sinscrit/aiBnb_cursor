@@ -32,6 +32,7 @@ const nextConfig = {
   },
   
   // Using pages directory (default behavior)
+  pageExtensions: ['js', 'jsx', 'ts', 'tsx']
 };
 
 module.exports = nextConfig; 

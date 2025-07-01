@@ -6,7 +6,7 @@
 import { useState, useMemo } from 'react';
 import PropertyCard from './PropertyCard';
 
-const PropertyList = ({ properties = [], loading = false, onDeleteProperty }) => {
+const PropertyList = ({ properties = [], onDelete, onCreate }) => {
   const [sortBy, setSortBy] = useState('name');
   const [sortOrder, setSortOrder] = useState('asc');
   const [searchTerm, setSearchTerm] = useState('');
@@ -69,63 +69,23 @@ const PropertyList = ({ properties = [], loading = false, onDeleteProperty }) =>
     }
   };
 
-  if (loading) {
-    return (
-      <div className="property-list">
-        <div className="loading-container">
-          <div className="loading-spinner"></div>
-          <p className="loading-text">Loading properties...</p>
-        </div>
-        <style jsx>{`
-          .property-list {
-            width: 100%;
-          }
-
-          .loading-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 4rem 2rem;
-            text-align: center;
-          }
-
-          .loading-spinner {
-            width: 2rem;
-            height: 2rem;
-            border: 3px solid #f3f4f6;
-            border-top: 3px solid #3b82f6;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin-bottom: 1rem;
-          }
-
-          .loading-text {
-            color: #6b7280;
-            margin: 0;
-          }
-
-          @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-          }
-        `}</style>
-      </div>
-    );
-  }
-
   return (
     <div className="property-list">
       <div className="list-header">
         <div className="list-info">
-          <h2 className="list-title">
-            {searchTerm ? `Search Results (${sortedAndFilteredProperties.length})` : `Properties (${properties.length})`}
-          </h2>
-          {properties.length > 0 && (
-            <p className="list-subtitle">
-              Manage your rental properties and their associated items
-            </p>
-          )}
+          <h1 className="list-title">Property Management</h1>
+          <p className="list-subtitle">
+            Manage your rental properties and their associated items. Create new properties to start organizing your QR code system.
+          </p>
+        </div>
+        <div className="list-actions">
+          <button 
+            onClick={onCreate}
+            className="btn-primary"
+          >
+            <span className="btn-icon">+</span>
+            Create Property
+          </button>
         </div>
       </div>
 
@@ -193,6 +153,12 @@ const PropertyList = ({ properties = [], loading = false, onDeleteProperty }) =>
                 <p className="empty-text">
                   Create your first property to start managing items and generating QR codes.
                 </p>
+                <button 
+                  className="btn-primary"
+                  onClick={onCreate}
+                >
+                  Create Property
+                </button>
               </>
             )}
           </div>
@@ -202,7 +168,7 @@ const PropertyList = ({ properties = [], loading = false, onDeleteProperty }) =>
               <PropertyCard
                 key={property.id}
                 property={property}
-                onDelete={onDeleteProperty}
+                onDelete={() => onDelete(property.id)}
               />
             ))}
           </div>
@@ -212,15 +178,24 @@ const PropertyList = ({ properties = [], loading = false, onDeleteProperty }) =>
       <style jsx>{`
         .property-list {
           width: 100%;
+          max-width: 100%;
         }
 
         .list-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: flex-start;
           margin-bottom: 2rem;
+          gap: 2rem;
+        }
+
+        .list-info {
+          flex: 1;
         }
 
         .list-title {
-          font-size: 1.5rem;
-          font-weight: 600;
+          font-size: 2rem;
+          font-weight: 700;
           color: #1f2937;
           margin: 0 0 0.5rem 0;
         }
@@ -228,69 +203,95 @@ const PropertyList = ({ properties = [], loading = false, onDeleteProperty }) =>
         .list-subtitle {
           color: #6b7280;
           margin: 0;
+          line-height: 1.5;
+        }
+
+        .list-actions {
+          display: flex;
+          gap: 1rem;
+        }
+
+        .btn-primary {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          padding: 0.75rem 1.5rem;
+          background-color: #3b82f6;
+          color: white;
+          border: none;
+          border-radius: 0.375rem;
           font-size: 0.875rem;
+          font-weight: 500;
+          cursor: pointer;
+          transition: all 0.2s;
+        }
+
+        .btn-primary:hover {
+          background-color: #2563eb;
+        }
+
+        .btn-icon {
+          font-size: 1.25rem;
+          font-weight: bold;
         }
 
         .list-controls {
-          background: white;
-          padding: 1.5rem;
-          border-radius: 0.5rem;
-          box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
-          border: 1px solid #e5e7eb;
-          margin-bottom: 2rem;
           display: flex;
-          flex-direction: column;
+          flex-wrap: wrap;
           gap: 1rem;
+          margin-bottom: 2rem;
+          padding: 1rem;
+          background: white;
+          border: 1px solid #e5e7eb;
+          border-radius: 0.5rem;
         }
 
         .search-controls {
-          display: flex;
-          gap: 1rem;
+          flex: 1;
+          min-width: 250px;
         }
 
         .search-input {
-          flex: 1;
-          padding: 0.5rem 0.75rem;
+          width: 100%;
+          padding: 0.5rem 1rem;
           border: 1px solid #d1d5db;
           border-radius: 0.375rem;
           font-size: 0.875rem;
-          transition: border-color 0.2s;
+          transition: all 0.2s;
         }
 
         .search-input:focus {
           outline: none;
           border-color: #3b82f6;
-          box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+          box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
         }
 
         .sort-controls {
           display: flex;
           align-items: center;
           gap: 1rem;
-          flex-wrap: wrap;
         }
 
         .sort-label {
+          color: #6b7280;
           font-size: 0.875rem;
-          font-weight: 500;
-          color: #374151;
+          white-space: nowrap;
         }
 
         .sort-buttons {
           display: flex;
           gap: 0.5rem;
-          flex-wrap: wrap;
         }
 
         .sort-button {
-          padding: 0.375rem 0.75rem;
-          border: 1px solid #d1d5db;
+          padding: 0.5rem 1rem;
           background: white;
+          border: 1px solid #d1d5db;
           border-radius: 0.375rem;
           font-size: 0.875rem;
+          color: #374151;
           cursor: pointer;
           transition: all 0.2s;
-          color: #374151;
         }
 
         .sort-button:hover {
@@ -299,36 +300,31 @@ const PropertyList = ({ properties = [], loading = false, onDeleteProperty }) =>
         }
 
         .sort-button.active {
-          background: #3b82f6;
-          border-color: #3b82f6;
-          color: white;
+          background: #f3f4f6;
+          border-color: #9ca3af;
+          font-weight: 500;
         }
 
         .sort-direction {
+          display: inline-block;
+          margin-left: 0.25rem;
           font-weight: bold;
         }
 
         .list-content {
-          min-height: 200px;
-        }
-
-        .properties-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-          gap: 1.5rem;
+          width: 100%;
         }
 
         .empty-state {
           text-align: center;
           padding: 4rem 2rem;
           background: white;
-          border-radius: 0.5rem;
-          box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
           border: 1px solid #e5e7eb;
+          border-radius: 0.5rem;
         }
 
         .empty-icon {
-          font-size: 4rem;
+          font-size: 3rem;
           margin-bottom: 1rem;
         }
 
@@ -341,54 +337,66 @@ const PropertyList = ({ properties = [], loading = false, onDeleteProperty }) =>
 
         .empty-text {
           color: #6b7280;
-          margin: 0 0 1.5rem 0;
+          margin: 0 0 2rem 0;
           line-height: 1.5;
         }
 
         .btn-secondary {
-          padding: 0.5rem 1rem;
-          background: #6b7280;
-          color: white;
+          padding: 0.75rem 1.5rem;
+          background-color: #f3f4f6;
+          color: #1f2937;
           border: none;
           border-radius: 0.375rem;
           font-size: 0.875rem;
           font-weight: 500;
           cursor: pointer;
-          transition: background 0.2s;
+          transition: all 0.2s;
         }
 
         .btn-secondary:hover {
-          background: #4b5563;
+          background-color: #e5e7eb;
+        }
+
+        .properties-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+          gap: 1.5rem;
         }
 
         @media (max-width: 768px) {
-          .properties-grid {
-            grid-template-columns: 1fr;
+          .list-header {
+            flex-direction: column;
             gap: 1rem;
           }
 
-          .list-controls {
-            padding: 1rem;
+          .list-actions {
+            width: 100%;
+          }
+
+          .btn-primary {
+            width: 100%;
+            justify-content: center;
+          }
+
+          .list-title {
+            font-size: 1.5rem;
           }
 
           .sort-controls {
+            width: 100%;
             flex-direction: column;
             align-items: flex-start;
           }
 
           .sort-buttons {
             width: 100%;
-            justify-content: flex-start;
-          }
-        }
-
-        @media (max-width: 480px) {
-          .empty-state {
-            padding: 2rem 1rem;
+            flex-wrap: wrap;
           }
 
-          .empty-icon {
-            font-size: 3rem;
+          .sort-button {
+            flex: 1;
+            text-align: center;
+            min-width: 100px;
           }
         }
       `}</style>
