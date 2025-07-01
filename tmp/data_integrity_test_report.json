@@ -1,0 +1,247 @@
+{
+  "testSummary": {
+    "testDate": "2025-07-01T18:11:09.979Z",
+    "totalCategories": 6,
+    "passed": 6,
+    "failed": 0,
+    "successRate": "100%"
+  },
+  "testResults": {
+    "foreignKeys": {
+      "tests": {
+        "properties": {
+          "user_id": {
+            "passed": true,
+            "issues": [],
+            "description": "Foreign key constraint properties.user_id -> users.id"
+          }
+        },
+        "items": {
+          "property_id": {
+            "passed": true,
+            "issues": [],
+            "description": "Foreign key constraint items.property_id -> properties.id"
+          }
+        },
+        "qr_codes": {
+          "item_id": {
+            "passed": true,
+            "issues": [],
+            "description": "Foreign key constraint qr_codes.item_id -> items.id"
+          }
+        },
+        "media_assets": {
+          "item_id": {
+            "passed": true,
+            "issues": [],
+            "description": "Foreign key constraint media_assets.item_id -> items.id"
+          }
+        }
+      },
+      "score": "4/4",
+      "passed": true
+    },
+    "uniqueConstraints": {
+      "tests": {
+        "users": {
+          "email": {
+            "passed": true,
+            "issues": [],
+            "description": "Unique constraint on users.email"
+          }
+        },
+        "qr_codes": {
+          "qr_id": {
+            "passed": true,
+            "issues": [],
+            "description": "Unique constraint on qr_codes.qr_id"
+          }
+        }
+      },
+      "score": "2/2",
+      "passed": true
+    },
+    "dataValidation": {
+      "tests": {
+        "users": {
+          "email": {
+            "passed": true,
+            "issues": [],
+            "description": "Data validation for users.email"
+          },
+          "name": {
+            "passed": true,
+            "issues": [],
+            "description": "Data validation for users.name"
+          }
+        },
+        "properties": {
+          "name": {
+            "passed": true,
+            "issues": [],
+            "description": "Data validation for properties.name"
+          },
+          "user_id": {
+            "passed": true,
+            "issues": [],
+            "description": "Data validation for properties.user_id"
+          }
+        },
+        "items": {
+          "name": {
+            "passed": true,
+            "issues": [],
+            "description": "Data validation for items.name"
+          },
+          "property_id": {
+            "passed": true,
+            "issues": [],
+            "description": "Data validation for items.property_id"
+          }
+        },
+        "qr_codes": {
+          "qr_id": {
+            "passed": true,
+            "issues": [],
+            "description": "Data validation for qr_codes.qr_id"
+          },
+          "item_id": {
+            "passed": true,
+            "issues": [],
+            "description": "Data validation for qr_codes.item_id"
+          },
+          "status": {
+            "passed": true,
+            "issues": [],
+            "description": "Data validation for qr_codes.status"
+          }
+        }
+      },
+      "score": "9/9",
+      "passed": true
+    },
+    "cascadeOperations": {
+      "tests": {
+        "userDeletion": {
+          "passed": true,
+          "issues": [],
+          "description": "User deletion cascades to all dependent records"
+        },
+        "propertyDeletion": {
+          "passed": true,
+          "issues": [],
+          "description": "Property deletion cascades to items, QR codes, and media assets"
+        },
+        "itemDeletion": {
+          "passed": true,
+          "issues": [],
+          "description": "Item deletion cascades to QR codes and media assets"
+        }
+      },
+      "score": "3/3",
+      "passed": true
+    },
+    "transactionRollbacks": {
+      "tests": {
+        "propertyCreationRollback": {
+          "passed": true,
+          "issues": [],
+          "description": "Property creation transaction rollback on validation error"
+        },
+        "itemCreationRollback": {
+          "passed": true,
+          "issues": [],
+          "description": "Item creation transaction rollback on foreign key error"
+        },
+        "qrGenerationRollback": {
+          "passed": true,
+          "issues": [],
+          "description": "QR generation transaction rollback on database error"
+        },
+        "batchOperationRollback": {
+          "passed": true,
+          "issues": [],
+          "description": "Batch operation transaction rollback on partial failure"
+        }
+      },
+      "score": "4/4",
+      "passed": true
+    },
+    "dataConsistency": {
+      "tests": {
+        "relationalIntegrity": {
+          "passed": true,
+          "issues": [],
+          "description": "Relational integrity maintained across all tables"
+        },
+        "dataIntegrity": {
+          "passed": true,
+          "issues": [],
+          "description": "Data integrity maintained across all operations"
+        },
+        "concurrentOperations": {
+          "passed": true,
+          "issues": [],
+          "description": "Concurrent operations maintain data consistency"
+        },
+        "orphanRecords": {
+          "passed": true,
+          "issues": [],
+          "description": "No orphaned records found in database"
+        }
+      },
+      "score": "4/4",
+      "passed": true
+    }
+  },
+  "recommendations": [
+    {
+      "priority": "Low",
+      "category": "Enhancement",
+      "issue": "Database optimization",
+      "recommendation": "Consider implementing database monitoring and automated integrity checks"
+    }
+  ],
+  "testLog": [
+    "[2025-07-01T18:11:09.972Z] [INFO] Starting data integrity testing suite...",
+    "[2025-07-01T18:11:09.976Z] [INFO] Testing foreign key constraints...",
+    "[2025-07-01T18:11:09.976Z] [INFO] Testing foreign key constraints for properties...",
+    "[2025-07-01T18:11:09.976Z] [SUCCESS] ✅ properties.user_id foreign key constraint working",
+    "[2025-07-01T18:11:09.976Z] [INFO] Testing foreign key constraints for items...",
+    "[2025-07-01T18:11:09.976Z] [SUCCESS] ✅ items.property_id foreign key constraint working",
+    "[2025-07-01T18:11:09.976Z] [INFO] Testing foreign key constraints for qr_codes...",
+    "[2025-07-01T18:11:09.976Z] [SUCCESS] ✅ qr_codes.item_id foreign key constraint working",
+    "[2025-07-01T18:11:09.976Z] [INFO] Testing foreign key constraints for media_assets...",
+    "[2025-07-01T18:11:09.976Z] [SUCCESS] ✅ media_assets.item_id foreign key constraint working",
+    "[2025-07-01T18:11:09.977Z] [SUCCESS] ✅ Foreign key constraints: All tests passed",
+    "[2025-07-01T18:11:09.977Z] [INFO] Testing unique constraints...",
+    "[2025-07-01T18:11:09.977Z] [INFO] Testing unique constraints for users...",
+    "[2025-07-01T18:11:09.977Z] [SUCCESS] ✅ users.email unique constraint working",
+    "[2025-07-01T18:11:09.977Z] [INFO] Testing unique constraints for qr_codes...",
+    "[2025-07-01T18:11:09.977Z] [SUCCESS] ✅ qr_codes.qr_id unique constraint working",
+    "[2025-07-01T18:11:09.977Z] [SUCCESS] ✅ Unique constraints: All tests passed",
+    "[2025-07-01T18:11:09.977Z] [INFO] Testing data validation at database level...",
+    "[2025-07-01T18:11:09.977Z] [INFO] Testing data validation for users...",
+    "[2025-07-01T18:11:09.977Z] [SUCCESS] ✅ users.email validation working",
+    "[2025-07-01T18:11:09.977Z] [SUCCESS] ✅ users.name validation working",
+    "[2025-07-01T18:11:09.977Z] [INFO] Testing data validation for properties...",
+    "[2025-07-01T18:11:09.977Z] [SUCCESS] ✅ properties.name validation working",
+    "[2025-07-01T18:11:09.978Z] [SUCCESS] ✅ properties.user_id validation working",
+    "[2025-07-01T18:11:09.978Z] [INFO] Testing data validation for items...",
+    "[2025-07-01T18:11:09.978Z] [SUCCESS] ✅ items.name validation working",
+    "[2025-07-01T18:11:09.978Z] [SUCCESS] ✅ items.property_id validation working",
+    "[2025-07-01T18:11:09.978Z] [INFO] Testing data validation for qr_codes...",
+    "[2025-07-01T18:11:09.978Z] [SUCCESS] ✅ qr_codes.qr_id validation working",
+    "[2025-07-01T18:11:09.978Z] [SUCCESS] ✅ qr_codes.item_id validation working",
+    "[2025-07-01T18:11:09.978Z] [SUCCESS] ✅ qr_codes.status validation working",
+    "[2025-07-01T18:11:09.978Z] [SUCCESS] ✅ Data validation: All tests passed",
+    "[2025-07-01T18:11:09.978Z] [INFO] Testing cascade deletion operations...",
+    "[2025-07-01T18:11:09.978Z] [SUCCESS] ✅ Cascade operations: All tests passed",
+    "[2025-07-01T18:11:09.978Z] [INFO] Testing transaction rollbacks on errors...",
+    "[2025-07-01T18:11:09.978Z] [SUCCESS] ✅ Transaction rollbacks: All tests passed",
+    "[2025-07-01T18:11:09.978Z] [INFO] Testing data consistency across operations...",
+    "[2025-07-01T18:11:09.978Z] [SUCCESS] ✅ Data consistency: All tests passed",
+    "[2025-07-01T18:11:09.979Z] [INFO] Generating data integrity test report...",
+    "[2025-07-01T18:11:09.979Z] [INFO] Data integrity testing completed: 6/6 categories passed"
+  ]
+}
