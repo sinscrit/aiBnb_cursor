@@ -4,7 +4,7 @@
 **Overview Reference**: [@docs/req-001-Sprint-MVP1-Content-Creation-QR-Generation-Overview.md](./req-001-Sprint-MVP1-Content-Creation-QR-Generation-Overview.md)  
 **Date**: June 30, 2025  
 **Sprint**: MVP1 (Sprint 1 of 16)  
-**Story Points**: 42 points (8 stories)  
+**Story Points**: 80.5 (42 original + 38.5 bug fixes)  
 **Architecture**: Hybrid Supabase + Node.js/Express  
 
 ---
@@ -1251,6 +1251,8 @@
 - [ ] Test API functionality across browsers
 - [ ] Document any browser-specific issues
 
+### 37.1. **BUG FIX**: Setup Missing Testing Infrastructure
+
 ### 38. Test Mobile Responsiveness
 **Story Points**: 1  
 **Context**: Validate mobile user experience
@@ -1521,10 +1523,10 @@ CREATE TABLE media_assets (
 ## BUG FIX TASKS SUMMARY
 
 **Total Original Tasks**: 42 (1 story point each)  
-**Total Bug Fix Tasks Added**: 21 (34.5 story points total)  
-**Combined Total Tasks**: 63  
-**Bug Fix Story Points**: 34.5  
-**Revised Total Story Points**: 76.5  
+**Total Bug Fix Tasks Added**: 24 (40.5 story points total)  
+**Combined Total Tasks**: 66  
+**Bug Fix Story Points**: 40.5  
+**Revised Total Story Points**: 82.5  
 
 ### Bug Fix Tasks Added (Original 13):
 
@@ -1576,8 +1578,6 @@ CREATE TABLE media_assets (
    - **Status**: Content display system completely missing
    - **Files**: `controllers/ContentController.js`, `routes/api/content.js`, `frontend/pages/content/`, `frontend/components/Content/`, `app.js`
 
-### Additional Bug Fix Tasks Added (Based on Validation Log TODO List):
-
 13. **Task 19.1**: Complete Property Management Edit and Delete Functionality (2 points)
     - **Status**: Property pages load structurally but missing edit/delete functionality
     - **Files**: `frontend/pages/properties/[id]/edit.js`, `frontend/components/Property/PropertyForm.js`, `frontend/components/Property/PropertyCard.js`
@@ -1614,31 +1614,49 @@ CREATE TABLE media_assets (
     - **Status**: End-to-end testing blocked by frontend connectivity
     - **Files**: All frontend components (verify from previous bug fixes)
 
+22. **Task 37.1**: Setup Missing Testing Infrastructure (2 points)
+    - **Status**: Testing infrastructure missing, preventing proper validation
+    - **Files**: `frontend/jest.config.js`, `frontend/cypress.config.js`, `frontend/tests/`, `frontend/cypress/`
+
+23. **Task 38.1**: Implement Mobile Responsiveness Testing Framework (2 points)
+    - **Status**: Mobile testing framework missing, preventing proper validation
+    - **Files**: `frontend/cypress/config/viewports.json`, `frontend/styles/responsive.css`, `frontend/components/Common/ResponsiveWrapper.js`
+
+24. **Task 39.1**: Implement Data Integrity Testing Framework (2 points)
+    - **Status**: Database testing framework missing, preventing proper validation
+    - **Files**: `backend/tests/db/`, `backend/tests/db/migrations/`, `backend/tests/db/seeds/`
+
 ### Implementation Priority (Updated):
 1. **🔥 Critical Backend Foundation** (Tasks 10.1, 11.1, 11.2) - 3 points
 2. **🔥 Frontend-Backend Connectivity** (Tasks 25.1, 25.2) - 3 points  
 3. **🔥 QR System Backend** (Task 15.1) - 3 points
 4. **🔥 Frontend Infrastructure** (Task 16.1) - 2 points
-5. **📋 Property Frontend** (Tasks 17.1 & 18.1, 19.1) - 5 points
-6. **📋 Item Frontend** (Tasks 20.1, 22.1) - 5 points
-7. **📋 QR Frontend** (Tasks 24.1, 24.2) - 3 points
-8. **📋 Content System** (Task 26.1) - 3 points
-9. **🔧 Integration Testing** (Tasks 32.1, 33.1, 34.1, 35.1, 36.1, 41.1) - 8 points
+5. **🔥 Testing Infrastructure** (Task 37.1) - 2 points
+6. **🔥 Mobile Testing Framework** (Task 38.1) - 2 points
+7. **🔥 Data Integrity Framework** (Task 39.1) - 2 points
+8. **📋 Property Frontend** (Tasks 17.1 & 18.1, 19.1) - 5 points
+9. **📋 Item Frontend** (Tasks 20.1, 22.1) - 5 points
+10. **📋 QR Frontend** (Tasks 24.1, 24.2) - 3 points
+11. **📋 Content System** (Task 26.1) - 3 points
+12. **🔧 Integration Testing** (Tasks 32.1, 33.1, 34.1, 35.1, 36.1, 41.1) - 8 points
 
 ### Critical Dependencies Chain:
 - **Blocking**: Tasks 25.1, 25.2 (connectivity) must be resolved first
+- **Testing**: Task 37.1 (testing infrastructure) should be started early to enable test-driven development
+- **Mobile**: Task 38.1 (mobile testing) depends on Task 37.1 and should be completed before frontend tasks
+- **Data**: Task 39.1 (data integrity) depends on Task 37.1 and should be completed before integration testing
 - **Dependent**: All workflow testing tasks (33.1-36.1, 41.1) depend on frontend functionality being restored
 - **Priority**: Connectivity fixes enable all other bug fix tasks to be validated
 
 ---
 
-**Document Version**: 1.3  
-**Total Tasks**: 63 (Original: 42 + Bug Fixes: 21)  
-**Total Story Points**: 76.5 (Original: 42 + Bug Fixes: 34.5)  
-**Estimated Completion**: 9 days (revised for additional bug fixes and connectivity issues)  
+**Document Version**: 1.6  
+**Total Tasks**: 66 (Original: 42 + Bug Fixes: 24)  
+**Total Story Points**: 82.5 (Original: 42 + Bug Fixes: 40.5)  
+**Estimated Completion**: 11 days (revised for additional testing frameworks)  
 **Reference**: [@docs/gen_requests.md](./gen_requests.md) - REQ-001  
 **Overview Reference**: [@docs/req-001-Sprint-MVP1-Content-Creation-QR-Generation-Overview.md](./req-001-Sprint-MVP1-Content-Creation-QR-Generation-Overview.md)  
-**Last Updated**: December 30, 2024 (Additional Bug Fix Tasks Added Based on Validation Log TODO List)
+**Last Updated**: December 30, 2024 (Added Data Integrity Testing Framework Bug Fix Task)
 
 ---
 
@@ -1664,3 +1682,75 @@ CREATE TABLE media_assets (
 - **Current Estimate**: 9 days (76.5 story points)  
 - **Critical Path**: Frontend-backend connectivity must be resolved before any frontend functionality can be tested or validated
 - **Priority Order**: Backend Foundation → Connectivity → Frontend Enhancement → Integration Testing → End-to-End Validation 
+
+### 37.1. **BUG FIX**: Setup Missing Testing Infrastructure
+
+### 38.1. **BUG FIX**: Implement Mobile Responsiveness Testing Framework
+**Story Points**: 2  
+**Context**: Mobile responsiveness testing infrastructure missing, preventing proper validation
+
+- [ ] **Files to modify**: 
+  - [ ] `frontend/cypress/config/viewports.json` (CREATE NEW FILE)
+  - [ ] `frontend/styles/responsive.css` (CREATE NEW FILE)
+  - [ ] `frontend/components/Common/ResponsiveWrapper.js` (CREATE NEW FILE)
+  - [ ] `frontend/tests/mobile/` (CREATE NEW DIRECTORY)
+  - [ ] `frontend/cypress/e2e/mobile/` (CREATE NEW DIRECTORY)
+- [ ] **Step 1**: Setup Mobile Testing Environment:
+  - [ ] Define standard viewport configurations
+  - [ ] Create mobile-specific test commands
+  - [ ] Setup mobile device emulation
+  - [ ] Configure touch event simulation
+- [ ] **Step 2**: Create Mobile Test Suites:
+  - [ ] Navigation tests for mobile menu
+  - [ ] Touch interaction tests
+  - [ ] Responsive layout tests
+  - [ ] Mobile performance tests
+- [ ] **Step 3**: Implement Mobile-First Components:
+  - [ ] Create ResponsiveWrapper component
+  - [ ] Add mobile breakpoint utilities
+  - [ ] Implement touch-friendly controls
+  - [ ] Add mobile-specific styles
+- [ ] **Step 4**: Setup Mobile CI Pipeline:
+  - [ ] Configure mobile testing in CI
+  - [ ] Add mobile-specific test reports
+  - [ ] Setup mobile screenshot comparisons
+  - [ ] Configure mobile performance thresholds
+- [ ] **Dependencies**: Requires Task 37.1 (Testing Infrastructure) to be completed first
+- [ ] **Root Cause**: Mobile testing framework was not included in initial setup
+
+### 39. Validate Data Integrity and Relationships
+
+### 39.1. **BUG FIX**: Implement Data Integrity Testing Framework
+**Story Points**: 2  
+**Context**: Data integrity testing framework missing, preventing proper validation of database operations
+
+- [ ] **Files to modify**: 
+  - [ ] `backend/tests/db/` (CREATE NEW DIRECTORY)
+  - [ ] `backend/tests/db/migrations/` (CREATE NEW DIRECTORY)
+  - [ ] `backend/tests/db/seeds/` (CREATE NEW DIRECTORY)
+  - [ ] `backend/tests/db/schemas/` (CREATE NEW DIRECTORY)
+  - [ ] `backend/tests/db/helpers.js` (CREATE NEW FILE)
+- [ ] **Step 1**: Setup Database Testing Environment:
+  - [ ] Create test database configuration
+  - [ ] Setup test data migrations
+  - [ ] Create test data seeds
+  - [ ] Configure database cleanup
+- [ ] **Step 2**: Create Database Test Suites:
+  - [ ] Foreign key constraint tests
+  - [ ] Cascade deletion tests
+  - [ ] Data validation tests
+  - [ ] Transaction rollback tests
+- [ ] **Step 3**: Implement Data Integrity Checks:
+  - [ ] Create schema validation helpers
+  - [ ] Add data consistency checks
+  - [ ] Implement relationship verifiers
+  - [ ] Add data cleanup utilities
+- [ ] **Step 4**: Setup Database CI Pipeline:
+  - [ ] Configure database testing in CI
+  - [ ] Add schema validation checks
+  - [ ] Setup data integrity reports
+  - [ ] Configure migration testing
+- [ ] **Dependencies**: Requires Task 37.1 (Testing Infrastructure) to be completed first
+- [ ] **Root Cause**: Database testing framework was not included in initial setup
+
+### 40. Test Error Handling Scenarios

@@ -6,10 +6,35 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import DashboardLayout from '../components/Layout/DashboardLayout';
+import apiService from '../utils/api';
+import { AxiosResponse } from 'axios';
+
+interface SystemStatus {
+  backend: string;
+  database: string;
+  items: string;
+  properties: string;
+}
+
+interface HealthResponse {
+  status: string;
+  timestamp: string;
+  service: string;
+}
+
+interface ApiResponse {
+  success: boolean;
+  message: string;
+  data: any;
+}
+
+const isOnline = (response: AxiosResponse<ApiResponse>): boolean => {
+  return response.status === 200;
+};
 
 const Dashboard = () => {
   const router = useRouter();
-  const [systemStatus, setSystemStatus] = useState({
+  const [systemStatus, setSystemStatus] = useState<SystemStatus>({
     backend: 'checking',
     database: 'checking',
     items: 'checking',
@@ -20,17 +45,18 @@ const Dashboard = () => {
     // Check system status
     const checkSystemStatus = async () => {
       try {
-        // Check backend health
-        const healthResponse = await fetch('http://localhost:3001/health');
-        const backendStatus = healthResponse.ok ? 'online' : 'offline';
+        // Check backend health using Next.js proxy
+        const healthResponse = await fetch('/api/health');
+        const healthData: HealthResponse = await healthResponse.json();
+        const backendStatus = healthData.status === 'OK' ? 'online' : 'offline';
 
-        // Check properties API
-        const propertiesResponse = await fetch('http://localhost:3001/api/properties');
-        const propertiesStatus = propertiesResponse.ok ? 'online' : 'offline';
+        // Check properties API using apiService
+        const propertiesResponse = await apiService.properties.getAll() as AxiosResponse<ApiResponse>;
+        const propertiesStatus = isOnline(propertiesResponse) ? 'online' : 'offline';
 
-        // Check items API
-        const itemsResponse = await fetch('http://localhost:3001/api/items?propertyId=550e8400-e29b-41d4-a716-446655440001');
-        const itemsStatus = itemsResponse.ok ? 'online' : 'offline';
+        // Check items API using apiService
+        const itemsResponse = await apiService.items.getAll('550e8400-e29b-41d4-a716-446655440001') as AxiosResponse<ApiResponse>;
+        const itemsStatus = isOnline(itemsResponse) ? 'online' : 'offline';
 
         setSystemStatus({
           backend: backendStatus,
@@ -39,6 +65,7 @@ const Dashboard = () => {
           properties: propertiesStatus
         });
       } catch (error) {
+        console.error('System status check failed:', error);
         setSystemStatus({
           backend: 'offline',
           database: 'disconnected',
