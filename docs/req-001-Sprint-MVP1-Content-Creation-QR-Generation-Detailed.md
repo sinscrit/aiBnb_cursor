@@ -4,7 +4,7 @@
 **Overview Reference**: [@docs/req-001-Sprint-MVP1-Content-Creation-QR-Generation-Overview.md](./req-001-Sprint-MVP1-Content-Creation-QR-Generation-Overview.md)  
 **Date**: June 30, 2025  
 **Sprint**: MVP1 (Sprint 1 of 16)  
-**Story Points**: 80.5 (42 original + 38.5 bug fixes)  
+**Story Points**: 42 points (8 stories)  
 **Architecture**: Hybrid Supabase + Node.js/Express  
 
 ---
@@ -1251,8 +1251,6 @@
 - [ ] Test API functionality across browsers
 - [ ] Document any browser-specific issues
 
-### 37.1. **BUG FIX**: Setup Missing Testing Infrastructure
-
 ### 38. Test Mobile Responsiveness
 **Story Points**: 1  
 **Context**: Validate mobile user experience
@@ -1297,41 +1295,45 @@
 - [ ] Verify demo user isolation works correctly
 - [ ] Test concurrent operations handle properly
 
-### 41.1. **BUG FIX**: Unblock End-to-End Integration Testing
-**Story Points**: 2  
-**Context**: End-to-end testing blocked by frontend connectivity preventing complete workflow validation
+### 41.1. **BUG FIX**: Implement End-to-End Testing Framework (3 points)
+**Context**: End-to-end testing framework missing, preventing proper validation
 
 - [ ] **Files to modify**: 
-  - [ ] All frontend components (VERIFY from previous bug fixes)
-  - [ ] Test complete workflows end-to-end
-- [ ] **Step 1**: Test complete Property → Items → QR → Content workflow:
+  - [ ] `tests/e2e/`
+  - [ ] `tests/e2e/flows/`
+  - [ ] `tests/e2e/fixtures/`
+- [ ] **Step 1**: Implement end-to-end testing framework
+  - [ ] Create test scenarios for complete workflow
+  - [ ] Implement test data generation and cleanup
+  - [ ] Implement test assertions and validation
+- [ ] **Step 2**: Test complete workflow end-to-end
   - [ ] Test property creation through frontend interface
   - [ ] Test item creation and assignment to property
   - [ ] Test QR code generation for items
   - [ ] Test QR code content page access and display
   - [ ] Verify complete workflow works seamlessly
-- [ ] **Step 2**: Test multiple property scenarios:
+- [ ] **Step 3**: Test multiple property scenarios
   - [ ] Test multiple properties with multiple items each
   - [ ] Test item management across different properties
   - [ ] Test QR code generation for items in different properties
   - [ ] Test property-item-QR relationships maintain integrity
-- [ ] **Step 3**: Test deletion workflows with cleanup:
+- [ ] **Step 4**: Test deletion workflows with cleanup
   - [ ] Test item deletion triggers QR code deactivation
   - [ ] Test property deletion cascades to items and QR codes
   - [ ] Test deletion workflows maintain data integrity
   - [ ] Verify proper cleanup and user feedback
-- [ ] **Step 4**: Test concurrent operations and demo isolation:
+- [ ] **Step 5**: Test concurrent operations and demo isolation
   - [ ] Test multiple operations simultaneously
   - [ ] Test demo user isolation works correctly
   - [ ] Test concurrent property/item/QR operations
   - [ ] Verify system stability under concurrent load
-- [ ] **Step 5**: Validate complete user journey:
+- [ ] **Step 6**: Validate complete user journey
   - [ ] Test guest access to QR content without authentication
   - [ ] Test QR code scan count incrementing
   - [ ] Test mobile responsiveness throughout workflow
   - [ ] Verify all acceptance criteria met end-to-end
 - [ ] **Dependencies**: Requires completion of bug fix tasks 25.1, 25.2, 32.1, 33.1, 34.1, 35.1, 36.1
-- [ ] **Root Cause**: Frontend connectivity blocking all end-to-end workflow validation
+- [ ] **Root Cause**: End-to-end testing framework missing, preventing proper validation
 
 ### 42. Final Validation and Documentation
 **Story Points**: 1  
@@ -1523,10 +1525,10 @@ CREATE TABLE media_assets (
 ## BUG FIX TASKS SUMMARY
 
 **Total Original Tasks**: 42 (1 story point each)  
-**Total Bug Fix Tasks Added**: 24 (40.5 story points total)  
-**Combined Total Tasks**: 66  
-**Bug Fix Story Points**: 40.5  
-**Revised Total Story Points**: 82.5  
+**Total Bug Fix Tasks Added**: 26 (45.5 story points total)  
+**Combined Total Tasks**: 68  
+**Bug Fix Story Points**: 45.5  
+**Revised Total Story Points**: 87.5  
 
 ### Bug Fix Tasks Added (Original 13):
 
@@ -1578,6 +1580,8 @@ CREATE TABLE media_assets (
    - **Status**: Content display system completely missing
    - **Files**: `controllers/ContentController.js`, `routes/api/content.js`, `frontend/pages/content/`, `frontend/components/Content/`, `app.js`
 
+### Additional Bug Fix Tasks Added (Based on Validation Log TODO List):
+
 13. **Task 19.1**: Complete Property Management Edit and Delete Functionality (2 points)
     - **Status**: Property pages load structurally but missing edit/delete functionality
     - **Files**: `frontend/pages/properties/[id]/edit.js`, `frontend/components/Property/PropertyForm.js`, `frontend/components/Property/PropertyCard.js`
@@ -1610,21 +1614,25 @@ CREATE TABLE media_assets (
     - **Status**: Content display workflow testing blocked by connectivity
     - **Files**: `frontend/pages/content/` (verify from tasks 26.1, 25.1)
 
-21. **Task 41.1**: Unblock End-to-End Integration Testing (2 points)
-    - **Status**: End-to-end testing blocked by frontend connectivity
-    - **Files**: All frontend components (verify from previous bug fixes)
+21. **Task 37.1**: Implement Testing Infrastructure (2 points)
+    - **Status**: Testing infrastructure missing, preventing test-driven development
+    - **Files**: `tests/`, `tests/unit/`, `tests/integration/`, `tests/e2e/`
 
-22. **Task 37.1**: Setup Missing Testing Infrastructure (2 points)
-    - **Status**: Testing infrastructure missing, preventing proper validation
-    - **Files**: `frontend/jest.config.js`, `frontend/cypress.config.js`, `frontend/tests/`, `frontend/cypress/`
+22. **Task 38.1**: Implement Mobile Testing Framework (2 points)
+    - **Status**: Mobile testing framework missing, preventing mobile responsiveness testing
+    - **Files**: `tests/mobile/`, `tests/mobile/fixtures/`, `tests/mobile/flows/`
 
-23. **Task 38.1**: Implement Mobile Responsiveness Testing Framework (2 points)
-    - **Status**: Mobile testing framework missing, preventing proper validation
-    - **Files**: `frontend/cypress/config/viewports.json`, `frontend/styles/responsive.css`, `frontend/components/Common/ResponsiveWrapper.js`
+23. **Task 39.1**: Implement Data Integrity Framework (2 points)
+    - **Status**: Data integrity framework missing, preventing data integrity testing
+    - **Files**: `tests/data/`, `tests/data/fixtures/`, `tests/data/flows/`
 
-24. **Task 39.1**: Implement Data Integrity Testing Framework (2 points)
-    - **Status**: Database testing framework missing, preventing proper validation
-    - **Files**: `backend/tests/db/`, `backend/tests/db/migrations/`, `backend/tests/db/seeds/`
+24. **Task 40.1**: Implement Error Handling Framework (2 points)
+    - **Status**: Error handling framework missing, preventing error scenario testing
+    - **Files**: `tests/error/`, `tests/error/fixtures/`, `tests/error/flows/`
+
+25. **Task 41.1**: Implement End-to-End Testing Framework (3 points)
+    - **Status**: End-to-end testing framework missing, preventing proper validation
+    - **Files**: `tests/e2e/`, `tests/e2e/flows/`, `tests/e2e/fixtures/`
 
 ### Implementation Priority (Updated):
 1. **🔥 Critical Backend Foundation** (Tasks 10.1, 11.1, 11.2) - 3 points
@@ -1634,123 +1642,30 @@ CREATE TABLE media_assets (
 5. **🔥 Testing Infrastructure** (Task 37.1) - 2 points
 6. **🔥 Mobile Testing Framework** (Task 38.1) - 2 points
 7. **🔥 Data Integrity Framework** (Task 39.1) - 2 points
-8. **📋 Property Frontend** (Tasks 17.1 & 18.1, 19.1) - 5 points
-9. **📋 Item Frontend** (Tasks 20.1, 22.1) - 5 points
-10. **📋 QR Frontend** (Tasks 24.1, 24.2) - 3 points
-11. **📋 Content System** (Task 26.1) - 3 points
-12. **🔧 Integration Testing** (Tasks 32.1, 33.1, 34.1, 35.1, 36.1, 41.1) - 8 points
+8. **🔥 Error Handling Framework** (Task 40.1) - 2 points
+9. **🔥 End-to-End Framework** (Task 41.1) - 3 points
+10. **📋 Property Frontend** (Tasks 17.1 & 18.1, 19.1) - 5 points
+11. **📋 Item Frontend** (Tasks 20.1, 22.1) - 5 points
+12. **📋 QR Frontend** (Tasks 24.1, 24.2) - 3 points
+13. **📋 Content System** (Task 26.1) - 3 points
+14. **🔧 Integration Testing** (Tasks 32.1, 33.1, 34.1, 35.1, 36.1, 41.1) - 8 points
 
 ### Critical Dependencies Chain:
 - **Blocking**: Tasks 25.1, 25.2 (connectivity) must be resolved first
 - **Testing**: Task 37.1 (testing infrastructure) should be started early to enable test-driven development
 - **Mobile**: Task 38.1 (mobile testing) depends on Task 37.1 and should be completed before frontend tasks
 - **Data**: Task 39.1 (data integrity) depends on Task 37.1 and should be completed before integration testing
+- **Error**: Task 40.1 (error handling) depends on Task 37.1 and should be completed before integration testing
+- **E2E**: Task 41.1 (end-to-end testing) depends on all other testing frameworks being in place
 - **Dependent**: All workflow testing tasks (33.1-36.1, 41.1) depend on frontend functionality being restored
 - **Priority**: Connectivity fixes enable all other bug fix tasks to be validated
 
 ---
 
-**Document Version**: 1.6  
-**Total Tasks**: 66 (Original: 42 + Bug Fixes: 24)  
-**Total Story Points**: 82.5 (Original: 42 + Bug Fixes: 40.5)  
-**Estimated Completion**: 11 days (revised for additional testing frameworks)  
+**Document Version**: 1.8  
+**Total Tasks**: 68 (Original: 42 + Bug Fixes: 26)  
+**Total Story Points**: 87.5 (Original: 42 + Bug Fixes: 45.5)  
+**Estimated Completion**: 12 days (revised for additional testing frameworks)  
 **Reference**: [@docs/gen_requests.md](./gen_requests.md) - REQ-001  
 **Overview Reference**: [@docs/req-001-Sprint-MVP1-Content-Creation-QR-Generation-Overview.md](./req-001-Sprint-MVP1-Content-Creation-QR-Generation-Overview.md)  
-**Last Updated**: December 30, 2024 (Added Data Integrity Testing Framework Bug Fix Task)
-
----
-
-## Additional Bug Fix Tasks Added Based on Validation Log Analysis
-
-**Date Added**: December 30, 2024  
-**Source**: [@docs/req-001-Sprint-MVP1-Content-Creation-QR-Generation-log.md](./req-001-Sprint-MVP1-Content-Creation-QR-Generation-log.md) TODO List  
-
-### New Critical Issues Addressed:
-1. **Frontend-Backend Connectivity** - "Failed to fetch" errors across all frontend pages preventing all data loading
-2. **Missing Edit/Delete Functionality** - Property and Item management missing complete CRUD operations
-3. **Integration Testing Blockage** - All workflow testing blocked by connectivity issues
-4. **End-to-End Validation** - Complete user journey testing prevented by frontend issues
-
-### New Bug Fix Categories Added:
-- **Frontend Enhancement**: Tasks 19.1, 22.1, 24.2 (Complete CRUD functionality)
-- **Integration Unblocking**: Tasks 32.1, 33.1, 34.1, 35.1, 36.1 (Restore workflow testing)
-- **End-to-End Validation**: Task 41.1 (Complete user journey testing)
-
-### Updated Impact on Project Timeline:
-- **Original Estimate**: 5 days (42 story points)
-- **First Revision**: 7 days (65.5 story points)  
-- **Current Estimate**: 9 days (76.5 story points)  
-- **Critical Path**: Frontend-backend connectivity must be resolved before any frontend functionality can be tested or validated
-- **Priority Order**: Backend Foundation → Connectivity → Frontend Enhancement → Integration Testing → End-to-End Validation 
-
-### 37.1. **BUG FIX**: Setup Missing Testing Infrastructure
-
-### 38.1. **BUG FIX**: Implement Mobile Responsiveness Testing Framework
-**Story Points**: 2  
-**Context**: Mobile responsiveness testing infrastructure missing, preventing proper validation
-
-- [ ] **Files to modify**: 
-  - [ ] `frontend/cypress/config/viewports.json` (CREATE NEW FILE)
-  - [ ] `frontend/styles/responsive.css` (CREATE NEW FILE)
-  - [ ] `frontend/components/Common/ResponsiveWrapper.js` (CREATE NEW FILE)
-  - [ ] `frontend/tests/mobile/` (CREATE NEW DIRECTORY)
-  - [ ] `frontend/cypress/e2e/mobile/` (CREATE NEW DIRECTORY)
-- [ ] **Step 1**: Setup Mobile Testing Environment:
-  - [ ] Define standard viewport configurations
-  - [ ] Create mobile-specific test commands
-  - [ ] Setup mobile device emulation
-  - [ ] Configure touch event simulation
-- [ ] **Step 2**: Create Mobile Test Suites:
-  - [ ] Navigation tests for mobile menu
-  - [ ] Touch interaction tests
-  - [ ] Responsive layout tests
-  - [ ] Mobile performance tests
-- [ ] **Step 3**: Implement Mobile-First Components:
-  - [ ] Create ResponsiveWrapper component
-  - [ ] Add mobile breakpoint utilities
-  - [ ] Implement touch-friendly controls
-  - [ ] Add mobile-specific styles
-- [ ] **Step 4**: Setup Mobile CI Pipeline:
-  - [ ] Configure mobile testing in CI
-  - [ ] Add mobile-specific test reports
-  - [ ] Setup mobile screenshot comparisons
-  - [ ] Configure mobile performance thresholds
-- [ ] **Dependencies**: Requires Task 37.1 (Testing Infrastructure) to be completed first
-- [ ] **Root Cause**: Mobile testing framework was not included in initial setup
-
-### 39. Validate Data Integrity and Relationships
-
-### 39.1. **BUG FIX**: Implement Data Integrity Testing Framework
-**Story Points**: 2  
-**Context**: Data integrity testing framework missing, preventing proper validation of database operations
-
-- [ ] **Files to modify**: 
-  - [ ] `backend/tests/db/` (CREATE NEW DIRECTORY)
-  - [ ] `backend/tests/db/migrations/` (CREATE NEW DIRECTORY)
-  - [ ] `backend/tests/db/seeds/` (CREATE NEW DIRECTORY)
-  - [ ] `backend/tests/db/schemas/` (CREATE NEW DIRECTORY)
-  - [ ] `backend/tests/db/helpers.js` (CREATE NEW FILE)
-- [ ] **Step 1**: Setup Database Testing Environment:
-  - [ ] Create test database configuration
-  - [ ] Setup test data migrations
-  - [ ] Create test data seeds
-  - [ ] Configure database cleanup
-- [ ] **Step 2**: Create Database Test Suites:
-  - [ ] Foreign key constraint tests
-  - [ ] Cascade deletion tests
-  - [ ] Data validation tests
-  - [ ] Transaction rollback tests
-- [ ] **Step 3**: Implement Data Integrity Checks:
-  - [ ] Create schema validation helpers
-  - [ ] Add data consistency checks
-  - [ ] Implement relationship verifiers
-  - [ ] Add data cleanup utilities
-- [ ] **Step 4**: Setup Database CI Pipeline:
-  - [ ] Configure database testing in CI
-  - [ ] Add schema validation checks
-  - [ ] Setup data integrity reports
-  - [ ] Configure migration testing
-- [ ] **Dependencies**: Requires Task 37.1 (Testing Infrastructure) to be completed first
-- [ ] **Root Cause**: Database testing framework was not included in initial setup
-
-### 40. Test Error Handling Scenarios
+**Last Updated**: December 30, 2024 (Added End-to-End Testing Framework Bug Fix Task)
