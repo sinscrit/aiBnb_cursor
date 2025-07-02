@@ -22,28 +22,52 @@ const ItemsPage = () => {
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [propertyId]);
 
   const loadData = async () => {
-      setLoading(true);
-      setError(null);
+    setLoading(true);
+    setError(null);
 
     try {
       // Load properties first for the filter dropdown
       const propertiesResponse = await apiService.properties.getAll();
       const propertiesData = apiHelpers.extractData(propertiesResponse);
-      setProperties(propertiesData.properties || []);
+      const availableProperties = propertiesData.properties || [];
+      setProperties(availableProperties);
 
-      // Load items
-      const itemsResponse = await apiService.items.getAll();
+      if (availableProperties.length === 0) {
+        setItems([]);
+        setError('No properties available. Please create a property first.');
+        setLoading(false);
+        return;
+      }
+
+      // Determine which property to load items for
+      let effectivePropertyId = propertyId;
+      
+      // Only fallback to first property if no propertyId is provided
+      if (!effectivePropertyId) {
+        effectivePropertyId = availableProperties[0].id;
+        // Update URL only if no propertyId was provided
+        router.replace(`/items?propertyId=${effectivePropertyId}`, undefined, { shallow: true });
+      } else if (!availableProperties.find(p => p.id === effectivePropertyId)) {
+        // If provided propertyId is invalid, show error
+        setError(`Property with ID ${effectivePropertyId} not found.`);
+        setItems([]);
+        setLoading(false);
+        return;
+      }
+
+      // Load items for the selected property
+      const itemsResponse = await apiService.items.getAll(effectivePropertyId);
       const itemsData = apiHelpers.extractData(itemsResponse);
       
       // Enhance items with property information
       const enhancedItems = (itemsData.items || []).map(item => ({
-          ...item,
-        property: propertiesData.properties?.find(p => p.property_id === item.property_id),
+        ...item,
+        property: availableProperties.find(p => p.id === item.property_id),
         qr_count: item.qr_count || 0
-        }));
+      }));
       setItems(enhancedItems);
 
     } catch (err) {

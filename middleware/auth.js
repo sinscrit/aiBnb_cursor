@@ -21,6 +21,18 @@ const authenticateDemo = (req, res, next) => {
     
     console.log('🎭 Demo Auth: Setting demo user for request');
     
+    // Get demo user ID from header or use default
+    const demoUserId = req.headers['x-demo-user'] || DemoUserService.getDemoUserId();
+    
+    // Validate that the user ID matches our demo user
+    if (demoUserId !== DemoUserService.getDemoUserId()) {
+      return res.status(401).json({
+        error: 'Authentication Error',
+        message: 'Invalid demo user ID',
+        details: 'The provided demo user ID does not match the expected value'
+      });
+    }
+    
     // Set demo user in request object
     const demoUser = DemoUserService.getCurrentUser();
     const demoSession = DemoUserService.getDemoSession();

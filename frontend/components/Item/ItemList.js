@@ -3,14 +3,37 @@
  * QR Code-Based Instructional System - Item Grid Display
  */
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
+import { useRouter } from 'next/router';
 import ItemCard from './ItemCard';
 
 const ItemList = ({ items = [], properties = [], loading = false, onDeleteItem, onGenerateQR }) => {
+  const router = useRouter();
+  const { propertyId } = router.query;
   const [sortBy, setSortBy] = useState('name');
   const [sortOrder, setSortOrder] = useState('asc');
   const [searchTerm, setSearchTerm] = useState('');
-  const [filterProperty, setFilterProperty] = useState('');
+  const [filterProperty, setFilterProperty] = useState(propertyId || '');
+
+  // Update filterProperty when URL propertyId changes or properties load
+  useEffect(() => {
+    if (properties.length > 0) {
+      const urlPropertyId = propertyId;
+      // If URL has a valid propertyId, use it
+      if (urlPropertyId && properties.find(p => p.id === urlPropertyId)) {
+        setFilterProperty(urlPropertyId);
+      } else if (!filterProperty || !properties.find(p => p.id === filterProperty)) {
+        // Fallback to first property only if no valid property is selected
+        setFilterProperty(properties[0].id);
+      }
+    }
+  }, [properties, propertyId, filterProperty]);
+
+  // Update URL when filter property changes
+  const handlePropertyChange = (newPropertyId) => {
+    setFilterProperty(newPropertyId);
+    router.replace(`/items?propertyId=${newPropertyId}`, undefined, { shallow: true });
+  };
 
   const sortedAndFilteredItems = useMemo(() => {
     let filtered = items;
@@ -170,10 +193,9 @@ const ItemList = ({ items = [], properties = [], loading = false, onDeleteItem, 
               <label className="filter-label">Property:</label>
               <select
                 value={filterProperty}
-                onChange={(e) => setFilterProperty(e.target.value)}
+                onChange={(e) => handlePropertyChange(e.target.value)}
                 className="filter-select"
               >
-                <option value="">All Properties</option>
                 {properties.map((property) => (
                   <option key={property.id} value={property.id}>
                     {property.name}

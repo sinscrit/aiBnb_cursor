@@ -4,6 +4,7 @@
  */
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/router';
 
 const ItemForm = ({ 
   item = null, 
@@ -30,11 +31,14 @@ const ItemForm = ({
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const router = useRouter();
+
   const mediaTypes = [
     { value: 'text', label: 'Text Instructions' },
     { value: 'youtube', label: 'YouTube Video' },
     { value: 'image', label: 'Image Guide' },
-    { value: 'pdf', label: 'PDF Document' }
+    { value: 'pdf', label: 'PDF Document' },
+    { value: 'other', label: 'Other' }
   ];
 
   const difficultyLevels = [
@@ -146,38 +150,79 @@ const ItemForm = ({
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    
     if (name.startsWith('metadata.')) {
-      const metadataKey = name.split('.')[1];
+      const metadataField = name.split('.')[1];
       setFormData(prev => ({
         ...prev,
         metadata: {
           ...prev.metadata,
-          [metadataKey]: value
+          [metadataField]: value
         }
       }));
     } else {
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-    }
-
-    // Clear error when user starts typing
-    const errorKey = name.startsWith('metadata.') ? name.split('.')[1] : name;
-    if (errors[errorKey]) {
-      setErrors(prev => ({
+      setFormData(prev => ({
         ...prev,
-        [errorKey]: ''
+        [name]: value
+      }));
+    }
+  };
+
+  const handleSelectChange = (e) => {
+    const { name, value } = e.target;
+    console.log('Select change:', { name, value });
+    
+    if (name === 'property_id') {
+      setFormData(prev => ({
+        ...prev,
+        property_id: value
+      }));
+    } else if (name === 'metadata.category') {
+      setFormData(prev => ({
+        ...prev,
+        metadata: {
+          ...prev.metadata,
+          category: value
+        }
+      }));
+    } else if (name === 'metadata.difficulty') {
+      setFormData(prev => ({
+        ...prev,
+        metadata: {
+          ...prev.metadata,
+          difficulty: value
+        }
+      }));
+    } else if (name === 'media_type') {
+      setFormData(prev => ({
+        ...prev,
+        media_type: value
       }));
     }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Debug logging for form data structure
+    console.log('Form Submission Debug:', {
+      formDataComplete: formData,
+      metadataFields: {
+        hasMetadata: Boolean(formData.metadata),
+        metadataKeys: formData.metadata ? Object.keys(formData.metadata) : [],
+        category: formData.metadata?.category,
+        difficulty: formData.metadata?.difficulty,
+        duration: formData.metadata?.duration
+      },
+      mediaFields: {
+        hasMediaType: Boolean(formData.media_type),
+        mediaTypeValue: formData.media_type,
+        mediaUrl: formData.media_url
+      }
+    });
 
     const formErrors = validateForm();
     if (Object.keys(formErrors).length > 0) {
+      console.log('Validation Errors:', formErrors);
       setErrors(formErrors);
       return;
     }
@@ -186,7 +231,7 @@ const ItemForm = ({
     setErrors({});
 
     try {
-      // Prepare submission data
+      // Prepare the submission data with all required fields
       const submissionData = {
         name: formData.name.trim(),
         description: formData.description.trim() || null,
@@ -196,18 +241,21 @@ const ItemForm = ({
         media_type: formData.media_type,
         metadata: {
           category: formData.metadata.category || null,
-          difficulty: formData.metadata.difficulty,
-          duration: formData.metadata.duration.trim() || null
+          difficulty: formData.metadata.difficulty || 'easy',
+          duration: formData.metadata.duration || null
         }
       };
 
-      if (onSubmit) {
-        await onSubmit(submissionData);
+      console.log('Submitting form data:', submissionData);
+      const response = await onSubmit(submissionData);
+      
+      if (response.data.success) {
+        router.push('/items');
       }
     } catch (error) {
       console.error('Form submission error:', error);
       setErrors({
-        submit: error.message || 'Failed to save item. Please try again.'
+        submit: error.response?.data?.message || 'Failed to create item'
       });
     } finally {
       setIsSubmitting(false);
@@ -301,224 +349,214 @@ const ItemForm = ({
           </div>
 
             <div className="form-group">
-              <label htmlFor="property_id" className="form-label">
-                Property <span className="required">*</span>
-              </label>
+              <label htmlFor="property_id" className="required">Property</label>
               <select
                 id="property_id"
                 name="property_id"
                 value={formData.property_id}
-                onChange={handleInputChange}
-                className={`form-select ${errors.property_id ? 'error' : ''}`}
-                disabled={isSubmitting || loading}
+                onChange={handleSelectChange}
+                className={errors.property_id ? 'error' : ''}
+                required
               >
-                <option value="">Select a property...</option>
+                <option value="">Select property...</option>
                 {properties.map(property => (
                   <option key={property.id} value={property.id}>
                     {property.name}
                   </option>
                 ))}
               </select>
-              {errors.property_id && (
-                <span className="form-error">{errors.property_id}</span>
-              )}
+              {errors.property_id && <div className="error-message">{errors.property_id}</div>}
             </div>
           </div>
 
           <div className="form-group">
-            <label htmlFor="description" className="form-label">
-              Description
-            </label>
+            <label htmlFor="description">Description</label>
             <textarea
               id="description"
               name="description"
               value={formData.description}
               onChange={handleInputChange}
-            placeholder="Describe what this item is and how guests should use it..."
-            rows="3"
-            className="form-textarea"
-              disabled={isSubmitting || loading}
+              className={errors.description ? 'error' : ''}
+              placeholder="Enter item description..."
+              rows={4}
             />
-            {errors.description && (
-              <span className="form-error">{errors.description}</span>
-            )}
-        </div>
-
-        <div className="form-grid">
-          <div className="form-group">
-            <label htmlFor="metadata.category" className="form-label">
-              Category
-            </label>
-            <select
-              id="metadata.category"
-              name="metadata.category"
-              value={formData.metadata.category}
-              onChange={handleInputChange}
-              className="form-select"
-              disabled={isSubmitting || loading}
-            >
-              {itemCategories.map(category => (
-                <option key={category.value} value={category.value}>
-                  {category.label}
-                </option>
-              ))}
-            </select>
-          </div>
-          
-          <div className="form-group">
-            <label htmlFor="location" className="form-label">
-              Location
-            </label>
-            <input
-              type="text"
-              id="location"
-              name="location"
-              value={formData.location}
-              onChange={handleInputChange}
-              placeholder="Where is this item located?"
-              className="form-input"
-              disabled={isSubmitting || loading}
-              list="location-suggestions"
-            />
-            <datalist id="location-suggestions">
-              {getLocationSuggestions().map((suggestion, index) => (
-                <option key={index} value={suggestion} />
-              ))}
-            </datalist>
-            {errors.location && (
-              <span className="form-error">{errors.location}</span>
-            )}
-          </div>
-        </div>
-
-        <div className="form-section">
-          <h3 className="section-title">Instructions & Media</h3>
-
-          <div className="form-grid">
-            <div className="form-group">
-              <label htmlFor="media_type" className="form-label">
-                Media Type
-              </label>
-              <select
-                id="media_type"
-                name="media_type"
-                value={formData.media_type}
-                onChange={handleInputChange}
-                className="form-select"
-                disabled={isSubmitting || loading}
-              >
-                {mediaTypes.map(type => (
-                  <option key={type.value} value={type.value}>
-                    {type.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="metadata.difficulty" className="form-label">
-                Difficulty Level
-              </label>
-              <select
-                id="metadata.difficulty"
-                name="metadata.difficulty"
-                value={formData.metadata.difficulty}
-                onChange={handleInputChange}
-                className="form-select"
-                disabled={isSubmitting || loading}
-              >
-                {difficultyLevels.map(level => (
-                  <option key={level.value} value={level.value}>
-                    {level.label}
-                  </option>
-                ))}
-              </select>
-            </div>
+            {errors.description && <div className="error-message">{errors.description}</div>}
           </div>
 
           <div className="form-grid">
             <div className="form-group">
-              <label htmlFor="media_url" className="form-label">
-                Media URL
-                {formData.media_type !== 'text' && <span className="optional"> (Optional)</span>}
-              </label>
-              <input
-                type="url"
-                id="media_url"
-                name="media_url"
-                value={formData.media_url}
-                onChange={handleInputChange}
-                placeholder={
-                  formData.media_type === 'youtube' ? 'https://www.youtube.com/watch?v=...' :
-                  formData.media_type === 'image' ? 'https://example.com/image.jpg' :
-                  formData.media_type === 'pdf' ? 'https://example.com/guide.pdf' :
-                  'URL to instructions (optional)'
-                }
-                className={`form-input ${errors.media_url ? 'error' : ''}`}
-                disabled={isSubmitting || loading}
-              />
-              {errors.media_url && (
-                <span className="form-error">{errors.media_url}</span>
-              )}
+              <label htmlFor="metadata.category">Category</label>
+              <select
+                id="metadata.category"
+                name="metadata.category"
+                value={formData.metadata.category}
+                onChange={handleSelectChange}
+                className={errors.category ? 'error' : ''}
+              >
+                <option value="">Select category...</option>
+                {itemCategories.map(category => (
+                  <option key={category.value} value={category.value}>
+                    {category.label}
+                  </option>
+                ))}
+              </select>
+              {errors.category && <div className="error-message">{errors.category}</div>}
             </div>
-
+            
             <div className="form-group">
-              <label htmlFor="metadata.duration" className="form-label">
-                Estimated Duration
+              <label htmlFor="location" className="form-label">
+                Location
               </label>
               <input
                 type="text"
-                id="metadata.duration"
-                name="metadata.duration"
-                value={formData.metadata.duration}
+                id="location"
+                name="location"
+                value={formData.location}
                 onChange={handleInputChange}
-                placeholder="e.g. 2 minutes, 30 seconds"
+                placeholder="Where is this item located?"
                 className="form-input"
                 disabled={isSubmitting || loading}
+                list="location-suggestions"
               />
-              {errors.duration && (
-                <span className="form-error">{errors.duration}</span>
+              <datalist id="location-suggestions">
+                {getLocationSuggestions().map((suggestion, index) => (
+                  <option key={index} value={suggestion} />
+                ))}
+              </datalist>
+              {errors.location && (
+                <span className="form-error">{errors.location}</span>
               )}
             </div>
           </div>
-        </div>
 
-        {errors.submit && (
-          <div className="form-error-banner">
-            {errors.submit}
+          <div className="form-section">
+            <h3 className="section-title">Instructions & Media</h3>
+
+            <div className="form-grid">
+              <div className="form-group">
+                <label htmlFor="media_type" className="form-label">
+                  Media Type
+                </label>
+                <select
+                  id="media_type"
+                  name="media_type"
+                  value={formData.media_type}
+                  onChange={handleSelectChange}
+                  className="form-select"
+                  disabled={isSubmitting || loading}
+                >
+                  {mediaTypes.map(type => (
+                    <option key={type.value} value={type.value}>
+                      {type.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="metadata.difficulty" className="form-label">
+                  Difficulty Level
+                </label>
+                <select
+                  id="metadata.difficulty"
+                  name="metadata.difficulty"
+                  value={formData.metadata.difficulty}
+                  onChange={handleSelectChange}
+                  className="form-select"
+                  disabled={isSubmitting || loading}
+                >
+                  {difficultyLevels.map(level => (
+                    <option key={level.value} value={level.value}>
+                      {level.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div className="form-grid">
+              <div className="form-group">
+                <label htmlFor="media_url" className="form-label">
+                  Media URL
+                  {formData.media_type !== 'text' && <span className="optional"> (Optional)</span>}
+                </label>
+                <input
+                  type="url"
+                  id="media_url"
+                  name="media_url"
+                  value={formData.media_url}
+                  onChange={handleInputChange}
+                  placeholder={
+                    formData.media_type === 'youtube' ? 'https://www.youtube.com/watch?v=...' :
+                    formData.media_type === 'image' ? 'https://example.com/image.jpg' :
+                    formData.media_type === 'pdf' ? 'https://example.com/guide.pdf' :
+                    'URL to instructions (optional)'
+                  }
+                  className={`form-input ${errors.media_url ? 'error' : ''}`}
+                  disabled={isSubmitting || loading}
+                />
+                {errors.media_url && (
+                  <span className="form-error">{errors.media_url}</span>
+                )}
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="metadata.duration" className="form-label">
+                  Estimated Duration
+                </label>
+                <input
+                  type="text"
+                  id="metadata.duration"
+                  name="metadata.duration"
+                  value={formData.metadata.duration}
+                  onChange={handleInputChange}
+                  placeholder="e.g. 2 minutes, 30 seconds"
+                  className="form-input"
+                  disabled={isSubmitting || loading}
+                />
+                {errors.duration && (
+                  <span className="form-error">{errors.duration}</span>
+                )}
+              </div>
+            </div>
           </div>
-        )}
 
-        <div className="form-actions">
-          <button
-            type="button"
-            onClick={onCancel}
-            className="btn-secondary"
-            disabled={isSubmitting}
-          >
-            Cancel
-          </button>
-          
-          <button
-            type="button"
-            onClick={handleReset}
-            className="btn-reset"
-            disabled={isSubmitting}
-          >
-            Reset
-          </button>
+          {errors.submit && (
+            <div className="form-error-banner">
+              {errors.submit}
+            </div>
+          )}
 
-          <button
-            type="submit"
-            className="btn-primary"
-            disabled={isSubmitting || loading}
-          >
-            {isSubmitting ? 
-              (mode === 'edit' ? 'Updating...' : 'Creating...') : 
-              (mode === 'edit' ? 'Update Item' : 'Create Item')
-            }
-          </button>
-        </div>
+          <div className="form-actions">
+            <button
+              type="button"
+              onClick={onCancel}
+              className="btn-secondary"
+              disabled={isSubmitting}
+            >
+              Cancel
+            </button>
+            
+            <button
+              type="button"
+              onClick={handleReset}
+              className="btn-reset"
+              disabled={isSubmitting}
+            >
+              Reset
+            </button>
+
+            <button
+              type="submit"
+              className="btn-primary"
+              disabled={isSubmitting || loading}
+            >
+              {isSubmitting ? 
+                (mode === 'edit' ? 'Updating...' : 'Creating...') : 
+                (mode === 'edit' ? 'Update Item' : 'Create Item')
+              }
+            </button>
+          </div>
       </form>
 
       <style jsx>{`
@@ -596,16 +634,29 @@ const ItemForm = ({
 
         .form-input,
         .form-select,
+        select,
         .form-textarea {
           padding: 0.75rem;
           border: 1px solid #d1d5db;
           border-radius: 0.375rem;
           font-size: 0.875rem;
           transition: border-color 0.2s, box-shadow 0.2s;
+          width: 100%;
+          background-color: white;
+          color: #374151;
+          -webkit-appearance: none;
+          -moz-appearance: none;
+          appearance: none;
+          background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+          background-position: right 0.5rem center;
+          background-repeat: no-repeat;
+          background-size: 1.5em 1.5em;
+          padding-right: 2.5rem;
         }
 
         .form-input:focus,
         .form-select:focus,
+        select:focus,
         .form-textarea:focus {
           outline: none;
           border-color: #3b82f6;
@@ -614,6 +665,7 @@ const ItemForm = ({
 
         .form-input.error,
         .form-select.error,
+        select.error,
         .form-textarea.error {
           border-color: #ef4444;
         }

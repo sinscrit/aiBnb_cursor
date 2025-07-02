@@ -7,6 +7,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import DashboardLayout from '../../components/Layout/DashboardLayout';
 import ItemForm from '../../components/Item/ItemForm';
+import { apiService, apiHelpers } from '../../utils/api';
 
 const CreateItemPage = () => {
   const router = useRouter();
@@ -26,20 +27,16 @@ const CreateItemPage = () => {
       setLoading(true);
       setError(null);
 
-      const response = await fetch('http://localhost:8000/api/properties');
-      if (!response.ok) {
-        throw new Error(`Properties API error: ${response.status}`);
-      }
-
-      const data = await response.json();
-      if (data.success) {
-        setProperties(data.data.properties || []);
-      } else {
-        throw new Error(data.error || 'Failed to load properties');
-      }
+      const response = await apiService.properties.getAll();
+      const data = apiHelpers.extractData(response);
+      
+      // Log properties for debugging
+      console.log('Loaded properties:', data.properties);
+      
+      setProperties(data.properties || []);
     } catch (err) {
       console.error('Error loading properties:', err);
-      setError(err.message);
+      setError(apiHelpers.handleError(err).message);
     } finally {
       setLoading(false);
     }
@@ -47,31 +44,20 @@ const CreateItemPage = () => {
 
   const handleSubmit = async (formData) => {
     try {
-      const response = await fetch('http://localhost:8000/api/items', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(formData)
-      });
-
-      if (!response.ok) {
-        throw new Error(`Create failed: ${response.status}`);
-      }
-
-      const data = await response.json();
-      if (data.success) {
-        // Show success message
-        alert(`Item "${data.data.item.name}" created successfully!`);
-        
-        // Navigate back to items list
-        if (propertyId) {
-          router.push(`/items?propertyId=${propertyId}`);
-        } else {
-          router.push('/items');
-        }
+      // Log form data for debugging
+      console.log('Submitting form data:', formData);
+      
+      const response = await apiService.items.create(formData);
+      const data = apiHelpers.extractData(response);
+      
+      // Show success message
+      alert(`Item "${data.item.name}" created successfully!`);
+      
+      // Navigate back to items list
+      if (propertyId) {
+        router.push(`/items?propertyId=${propertyId}`);
       } else {
-        throw new Error(data.error || 'Failed to create item');
+        router.push('/items');
       }
     } catch (error) {
       console.error('Error creating item:', error);

@@ -37,7 +37,7 @@ const PropertyForm = ({
         name: property.name || '',
         description: property.description || '',
         address: property.address || '',
-        property_type: property.property_type || 'other'
+        property_type: property.property_type?.toLowerCase() || 'other'
       });
     }
   }, [property, mode]);

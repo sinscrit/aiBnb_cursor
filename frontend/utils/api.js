@@ -108,7 +108,7 @@ apiClient.interceptors.response.use(
 );
 
 // API service object with endpoints
-const apiService = {
+export const apiService = {
   properties: {
     getAll: () => apiClient.get('/properties'),
     getById: (id) => apiClient.get(`/properties/${id}`),
@@ -119,14 +119,39 @@ const apiService = {
   items: {
     getAll: (propertyId) => apiClient.get(`/items?propertyId=${propertyId}`),
     getById: (id) => apiClient.get(`/items/${id}`),
-    create: (data) => apiClient.post('/items', data),
+    create: (data) => {
+      // Clean up the data before sending
+      const cleanData = {
+        name: data.name,
+        description: data.description,
+        location: data.location,
+        property_id: data.property_id,
+        media_url: data.media_url || null,
+        media_type: data.media_type || 'text',
+        metadata: {
+          category: data.metadata?.category || null,
+          difficulty: data.metadata?.difficulty || 'easy',
+          duration: data.metadata?.duration || null
+        }
+      };
+
+      console.log('API Service - Final Request Data:', cleanData);
+      return apiClient.post('/items', cleanData);
+    },
     update: (id, data) => apiClient.put(`/items/${id}`, data),
-    delete: (id) => apiClient.delete(`/items/${id}`)
+    delete: (id) => apiClient.delete(`/items/${id}`),
+    updateLocation: (id, location) => apiClient.patch(`/items/${id}/location`, { location })
   },
   qrcodes: {
     generate: (itemId) => apiClient.post(`/qrcodes/${itemId}`),
     getAll: () => apiClient.get('/qrcodes'),
     getByItemId: (itemId) => apiClient.get(`/qrcodes/${itemId}`)
+  },
+  content: {
+    getByQRCode: (qrCode) => apiClient.get(`/content/${qrCode}`),
+    getContentMeta: (qrCode) => apiClient.get(`/content/${qrCode}/meta`),
+    recordView: (qrCode, data) => apiClient.post(`/content/${qrCode}/view`, data),
+    getStats: (qrCode) => apiClient.get(`/content/${qrCode}/stats`)
   }
 };
 
